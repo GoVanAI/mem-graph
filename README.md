@@ -16,9 +16,31 @@ mem-graph is the LLM's persistent memory between opencode sessions. It builds on
 
 ## Install
 
+Clone, install, and register as an MCP server:
+
 ```bash
+git clone https://github.com/GoVanAI/mem-graph
+cd mem-graph
 npm install
 ```
+
+Add this entry to your MCP client config (e.g., `~/.config/opencode/opencode.jsonc` or Claude Code's MCP config):
+
+```jsonc
+{
+  "mcpServers": {
+    "mem-graph": {
+      "command": "npm",
+      "args": ["start", "--prefix", "/absolute/path/to/mem-graph"],
+      "env": {
+        "MEM_GRAPH_DIR": "/absolute/path/to/your/mem-graph-db"
+      }
+    }
+  }
+}
+```
+
+Replace both placeholder paths with absolute paths on your machine. The server reads `MEM_GRAPH_DIR` literally — `~` is not expanded at runtime. Default (without `MEM_GRAPH_DIR`) is `~/.local/share/mem-graph/memory.db`.
 
 ## Run (locally)
 
