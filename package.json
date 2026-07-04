@@ -1,0 +1,34 @@
+{
+  "name": "@opencode-ai/mem-graph",
+  "version": "0.2.0",
+  "description": "MCP server for mem-graph: graph-relational memory layer with wikilinks, BM25 auto-linking, spreading activation, and synaptic decay. Backed by better-sqlite3.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "mem-graph": "src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "better-sqlite3": "12.10.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.13",
+    "@types/node": "25.9.2",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3",
+    "vitest": "^2.1.9"
+  }
+}
