@@ -171,3 +171,63 @@ describe('runActivate — project scoping', () => {
     expect(ids).toContain(idGlobal);
   });
 });
+
+/**
+ * Regression: synapse access_count is bumped on the result-set's edges (id 90).
+ *
+ * Bug: only memory_get(include_synapses=true) wrote to synapses.access_count.
+ * memory_activate, the headline retrieval path, never bumped synapses, so the
+ * decay's access-based exemption (src/decay.ts:48-59) was effectively dead.
+ * Fix: runActivate now bumps synapses whose either endpoint is in the
+ * result set.
+ */
+describe('runActivate — synapse access tracking (regression: id 90)', () => {
+  it('increments synapse access_count when either endpoint lands in the result set', () => {
+    const db = createInMemoryDb();
+    const idA = seedMemory(db, {
+      title: 'a',
+      content: 'capybara capybara capybara',
+      layer: 'procedural',
+    });
+    const idB = seedMemory(db, {
+      title: 'b',
+      content: 'capybara b',
+      layer: 'procedural',
+    });
+    seedSynapse(db, idA, idB, 'wikilink', 1.0);
+
+    // Confirm baseline: synapse starts at access_count = 0
+    const before = db
+      .prepare('SELECT access_count FROM synapses WHERE source_id = ?')
+      .get(idA) as { access_count: number };
+    expect(before.access_count).toBe(0);
+
+    runActivate(db, { query: 'capybara' });
+
+    const after = db
+      .prepare('SELECT access_count FROM synapses WHERE source_id = ?')
+      .get(idA) as { access_count: number };
+    expect(after.access_count).toBeGreaterThan(0);
+  });
+
+  it('does not bump synapses whose endpoints are not in the result set', () => {
+    const db = createInMemoryDb();
+    const idA = seedMemory(db, { title: 'a', content: 'aardvark aardvark aardvark' });
+    const idB = seedMemory(db, { title: 'b', content: 'aardvark b' });
+    const idX = seedMemory(db, { title: 'x', content: 'unrelated content' });
+    const idY = seedMemory(db, { title: 'y', content: 'unrelated content' });
+    seedSynapse(db, idA, idB, 'wikilink', 1.0);
+    seedSynapse(db, idX, idY, 'wikilink', 1.0);
+
+    runActivate(db, { query: 'aardvark' });
+
+    const touched = db
+      .prepare('SELECT access_count FROM synapses WHERE source_id = ?')
+      .get(idA) as { access_count: number };
+    const untouched = db
+      .prepare('SELECT access_count FROM synapses WHERE source_id = ?')
+      .get(idX) as { access_count: number };
+    expect(touched.access_count).toBeGreaterThan(0);
+    expect(untouched.access_count).toBe(0);
+  });
+});

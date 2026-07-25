@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runDecayCycle } from '../src/decay.js';
+import { runActivate } from '../src/activate.js';
 import { createInMemoryDb, seedMemory, seedSynapse } from './helpers.js';
 
 describe('runDecayCycle — matrix lookup', () => {
@@ -152,5 +153,90 @@ describe('runDecayCycle — return shape', () => {
     expect(result.pruned).toBe(1);
     expect(typeof result.decayed).toBe('number');
     expect(typeof result.access_exempted).toBe('number');
+  });
+});
+
+/**
+ * Regression: end-to-end exemption (id 90).
+ *
+ * Verifies the fix's claimed behavior: repeated runActivate calls should
+ * accumulate synapse access_count enough to cross the threshold (>3) and
+ * trigger decay's access-based exemption. Without the fix, this threshold
+ * is never reached organically; the full matrix rate applies.
+ *
+ * Layers chosen for a predictable matrix rate:
+ *   procedural -> procedural wikilink = 0.995 (decay.ts:125)
+ * Access threshold for mid-exempt: > 3 -> 0.97 multiplier.
+ * Expected post-decay weight: 1.0 * 0.995 * 0.97 ~= 0.965.
+ * Without exemption (current code): 1.0 * 0.995 = 0.995.
+ */
+describe('runDecayCycle — access-based exemption integration (regression: id 90)', () => {
+  it('repeated runActivate usage triggers exemption (synapse access_count > 3)', () => {
+    const db = createInMemoryDb();
+    const idA = seedMemory(db, {
+      title: 'a',
+      content: 'tapir tapir tapir',
+      layer: 'procedural',
+    });
+    const idB = seedMemory(db, {
+      title: 'b',
+      content: 'tapir b',
+      layer: 'procedural',
+    });
+    seedSynapse(db, idA, idB, 'wikilink', 1.0);
+
+    // 5 activations should push synapse.access_count to 5 (post-fix)
+    for (let i = 0; i < 5; i++) {
+      runActivate(db, { query: 'tapir' });
+    }
+
+    const synBefore = db
+      .prepare('SELECT access_count FROM synapses WHERE source_id = ?')
+      .get(idA) as { access_count: number };
+    expect(synBefore.access_count).toBeGreaterThan(3);
+
+    // Backdate so the synapse is decay-eligible
+    db.prepare(
+      "UPDATE synapses SET updated_at = datetime('now', '-30 days') WHERE source_id = ?",
+    ).run(idA);
+
+    const result = runDecayCycle(db, { decayDays: 7 });
+
+    const weight = (db
+      .prepare('SELECT weight FROM synapses WHERE source_id = ?')
+      .get(idA) as { weight: number }).weight;
+    // 1.0 * 0.995 (matrix) * 0.97 (mid-exempt) ~= 0.965
+    expect(weight).toBeCloseTo(0.965, 2);
+    expect(result.access_exempted).toBeGreaterThan(0);
+  });
+
+  it('exemption does NOT fire when access_count stays below the threshold', () => {
+    const db = createInMemoryDb();
+    const idA = seedMemory(db, {
+      title: 'a',
+      content: 'coati coati coati',
+      layer: 'procedural',
+    });
+    const idB = seedMemory(db, {
+      title: 'b',
+      content: 'coati b',
+      layer: 'procedural',
+    });
+    seedSynapse(db, idA, idB, 'wikilink', 1.0);
+
+    // Single activate -> access_count = 1 (below > 3 threshold)
+    runActivate(db, { query: 'coati' });
+
+    db.prepare(
+      "UPDATE synapses SET updated_at = datetime('now', '-30 days') WHERE source_id = ?",
+    ).run(idA);
+
+    runDecayCycle(db, { decayDays: 7 });
+
+    const weight = (db
+      .prepare('SELECT weight FROM synapses WHERE source_id = ?')
+      .get(idA) as { weight: number }).weight;
+    // Matrix rate only: 1.0 * 0.995 = 0.995
+    expect(weight).toBeCloseTo(0.995, 2);
   });
 });

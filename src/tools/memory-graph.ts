@@ -4,6 +4,7 @@ import { getDatabase } from '../db.js';
 import { textResult, errorResult, rowsResult } from '../util.js';
 import { runActivate } from '../activate.js';
 import { runDecayCycle, getSpreadStats, getStaleMemories } from '../decay.js';
+import { runSynapseTraverse } from '../access.js';
 
 export function registerMemoryGraphTools(server: McpServer): void {
   server.tool(
@@ -60,44 +61,13 @@ export function registerMemoryGraphTools(server: McpServer): void {
     async ({ id, direction, connection_type, min_weight, limit }) => {
       const db = getDatabase('memory');
       try {
-        const exists = db.prepare('SELECT id FROM memories WHERE id = ?').get(id);
-        if (!exists) {
-          return errorResult(`No memory found with id ${id}.`);
-        }
-
-        const conditions: string[] = ['s.weight >= ?'];
-        const params: (string | number)[] = [min_weight];
-        const joins: string[] = [];
-
-        if (connection_type) {
-          conditions.push('s.connection_type = ?');
-          params.push(connection_type);
-        }
-
-        if (direction === 'outgoing' || direction === 'both') {
-          joins.push(`(s.source_id = ? AND s.target_id = m.id)`);
-          params.push(id);
-        }
-        if (direction === 'incoming' || direction === 'both') {
-          joins.push(`(s.target_id = ? AND s.source_id = m.id)`);
-          params.push(id);
-        }
-
-        params.push(limit);
-        const where = joins.length > 1 ? `(${joins.join(' OR ')})` : joins[0];
-
-        const stmt = db.prepare(`
-          SELECT s.source_id, s.target_id, s.connection_type, s.weight, s.access_count,
-                 s.created_at, s.updated_at,
-                 m.id AS other_id, m.layer AS other_layer, m.title AS other_title,
-                 m.summary AS other_summary, m.status AS other_status, m.project_id AS other_project_id
-          FROM synapses s
-          JOIN memories m ON ${where}
-          WHERE ${conditions.join(' AND ')}
-          ORDER BY s.weight DESC, s.updated_at DESC
-          LIMIT ?
-        `);
-        const rows = stmt.all(...params);
+        const rows = runSynapseTraverse(db, {
+          id,
+          direction,
+          connection_type,
+          min_weight,
+          limit,
+        });
         return rowsResult(rows);
       } catch (e) {
         return errorResult(`Synapse traverse error: ${(e as Error).message}`);

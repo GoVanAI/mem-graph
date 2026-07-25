@@ -1,6 +1,6 @@
 {
   "name": "@opencode-ai/mem-graph",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP server for mem-graph: graph-relational memory layer with wikilinks, BM25 auto-linking, spreading activation, and synaptic decay. Backed by better-sqlite3.",
   "license": "MIT",
   "type": "module",

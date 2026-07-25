@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { bumpSynapseAccess } from './access.js';
 
 export interface ActivateParams {
   query: string;
@@ -114,10 +115,12 @@ export function runActivate(
     LIMIT :limit_cap
   `;
 
-  // Note on access_count: memory_activate touches the returned memories'
-  // access_count below. Synapse access_count is touched by memory_get when
-  // include_synapses=true; we don't touch all traversed synapses here
-  // because that's too coarse — every traversal would inflate every edge.
+  // Note on access_count: runActivate touches the returned memories'
+  // access_count below AND the access_count of synapses connecting them
+  // (D7 — extended to the graph; see id 90 in mem-graph for rationale).
+  // We bump only the result-set's neighborhood — not all traversed synapses
+  // — to keep write amplification bounded (result_count <= limit_cap;
+  // per-memory degree capped at 50).
 
   const stmt = db.prepare(sql);
   const rows = stmt.all({
@@ -128,7 +131,8 @@ export function runActivate(
     ...(project_id ? { project_id } : {}),
   }) as Array<{ id: number; layer: string; project_id: string; max_relevance: number }>;
 
-  // Mark the returned memories' access_count (D7)
+  // Mark the returned memories' access_count (D7) and bump the access_count
+  // of synapses connecting them to the rest of the graph.
   if (rows.length > 0) {
     const ids = rows.map((r) => r.id);
     const placeholders = ids.map(() => '?').join(',');
@@ -137,6 +141,7 @@ export function runActivate(
        SET accessed_at = CURRENT_TIMESTAMP, access_count = access_count + 1
        WHERE id IN (${placeholders})`,
     ).run(...ids);
+    bumpSynapseAccess(db, ids);
   }
 
   return rows;

@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDatabase } from '../db.js';
 import { textResult, errorResult, rowsResult } from '../util.js';
+import { bumpMemoryAccess, bumpSynapseAccess } from '../access.js';
 
 function sanitizeFtsQuery(q: string): string {
   const trimmed = q.trim();
@@ -161,18 +162,12 @@ export function registerMemorySearchTools(server: McpServer): void {
         .prepare('SELECT tag FROM memory_tag WHERE memory_id = ? ORDER BY tag')
         .all(id) as { tag: string }[];
 
-      // Touch access (memory + its synapses)
+      // Touch access (memory + its synapses, D7). The synapse bump is
+      // unconditional — the access signal needs to be written regardless of
+      // whether the response payload includes synapse neighbors (id 90).
       try {
-        db.prepare(
-          "UPDATE memories SET accessed_at = datetime('now'), access_count = access_count + 1 WHERE id = ?",
-        ).run(id);
-        if (include_synapses) {
-          db.prepare(
-            `UPDATE synapses
-             SET access_count = access_count + 1
-             WHERE source_id = ? OR target_id = ?`,
-          ).run(id, id);
-        }
+        bumpMemoryAccess(db, id);
+        bumpSynapseAccess(db, [id]);
       } catch {
         /* ignore */
       }
