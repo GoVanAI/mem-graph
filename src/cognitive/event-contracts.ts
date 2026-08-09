@@ -82,7 +82,7 @@ const beliefRevisedValidator: PayloadValidator = (payload) => {
       message: 'BeliefRevised must set previous_revision_id OR genesis=true',
     });
   }
-  if (prev !== undefined && (typeof prev !== 'string' || prev.length === 0)) {
+  if (prev !== null && prev !== undefined && (typeof prev !== 'string' || prev.length === 0)) {
     failures.push({ code: 'INVALID_FIELD_TYPE', path: 'previous_revision_id', message: 'previous_revision_id must be a non-empty string when provided' });
   }
   if (genesis !== undefined && genesis !== true) {
