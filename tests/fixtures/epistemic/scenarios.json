@@ -1,0 +1,209 @@
+{
+  "scenarios": [
+    {
+      "name": "same-task-resume",
+      "query": "resume calibration offset decision question action",
+      "current_focus": "Resume the synthetic sensor calibration task.",
+      "scope": {
+        "workspace": "learning-lab",
+        "project": "sensor-demo",
+        "thread": "calibration",
+        "task": "offset-check"
+      },
+      "expected": {
+        "primary": ["decision.sensor.offset.001"],
+        "questions": ["question.sensor.drift.001"],
+        "actions": ["action.sensor.sample.001"]
+      },
+      "records": [
+        {
+          "schema_version": "0.3",
+          "id": "decision.sensor.offset.001",
+          "type": "decision",
+          "assertion_kind": "procedural",
+          "statement": "Use the documented neutral offset before collecting the next synthetic sample.",
+          "scope": { "workspace": "learning-lab", "project": "sensor-demo", "thread": "calibration", "task": "offset-check" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:same-task-resume", "observed_at": "2026-08-08T16:00:00Z" }],
+          "confidence": { "score": 0.9, "band": "high", "basis": ["DIRECT_DOCUMENT_OBSERVATION"], "rationale": "The synthetic calibration procedure states this offset." },
+          "status": "active",
+          "authority": "operator_adopted",
+          "relations": [],
+          "created_at": "2026-08-08T16:00:00Z",
+          "updated_at": "2026-08-08T16:00:00Z"
+        },
+        {
+          "schema_version": "0.3",
+          "id": "question.sensor.drift.001",
+          "type": "question",
+          "assertion_kind": "descriptive",
+          "statement": "Does the observed offset remain stable after the enclosure warms?",
+          "scope": { "workspace": "learning-lab", "project": "sensor-demo", "thread": "calibration", "task": "offset-check" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:same-task-resume", "observed_at": "2026-08-08T16:01:00Z" }],
+          "confidence": { "score": 0.45, "band": "low", "basis": ["MISSING_DIRECT_EVIDENCE"], "rationale": "No warmed-enclosure sample has been collected." },
+          "status": "active",
+          "authority": "informational",
+          "relations": [],
+          "created_at": "2026-08-08T16:01:00Z",
+          "updated_at": "2026-08-08T16:01:00Z"
+        },
+        {
+          "schema_version": "0.3",
+          "id": "action.sensor.sample.001",
+          "type": "action",
+          "assertion_kind": "procedural",
+          "statement": "Collect one warmed-enclosure sample using the neutral offset.",
+          "scope": { "workspace": "learning-lab", "project": "sensor-demo", "thread": "calibration", "task": "offset-check" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:same-task-resume", "observed_at": "2026-08-08T16:02:00Z" }],
+          "confidence": { "score": 0.72, "band": "medium", "basis": ["STRONG_INFERENCE"], "rationale": "The sample directly addresses the open drift question." },
+          "status": "active",
+          "authority": "advisory",
+          "relations": [{ "type": "answers", "target_id": "question.sensor.drift.001" }],
+          "created_at": "2026-08-08T16:02:00Z",
+          "updated_at": "2026-08-08T16:02:00Z"
+        }
+      ]
+    },
+    {
+      "name": "superseded-decision-resume",
+      "query": "resume parser delimiter decision",
+      "current_focus": "Use the current delimiter decision.",
+      "scope": { "workspace": "learning-lab", "project": "parser-demo", "task": "delimiter-investigation" },
+      "expected": { "primary": ["decision.parser.delimiter.002"], "excluded": ["decision.parser.delimiter.001"] },
+      "records": [
+        {
+          "schema_version": "0.3",
+          "id": "decision.parser.delimiter.001",
+          "type": "decision",
+          "assertion_kind": "procedural",
+          "statement": "Reject every trailing delimiter.",
+          "scope": { "workspace": "learning-lab", "project": "parser-demo", "task": "delimiter-investigation" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:superseded", "observed_at": "2026-08-01T12:00:00Z" }],
+          "confidence": { "score": 0.82, "band": "high", "basis": ["DIRECT_DOCUMENT_OBSERVATION"], "rationale": "An earlier synthetic contract used this rule." },
+          "status": "superseded",
+          "authority": "operator_adopted",
+          "relations": [],
+          "created_at": "2026-08-01T12:00:00Z",
+          "updated_at": "2026-08-01T12:00:00Z"
+        },
+        {
+          "schema_version": "0.3",
+          "id": "decision.parser.delimiter.002",
+          "type": "decision",
+          "assertion_kind": "procedural",
+          "statement": "Accept a trailing delimiter only for the versioned optional-terminal form.",
+          "scope": { "workspace": "learning-lab", "project": "parser-demo", "task": "delimiter-investigation" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:superseded", "observed_at": "2026-08-08T12:00:00Z" }],
+          "confidence": { "score": 0.88, "band": "high", "basis": ["MULTIPLE_CORROBORATING_SOURCES"], "rationale": "The synthetic versioned contract and test oracle agree." },
+          "status": "active",
+          "authority": "operator_adopted",
+          "relations": [{ "type": "supersedes", "target_id": "decision.parser.delimiter.001" }],
+          "created_at": "2026-08-08T12:00:00Z",
+          "updated_at": "2026-08-08T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "name": "new-topic-same-project",
+      "query": "recipe planning preference",
+      "current_focus": "Start a new recipe-planning topic in the same project.",
+      "scope": { "workspace": "learning-lab", "project": "kitchen-demo", "task": "recipe-plan" },
+      "expected": { "primary": ["preference.kitchen.units.001"], "excluded": ["belief.kitchen.budget.001"] },
+      "records": [
+        {
+          "schema_version": "0.3",
+          "id": "preference.kitchen.units.001",
+          "type": "preference",
+          "assertion_kind": "normative",
+          "statement": "Use metric units in project recipes.",
+          "scope": { "workspace": "learning-lab", "project": "kitchen-demo" },
+          "provenance": [{ "source_type": "operator_statement", "source_ref": "fixture:new-topic", "observed_at": "2026-08-08T10:00:00Z", "actor": "synthetic-operator" }],
+          "confidence": { "score": 0.98, "band": "high", "basis": ["DIRECT_OPERATOR_STATEMENT"], "rationale": "The synthetic operator directly stated the project preference." },
+          "status": "active",
+          "authority": "operator_adopted",
+          "relations": [],
+          "created_at": "2026-08-08T10:00:00Z",
+          "updated_at": "2026-08-08T10:00:00Z"
+        },
+        {
+          "schema_version": "0.3",
+          "id": "belief.kitchen.budget.001",
+          "type": "belief",
+          "assertion_kind": "predictive",
+          "statement": "The unrelated budget task will exceed its estimate.",
+          "scope": { "workspace": "learning-lab", "project": "kitchen-demo", "task": "budget-review" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:new-topic", "observed_at": "2026-08-08T10:05:00Z" }],
+          "confidence": { "score": 0.62, "band": "medium", "basis": ["PLAUSIBLE_INFERENCE"], "rationale": "The synthetic estimate remains uncertain." },
+          "status": "active",
+          "authority": "informational",
+          "relations": [],
+          "created_at": "2026-08-08T10:05:00Z",
+          "updated_at": "2026-08-08T10:05:00Z"
+        }
+      ]
+    },
+    {
+      "name": "same-topic-different-project",
+      "query": "parser delimiter hypothesis",
+      "current_focus": "Investigate the beta parser project.",
+      "scope": { "workspace": "learning-lab", "project": "parser-beta", "task": "delimiter-investigation" },
+      "expected": { "excluded": ["belief.parser-alpha.delimiter.001"] },
+      "records": [
+        {
+          "schema_version": "0.3",
+          "id": "belief.parser-alpha.delimiter.001",
+          "type": "belief",
+          "assertion_kind": "descriptive",
+          "statement": "The parser delimiter hypothesis points to an empty terminal token.",
+          "scope": { "workspace": "learning-lab", "project": "parser-alpha", "task": "delimiter-investigation" },
+          "provenance": [{ "source_type": "synthetic_fixture", "source_ref": "fixture:cross-project", "observed_at": "2026-08-08T11:00:00Z" }],
+          "confidence": { "score": 0.66, "band": "medium", "basis": ["STRONG_INFERENCE", "MISSING_DIRECT_EVIDENCE"], "rationale": "The alpha-project hypothesis has not been verified in beta." },
+          "status": "active",
+          "authority": "informational",
+          "relations": [],
+          "created_at": "2026-08-08T11:00:00Z",
+          "updated_at": "2026-08-08T11:00:00Z"
+        }
+      ]
+    },
+    {
+      "name": "disputed-research-hypothesis",
+      "query": "plant growth light hypothesis evidence",
+      "current_focus": "Review the disputed synthetic growth hypothesis.",
+      "scope": { "workspace": "learning-lab", "project": "plant-demo", "task": "light-study" },
+      "expected": { "primary": ["belief.plant.light.001"], "contradictions": ["belief.plant.water.001"] },
+      "records": [
+        {
+          "schema_version": "0.3",
+          "id": "belief.plant.light.001",
+          "type": "belief",
+          "assertion_kind": "predictive",
+          "statement": "Longer light exposure is the leading explanation for the synthetic growth difference.",
+          "scope": { "workspace": "learning-lab", "project": "plant-demo", "task": "light-study" },
+          "provenance": [{ "source_type": "experiment", "source_ref": "synthetic-growth-run-1", "observed_at": "2026-08-08T09:00:00Z" }],
+          "confidence": { "score": 0.7, "band": "medium", "basis": ["STRONG_INFERENCE", "CONTRADICTED"], "rationale": "The observation fits the light hypothesis but has an active alternative." },
+          "status": "disputed",
+          "authority": "informational",
+          "relations": [{ "type": "contradicts", "target_id": "belief.plant.water.001" }],
+          "created_at": "2026-08-08T09:00:00Z",
+          "updated_at": "2026-08-08T09:00:00Z"
+        },
+        {
+          "schema_version": "0.3",
+          "id": "belief.plant.water.001",
+          "type": "belief",
+          "assertion_kind": "predictive",
+          "statement": "Unequal watering may explain the synthetic growth difference better than light exposure.",
+          "scope": { "workspace": "learning-lab", "project": "plant-demo", "task": "light-study" },
+          "provenance": [{ "source_type": "experiment", "source_ref": "synthetic-growth-run-1", "observed_at": "2026-08-08T09:01:00Z" }],
+          "confidence": { "score": 0.58, "band": "medium", "basis": ["PLAUSIBLE_INFERENCE"], "rationale": "Watering was not independently controlled in the synthetic run." },
+          "status": "conditional",
+          "authority": "informational",
+          "conditions": ["The watering logs remain incomplete."],
+          "relations": [{ "type": "contradicts", "target_id": "belief.plant.light.001" }],
+          "created_at": "2026-08-08T09:01:00Z",
+          "updated_at": "2026-08-08T09:01:00Z"
+        }
+      ]
+    }
+  ]
+}
