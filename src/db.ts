@@ -2,7 +2,8 @@ import Database from 'better-sqlite3';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
-import { COGNITIVE_SCHEMA_SQL } from './cognitive/schema.js';
+import { runMigrations } from './migrations/registry.js';
+import { MIGRATIONS } from './migrations/index.js';
 
 const DEFAULT_MEMORY_DIR = join(homedir(), '.local', 'share', 'mem-graph');
 
@@ -161,9 +162,16 @@ const KNOWN_DATABASES: Record<string, 'memory'> = {
 const databases = new Map<string, Database.Database>();
 
 function ensureMemorySchema(db: Database.Database): void {
-  db.exec(SCHEMA_SQL);
-  db.exec(DECAY_MATRIX_SEED);
-  db.exec(COGNITIVE_SCHEMA_SQL);
+  // EPB-001 D4/D15/D16: every schema change is recorded in
+  // schema_migrations. v1 captures the existing baseline so fresh
+  // databases and pre-migration databases converge to the same state.
+  const result = runMigrations(db, MIGRATIONS, { applied_by: 'mem-graph-init' });
+  if (!result.ok) {
+    if (result.code === 'REPAIR_REQUIRED') {
+      throw new Error(`REPAIR_REQUIRED: ${result.message}`);
+    }
+    throw new Error(`Migration failed: ${result.message}`);
+  }
 }
 
 export function initDatabase(name: string): Database.Database {
