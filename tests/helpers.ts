@@ -15,6 +15,7 @@
  */
 import Database from 'better-sqlite3';
 import { SCHEMA_SQL, DECAY_MATRIX_SEED } from '../src/db.js';
+import { COGNITIVE_SCHEMA_SQL } from '../src/cognitive/schema.js';
 import { slugify } from '../src/wikilink.js';
 
 export function createInMemoryDb(): Database.Database {
@@ -22,6 +23,7 @@ export function createInMemoryDb(): Database.Database {
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA_SQL);
   db.exec(DECAY_MATRIX_SEED);
+  db.exec(COGNITIVE_SCHEMA_SQL);
   return db;
 }
 

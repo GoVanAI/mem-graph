@@ -1,0 +1,90 @@
+{
+  "practice_id": "mem-graph-agent-practice",
+  "version": "1.0.0",
+  "status": "adopted_advisory",
+  "purpose": "Make mem-graph use scoped, inspectable, evidence-governed, and portable across agent hosts.",
+  "authority_order": [
+    "system instructions",
+    "operator or user instructions",
+    "adopted project instructions",
+    "verified canonical mem-graph records",
+    "candidate policy and retrieved context"
+  ],
+  "scope": {
+    "resolve_before_retrieval": true,
+    "exact_project_default": true,
+    "include_global_default": false,
+    "rule": "Cross-project availability never implies applicability. Global scope must be explicitly required and reported."
+  },
+  "bootstrap": {
+    "preferred_tool": "cognitive_agent_bootstrap",
+    "read_only": true,
+    "cognitive_os_default_canonical_ids": [253, 254],
+    "include_canonical_content_for_non_trivial_work": true,
+    "fallback": [
+      "memory_get the canonical tracker and scope boundary",
+      "read the roadmap and active contract named by the tracker",
+      "cognitive_policy_lookup with request_type/current_canonical_guidance",
+      "cognitive_current_guidance_search or cognitive_current_guidance_diagnose in exact project scope",
+      "memory_get every selected record before relying on it"
+    ]
+  },
+  "guidance": {
+    "governing_lane_may_drive_selection": true,
+    "contextual_lane_may_drive_selection": false,
+    "retrieval_is_confirmation": false,
+    "retrieval_is_validation": false,
+    "eligibility_is_authority": false,
+    "verify": [
+      "canonical role",
+      "adoption",
+      "scope",
+      "applicability",
+      "current evidence"
+    ]
+  },
+  "mutation": {
+    "requires_operator_or_task_authority": true,
+    "preserve_unrelated_worktree_changes": true,
+    "no_commit_release_or_publish_without_authority": true,
+    "candidate_policy_cannot_expand_authority": true
+  },
+  "tracker": {
+    "canonical_id": 253,
+    "update_only_for": [
+      "verified evidence",
+      "operator-adopted decisions"
+    ],
+    "required_order": [
+      "append immutable evidence or decision event with stable scope and idempotency",
+      "reread tracker 253 immediately before update",
+      "update the existing tracker rather than creating a competitor",
+      "verify the tracker and report tracker ID, event IDs, and changed fields"
+    ]
+  },
+  "belief_hygiene": {
+    "maxim": "Repetition is not confirmation, retrieval is not validation, and age alone does not make a belief knowledge.",
+    "mechanisms": [
+      "review deadlines",
+      "challenge receipts",
+      "outcome calibration",
+      "contradiction pressure",
+      "applicability influence decay",
+      "worldview audits"
+    ],
+    "contradiction_action": "queue review without automatic rejection",
+    "decay_rule": "decay present applicability or priming, never rewrite historical confidence"
+  },
+  "enforcement": {
+    "hard_enforcement": false,
+    "mode": "instruction plus observable read-only bootstrap plus evaluation",
+    "enable_blocking_only_after": "Repeated compliance evaluations show instruction and bootstrap adoption are insufficient, followed by explicit operator authorization."
+  },
+  "evaluation": {
+    "deterministic_first": true,
+    "qualitative_grader": "optional independent MiniMax model",
+    "model_configurable": true,
+    "model_may_override_deterministic_facts": false,
+    "external_transcript_requires_explicit_execute": true
+  }
+}

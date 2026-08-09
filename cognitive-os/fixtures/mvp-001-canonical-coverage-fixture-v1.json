@@ -1,0 +1,34 @@
+{
+  "fixture_version": "v1",
+  "fixture_kind": "controlled_semantic_seed",
+  "created_at": "2026-08-04T18:05:00Z",
+  "purpose": "Minimal isolated corpus for reproducibly exercising the frozen MVP-001 v3 query matrix. It is a semantic seed derived from the named canonical records, not an export of the live database and not a production backup.",
+  "source_boundary": "No live SQLite read or write is used. IDs, scopes, lifecycle classes, and representative routing vocabulary are captured as fixture data; content is intentionally minimized to the terms needed by the matrix.",
+  "entries": [
+    {"id": 41, "project_id": "_global", "layer": "procedural", "lifecycle": "permanent", "category": "process", "title": "Global agent memory indexing rules", "summary": "Canonical global admission and retrieval rules.", "content": "global admission memory admission and retrieval rules memory admission policy"},
+    {"id": 60, "project_id": "_global", "layer": "semantic", "lifecycle": "permanent", "category": "note", "title": "Mem-graph retrieval foundations", "summary": "FTS5 BM25 infrastructure.", "content": "FTS5 BM25 memory retrieval infrastructure"},
+    {"id": 61, "project_id": "_global", "layer": "semantic", "lifecycle": "permanent", "category": "note", "title": "Mem-graph is the active memory MCP", "summary": "FTS5 BM25 memory substrate.", "content": "FTS5 BM25 memory substrate"},
+    {"id": 224, "project_id": "cognitive-os", "layer": "semantic", "lifecycle": "permanent", "category": "decision", "title": "Cognitive OS Framework — canonical project charter", "summary": "Canonical project charter for a model agnostic framework.", "content": "charter canonical project charter cognitive os charter framework model agnostic"},
+    {"id": 228, "project_id": "cognitive-os", "layer": "procedural", "lifecycle": "milestone", "category": "policy", "title": "Cognitive OS policy card", "summary": "Policy card recursive error safeguards.", "content": "policy card recursive error safeguards"},
+    {"id": 229, "project_id": "cognitive-os", "layer": "procedural", "lifecycle": "milestone", "category": "policy", "title": "Cognitive OS MVP proof contract", "summary": "MVP-001 closed-loop proof.", "content": "MVP-001 closed-loop proof durable revision later policy retrieval changed decisions improved measured outcomes guardrail regression Routing aliases: MVP-001; current-guidance retrieval; closed-loop MVP proof."},
+    {"id": 231, "project_id": "cognitive-os", "layer": "episodic", "lifecycle": "milestone", "category": "open_question", "title": "Policy card open design questions", "summary": "Policy card fields required.", "content": "policy card fields required unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated unrelated"},
+    {"id": 235, "project_id": "cognitive-os", "layer": "semantic", "lifecycle": "permanent", "category": "decision", "title": "Cognitive OS retrieval routing", "summary": "Retrieval routing with scope taxonomy and controlled graph expansion.", "content": "retrieval routing scope taxonomy controlled graph expansion scope precedence routing"},
+    {"id": 239, "project_id": "cognitive-os", "layer": "semantic", "lifecycle": "permanent", "category": "decision", "title": "Cognitive OS integration posture", "summary": "Additive sidecar until proof gate.", "content": "additive sidecar additive sidecar until proof gate integration posture sidecar"},
+    {"id": 241, "project_id": "cognitive-os", "layer": "episodic", "lifecycle": "milestone", "category": "finding", "title": "Cognitive OS MVP-001 implementation result", "summary": "First live smoke MVP-001.", "content": "implementation result MVP-001 first live smoke MVP-001"},
+    {"id": 250, "project_id": "cognitive-os", "layer": "semantic", "lifecycle": "permanent", "category": "decision", "title": "Cognitive OS roadmap frozen", "summary": "MVP-001 MVP-002 typed admission frozen roadmap.", "content": "roadmap roadmap frozen MVP-002 typed admission frozen roadmap MVP-001 MVP-001 MVP-001 MVP-001 MVP-001"},
+    {"id": 252, "project_id": "cognitive-os", "layer": "procedural", "lifecycle": "permanent", "category": "process", "title": "M3 onboarding contract", "summary": "M3 onboarding contract progress tracking and adversarial review contract.", "content": "M3 onboarding contract progress tracking adversarial review contract tracker next actions"},
+    {"id": 253, "project_id": "cognitive-os", "layer": "episodic", "lifecycle": "milestone", "category": "handoff", "title": "Cognitive OS program current state", "summary": "Program current state canonical progress tracker.", "content": "program current state canonical progress tracker tracker next actions closed-loop MVP proof conditions MVP success conditions"},
+    {"id": 254, "project_id": "cognitive-os", "layer": "semantic", "lifecycle": "permanent", "category": "decision", "title": "Cognitive OS scope boundary", "summary": "Global framework proving ground scope boundary.", "content": "scope boundary global framework proving ground scope cognitive os scope boundary global"},
+    {"id": 264, "project_id": "cognitive-os", "layer": "working", "lifecycle": "ephemeral", "category": "task_ledger", "title": "Task Ledger — Cognitive OS project recap", "summary": "MVP-001 MVP-001 MVP-001 recap.", "content": "MVP-001 MVP-001 MVP-001"}
+  ],
+  "treatment": {
+    "kind": "controlled_alias_append",
+    "source_event_id": "372cfbfd-f8c8-4fe7-8aa5-3ca5158dc2f3",
+    "treatment_fidelity": "Verbatim event-22 proposed alias phrases, once each; no repeated keywords or rank normalization.",
+    "production_authority": "not granted",
+    "patches": [
+      {"id": 228, "append_content": " Routing aliases: policy card fields; policy card requirements; candidate policy safeguards."},
+      {"id": 229, "append_content": " MVP success conditions; MVP proof conditions; closed-loop MVP proof conditions."}
+    ]
+  }
+}

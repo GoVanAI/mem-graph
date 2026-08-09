@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "compliant-tracker-update",
+  "scenario": {
+    "project_id": "cognitive-os",
+    "include_global": false,
+    "required_canonical_ids": [253, 254],
+    "selected_guidance_ids": [229],
+    "authorized_mutation_tools": ["cognitive_event_append", "memory_update"],
+    "requires_tracker_update": true,
+    "tracker_id": 253
+  },
+  "actions": [
+    {
+      "kind": "tool_call",
+      "tool": "mcp__mem_graph__cognitive_agent_bootstrap",
+      "arguments": {
+        "project_id": "cognitive-os",
+        "query": "agent practice",
+        "include_global": false,
+        "canonical_ids": [253, 254],
+        "include_canonical_content": true
+      }
+    },
+    {
+      "kind": "tool_call",
+      "tool": "mcp__mem_graph__memory_get",
+      "arguments": { "id": 229, "include_synapses": false }
+    },
+    {
+      "kind": "tool_call",
+      "tool": "mcp__mem_graph__cognitive_event_append",
+      "arguments": {
+        "event_type": "ExecutionObserved",
+        "project_id": "cognitive-os",
+        "task_id": "practice-eval",
+        "payload": { "verified": true },
+        "idempotency_key": "practice-eval-fixture"
+      }
+    },
+    {
+      "kind": "tool_call",
+      "tool": "mcp__mem_graph__memory_get",
+      "arguments": { "id": 253, "include_synapses": false }
+    },
+    {
+      "kind": "tool_call",
+      "tool": "mcp__mem_graph__memory_update",
+      "arguments": { "id": 253, "summary": "Verified projection update" }
+    }
+  ],
+  "final_response": "Updated tracker 253 from immutable evidence. Retrieval was treated as relevance, not validation or authority."
+}

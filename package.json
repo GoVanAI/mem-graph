@@ -1,7 +1,7 @@
 {
   "name": "@opencode-ai/mem-graph",
   "version": "0.2.1",
-  "description": "MCP server for mem-graph: graph-relational memory layer with wikilinks, BM25 auto-linking, spreading activation, and synaptic decay. Backed by better-sqlite3.",
+  "description": "MCP server for graph-relational memory with an additive Cognitive OS evidence and guidance sidecar. Backed by better-sqlite3.",
   "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
@@ -11,7 +11,11 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "practice:generate": "node cognitive-os/agent-practice/generate-adapters.mjs",
+    "practice:check": "node cognitive-os/agent-practice/generate-adapters.mjs --check",
+    "practice:grade": "tsx cognitive-os/agent-practice/evals/grade-transcript.ts",
+    "practice:minimax": "tsx cognitive-os/agent-practice/evals/review-with-minimax.ts"
   },
   "engines": {
     "node": ">=18"

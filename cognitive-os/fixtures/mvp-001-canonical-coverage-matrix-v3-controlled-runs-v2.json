@@ -1,0 +1,2492 @@
+{
+  "artifact_type": "controlled_fixture_run_results",
+  "artifact_version": "v2",
+  "matrix_version": "v3",
+  "matrix_artifact_path": "cognitive-os/fixtures/mvp-001-canonical-coverage-matrix-v3.json",
+  "fixture_artifact_path": "cognitive-os/fixtures/mvp-001-canonical-coverage-fixture-v1.json",
+  "harness_artifact_path": "cognitive-os/fixtures/run-mvp-001-canonical-coverage-matrix-v3.ts",
+  "generated_at": "2026-08-04T18:10:00Z",
+  "provenance": {
+    "execution_mode": "isolated in-memory SQLite fixture",
+    "live_database_access": false,
+    "live_canonical_node_mutation": false,
+    "treatment_authority": "controlled fixture only; production alias application remains unauthorized",
+    "fixture_input_sha256": {
+      "baseline": "e3306b78e558e2b5e72d617f3b1c6959a01bc697ee849d1c873ccd6405479be5",
+      "treatment": "45e67e1f9858d4a8419e6ad7db4aafe16463c7bc57e3d4fbddafda07542de033"
+    },
+    "matrix_sha256": "2fd18d9953a7342e3949f5fdf2c0ef645a01e6dad8517546d02544d9c22117e2"
+  },
+  "baseline": {
+    "run_1": {
+      "1": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "2": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "3": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228,
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228,
+          231
+        ]
+      },
+      "4": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 4,
+        "result_ids": [
+          264,
+          250,
+          241,
+          229
+        ],
+        "above_target_ids": [
+          264,
+          250,
+          241
+        ],
+        "unexpected_above_target_ids": [
+          264,
+          241
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          264,
+          250,
+          241,
+          229
+        ]
+      },
+      "5": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235,
+          229
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235,
+          229
+        ]
+      },
+      "6": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "7": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "8": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "9": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "10": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "11": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "12": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "13": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "14": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228
+        ]
+      },
+      "15": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "16": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "17": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "18": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "19": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "20": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "21": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "22": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "23": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "24": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "25": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          231
+        ]
+      },
+      "26": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "27": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "28": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "29": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "30": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "31": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "32": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253,
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          252
+        ]
+      },
+      "33": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "34": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "35": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          60,
+          61
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          60,
+          61
+        ]
+      }
+    },
+    "run_2": {
+      "1": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "2": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "3": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228,
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228,
+          231
+        ]
+      },
+      "4": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 4,
+        "result_ids": [
+          264,
+          250,
+          241,
+          229
+        ],
+        "above_target_ids": [
+          264,
+          250,
+          241
+        ],
+        "unexpected_above_target_ids": [
+          264,
+          241
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          264,
+          250,
+          241,
+          229
+        ]
+      },
+      "5": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235,
+          229
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235,
+          229
+        ]
+      },
+      "6": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "7": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "8": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "9": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "10": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "11": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "12": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "13": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "14": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228
+        ]
+      },
+      "15": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "16": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "17": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "18": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "19": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "20": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "21": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "22": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "23": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "24": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "25": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          231
+        ]
+      },
+      "26": {
+        "classification": "COVERAGE_FAIL",
+        "target_present": false,
+        "target_rank": null,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "27": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "28": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "29": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "30": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "31": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "32": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253,
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          252
+        ]
+      },
+      "33": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "34": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "35": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          60,
+          61
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          60,
+          61
+        ]
+      }
+    },
+    "deterministic": true,
+    "classification_counts": {
+      "PASS": 31,
+      "RANK_OR_CONTAMINATION_FAIL": 1,
+      "COVERAGE_FAIL": 3
+    }
+  },
+  "treatment": {
+    "run_1": {
+      "1": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "2": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "3": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228,
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228,
+          231
+        ]
+      },
+      "4": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 4,
+        "result_ids": [
+          264,
+          250,
+          241,
+          229
+        ],
+        "above_target_ids": [
+          264,
+          250,
+          241
+        ],
+        "unexpected_above_target_ids": [
+          264,
+          241
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          264,
+          250,
+          241,
+          229
+        ]
+      },
+      "5": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235,
+          229
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235,
+          229
+        ]
+      },
+      "6": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "7": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "8": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "9": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "10": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "11": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "12": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "13": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "14": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228
+        ]
+      },
+      "15": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "16": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "17": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "18": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "19": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "20": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "21": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "22": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "23": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "24": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "25": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 2,
+        "result_ids": [
+          231,
+          228
+        ],
+        "above_target_ids": [
+          231
+        ],
+        "unexpected_above_target_ids": [
+          231
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          231,
+          228
+        ]
+      },
+      "26": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 2,
+        "result_ids": [
+          253,
+          229
+        ],
+        "above_target_ids": [
+          253
+        ],
+        "unexpected_above_target_ids": [
+          253
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          229
+        ]
+      },
+      "27": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "28": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "29": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "30": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "31": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "32": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253,
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          252
+        ]
+      },
+      "33": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "34": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "35": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          60,
+          61
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          60,
+          61
+        ]
+      }
+    },
+    "run_2": {
+      "1": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "2": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "3": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228,
+          231
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228,
+          231
+        ]
+      },
+      "4": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 4,
+        "result_ids": [
+          264,
+          250,
+          241,
+          229
+        ],
+        "above_target_ids": [
+          264,
+          250,
+          241
+        ],
+        "unexpected_above_target_ids": [
+          264,
+          241
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          264,
+          250,
+          241,
+          229
+        ]
+      },
+      "5": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235,
+          229
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235,
+          229
+        ]
+      },
+      "6": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "7": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "8": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "9": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "10": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "11": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "12": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "13": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "14": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          228
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          228
+        ]
+      },
+      "15": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          229,
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          229,
+          253
+        ]
+      },
+      "16": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "17": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "18": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "19": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "20": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "21": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253
+        ]
+      },
+      "22": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "23": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          41
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          41
+        ]
+      },
+      "24": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          224
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          224
+        ]
+      },
+      "25": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 2,
+        "result_ids": [
+          231,
+          228
+        ],
+        "above_target_ids": [
+          231
+        ],
+        "unexpected_above_target_ids": [
+          231
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          231,
+          228
+        ]
+      },
+      "26": {
+        "classification": "RANK_OR_CONTAMINATION_FAIL",
+        "target_present": true,
+        "target_rank": 2,
+        "result_ids": [
+          253,
+          229
+        ],
+        "above_target_ids": [
+          253
+        ],
+        "unexpected_above_target_ids": [
+          253
+        ],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          229
+        ]
+      },
+      "27": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          235
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          235
+        ]
+      },
+      "28": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          239
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          239
+        ]
+      },
+      "29": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          241
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          241
+        ]
+      },
+      "30": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "31": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          252
+        ]
+      },
+      "32": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          253,
+          252
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          253,
+          252
+        ]
+      },
+      "33": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          254
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          254
+        ]
+      },
+      "34": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          250
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          250
+        ]
+      },
+      "35": {
+        "classification": "PASS",
+        "target_present": true,
+        "target_rank": 1,
+        "result_ids": [
+          60,
+          61
+        ],
+        "above_target_ids": [],
+        "unexpected_above_target_ids": [],
+        "forbidden_result_ids_present": [],
+        "diagnostic_result_ids": [
+          60,
+          61
+        ]
+      }
+    },
+    "deterministic": true,
+    "classification_counts": {
+      "PASS": 32,
+      "RANK_OR_CONTAMINATION_FAIL": 3
+    }
+  },
+  "baseline_to_treatment": {
+    "changed_row_ids": [
+      15,
+      25,
+      26
+    ],
+    "rows": [
+      {
+        "row_id": 1,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 2,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 3,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 4,
+        "changed": false,
+        "baseline_classification": "RANK_OR_CONTAMINATION_FAIL",
+        "treatment_classification": "RANK_OR_CONTAMINATION_FAIL",
+        "baseline_target_rank": 4,
+        "treatment_target_rank": 4,
+        "baseline_unexpected_above_target_ids": [
+          264,
+          241
+        ],
+        "treatment_unexpected_above_target_ids": [
+          264,
+          241
+        ]
+      },
+      {
+        "row_id": 5,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 6,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 7,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 8,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 9,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 10,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 11,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 12,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 13,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 14,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 15,
+        "changed": true,
+        "baseline_classification": "COVERAGE_FAIL",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": null,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 16,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 17,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 18,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 19,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 20,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 21,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 22,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 23,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 24,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 25,
+        "changed": true,
+        "baseline_classification": "COVERAGE_FAIL",
+        "treatment_classification": "RANK_OR_CONTAMINATION_FAIL",
+        "baseline_target_rank": null,
+        "treatment_target_rank": 2,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": [
+          231
+        ]
+      },
+      {
+        "row_id": 26,
+        "changed": true,
+        "baseline_classification": "COVERAGE_FAIL",
+        "treatment_classification": "RANK_OR_CONTAMINATION_FAIL",
+        "baseline_target_rank": null,
+        "treatment_target_rank": 2,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": [
+          253
+        ]
+      },
+      {
+        "row_id": 27,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 28,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 29,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 30,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 31,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 32,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 33,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 34,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      },
+      {
+        "row_id": 35,
+        "changed": false,
+        "baseline_classification": "PASS",
+        "treatment_classification": "PASS",
+        "baseline_target_rank": 1,
+        "treatment_target_rank": 1,
+        "baseline_unexpected_above_target_ids": [],
+        "treatment_unexpected_above_target_ids": []
+      }
+    ]
+  }
+}

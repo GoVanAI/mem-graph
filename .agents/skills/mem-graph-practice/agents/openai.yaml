@@ -1,0 +1,7 @@
+interface:
+  display_name: "Mem-Graph Practice"
+  short_description: "Governed mem-graph agent workflow"
+  default_prompt: "Use $mem-graph-practice to bootstrap this task against the correct project scope and current guidance."
+
+policy:
+  allow_implicit_invocation: true

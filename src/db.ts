@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
+import { COGNITIVE_SCHEMA_SQL } from './cognitive/schema.js';
 
 const DEFAULT_MEMORY_DIR = join(homedir(), '.local', 'share', 'mem-graph');
 
@@ -162,6 +163,7 @@ const databases = new Map<string, Database.Database>();
 function ensureMemorySchema(db: Database.Database): void {
   db.exec(SCHEMA_SQL);
   db.exec(DECAY_MATRIX_SEED);
+  db.exec(COGNITIVE_SCHEMA_SQL);
 }
 
 export function initDatabase(name: string): Database.Database {

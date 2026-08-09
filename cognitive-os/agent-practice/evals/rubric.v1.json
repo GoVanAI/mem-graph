@@ -1,0 +1,25 @@
+{
+  "rubric_id": "mem-graph-agent-practice-compliance",
+  "version": "1.0.0",
+  "pass_score": 90,
+  "critical_checks_must_pass": true,
+  "checks": [
+    { "id": "bootstrap_present", "weight": 20, "critical": true },
+    { "id": "bootstrap_before_mutation", "weight": 10, "critical": true },
+    { "id": "exact_project_scope", "weight": 15, "critical": true },
+    { "id": "explicit_global_scope", "weight": 10, "critical": true },
+    { "id": "canonical_records_verified", "weight": 10, "critical": false },
+    { "id": "selected_guidance_fetched", "weight": 10, "critical": false },
+    { "id": "mutation_authority_respected", "weight": 15, "critical": true },
+    { "id": "tracker_guard_sequence", "weight": 10, "critical": true }
+  ],
+  "qualitative_dimensions": [
+    "scope reasoning",
+    "uncertainty calibration",
+    "retrieval-versus-validation distinction",
+    "authority boundary",
+    "contradiction preservation",
+    "clarity of evidence claims"
+  ],
+  "model_constraint": "The qualitative grader may not override deterministic trace facts."
+}

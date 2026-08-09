@@ -1,18 +1,33 @@
 # mem-graph
 
-MCP server for graph-relational memory: a v2 evolution of mem-sol that adds a graph layer (wikilinks, BM25 auto-linking, spreading activation, synaptic decay) on top of a layered memory model. Backed by better-sqlite3.
+MCP server for graph-relational memory with an additive Cognitive OS evidence,
+guidance, and agent-practice layer. It evolves mem-sol with wikilinks, BM25
+auto-linking, spreading activation, and synaptic decay on top of a layered
+SQLite memory model backed by `better-sqlite3`.
 
 ## Purpose
 
-Solo learning build exploring graph-relational memory as an MCP substrate. Not production-aimed, not benchmarked against peer systems; the goal is hands-on understanding of layered memory, wikilinks, and spreading activation.
+Experimental learning and proving-ground repository. It is not production-
+aimed or benchmarked against peer systems. The runtime core explores layered
+memory, wikilinks, and graph retrieval; the additive Cognitive OS work explores
+scoped evidence, candidate policies, authority-aware guidance eligibility, and
+portable agent practice without replacing the existing substrate.
 
-mem-graph is the LLM's persistent memory between opencode sessions. It builds on mem-sol v1's relational foundation and adds:
+mem-graph provides persistent memory across MCP-capable agent clients and
+sessions. It builds on mem-sol v1's relational foundation and adds:
 
 - **Layered memory model** — five discrete layers (`working`, `episodic`, `procedural`, `semantic`, `partner`) with layer-aware decay and retrieval
 - **Wikilinks** — markdown-style `[[reference]]` syntax in memory content creates hard, operator-curated edges
 - **BM25 auto-linking** — on every insert, soft edges are auto-created to textually-overlapping memories in the same project
 - **Spreading activation** — retrieval is text-match + neighborhood traversal with weight attenuation, not pure FTS
 - **Synaptic decay** — synapse weights erode over time, with separate rates per layer pair and per connection type, and access-based exemption for hot edges
+- **Cognitive OS sidecar** — immutable evidence events, scoped candidate-policy evaluation, governing/contextual guidance lanes, and a read-only agent bootstrap
+- **Portable agent practice** — one machine-readable advisory contract generates Codex, Claude, Gemini, and generic-host adapters plus deterministic compliance evaluation
+
+The latest tagged package version is `v0.2.1`. The Cognitive OS,
+and agent-practice work documented below is the next unreleased repository
+state; selecting a new package/tag version remains a separate release
+decision.
 
 ## Install
 
@@ -55,14 +70,16 @@ npm test           # run once, exits 0 on success
 npm run test:watch # watch mode for development
 ```
 
-108 tests across 9 files exercise the substrate in-memory via `:memory:` SQLite. Run takes ~500ms. See `tests/` for fixtures and `tests/helpers.ts` for the `createInMemoryDb()` factory.
+The Vitest suite exercises the substrate, Cognitive OS sidecar, and
+agent-practice contract in-memory via `:memory:` SQLite. See `tests/` for
+fixtures and `tests/helpers.ts` for the `createInMemoryDb()` factory.
 
 ## Configuration
 
 The MCP reads:
 - `MEM_GRAPH_DIR` — directory for the SQLite database. Default: `~/.local/share/mem-graph/`. The DB file is `memory.db` inside. Override by setting the env var before launch.
 
-## Tools (27)
+## Tools (35)
 
 | Group | Tools |
 |---|---|
@@ -72,6 +89,7 @@ The MCP reads:
 | Write (7) | `memory_add`, `memory_update`, `memory_supersede`, `memory_mark`, `memory_boost`, `memory_tag_add`, `memory_tag_remove` |
 | Graph (6) | `memory_synapse_create`, `memory_synapse_traverse`, `memory_activate`, `memory_decay`, `memory_spread_stats`, `memory_stale` |
 | Import (1) | `memory_import_from_mem_sol` |
+| Cognitive OS (8) | `cognitive_agent_bootstrap`, `cognitive_event_append`, `cognitive_event_trace`, `cognitive_policy_create`, `cognitive_policy_lookup`, `cognitive_policy_evaluate`, `cognitive_current_guidance_search`, `cognitive_current_guidance_diagnose` |
 
 ### `memory_add` write pipeline
 
@@ -88,6 +106,83 @@ On every `memory_add`:
 Spreading activation retrieval. Inputs: `query` (FTS5 string), `max_hop_depth` (default 2), `min_synapse_weight` (default 0.3), `limit_cap` (default 20), `land_on_layers` (default all except working), `pass_through_layers` (default `[semantic]`), `project_id` (optional).
 
 The recursive CTE carries a `path` column so the pass-through check can correctly verify "any ancestor in the path is a pass-through layer" (the v1 review's critical issue 1 is fixed here).
+
+### Cognitive OS guidance and evidence
+
+The Cognitive OS sidecar records immutable, hash-linked learning events;
+projects candidate policies from that evidence; evaluates them without
+automatic authority promotion; and provides an active, exact-project current-
+guidance search before optional graph expansion. That MCP guidance surface
+mechanically excludes working or ephemeral memories and non-governing
+categories. It admits only normalized `decision`, `policy`, `process`,
+`preference`, `commitment`, and `handoff` categories, allowing non-working,
+non-ephemeral handoffs to remain candidates for direct authority verification.
+
+`cognitive_current_guidance_diagnose` instead classifies the bounded active
+candidate set into governing and contextual/ineligible lanes with stable
+reasons (`working_layer`, `ephemeral_lifecycle`,
+`category_not_governing`) and never changes access tracking. Policy
+evaluations can preserve correlation and causation IDs in their append-only
+event evidence. This is retrieval eligibility—not authority or automatic
+policy promotion. Legacy `memory_search` and `memory_activate` semantics are
+unchanged. See the historical
+[`MVP-001 proof contract`](cognitive-os/experiments/MVP-001-current-guidance-retrieval.md).
+
+### Agent practice and bootstrap
+
+The adopted vendor-neutral practice is defined in
+[`cognitive-os/agent-practice/practice.v1.json`](cognitive-os/agent-practice/practice.v1.json).
+It generates human guidance and Codex, Claude, Gemini, and generic host
+adapters. The repo-scoped `$mem-graph-practice` skill applies the same workflow.
+
+`cognitive_agent_bootstrap` composes exact-project scope, an optional canonical
+record snapshot, candidate-policy lookup, and governing/contextual guidance
+diagnosis in one strictly read-only call. It performs no database writes,
+event append, access-count update, graph expansion, or durable receipt. Its
+output is observable bootstrap evidence, not authority or validation. Global
+records remain excluded unless `include_global=true` is explicit.
+
+Regenerate and verify adapters with:
+
+```bash
+npm run practice:generate
+npm run practice:check
+```
+
+Deterministic transcript grading runs locally:
+
+```bash
+npm run practice:grade -- cognitive-os/agent-practice/evals/fixtures/compliant-tracker-update.json
+```
+
+An independent MiniMax qualitative review is opt-in and dry-runs by default.
+The exact model ID is deliberately configurable because account labels and API
+model identifiers can differ:
+
+```bash
+npm run practice:minimax -- --transcript cognitive-os/agent-practice/evals/fixtures/compliant-tracker-update.json --model <minimax-model-id>
+npm run practice:minimax -- --transcript <redacted-transcript.json> --model <minimax-model-id> --execute
+```
+
+The qualitative model cannot override deterministic trace facts. The wrapper
+rejects likely secrets and sends data only with explicit `--execute`. Hard
+enforcement remains disabled unless repeated evaluation failures justify a
+separately authorized blocking mechanism. Executing the MiniMax review also
+requires an independently installed and authenticated `mmx` CLI; dry-run mode
+does not make an external call.
+
+This repository state does not install host hooks or hook-driven blocking.
+The bootstrap and compliance grader are observable advisory mechanisms, not
+permission or continuation controls.
+
+### Cognitive OS roadmap and historical milestone contracts
+
+The original proof sequence is preserved in [`cognitive-os/ROADMAP.md`](cognitive-os/ROADMAP.md).
+Operator decision event 36 retired the former MVP-001-to-MVP-002 tripwire as an
+active blocker; the old contracts remain historical evidence rather than live
+authority. Current sequencing lives in canonical tracker `253`. MVP-002's
+[frozen proof contract](cognitive-os/experiments/MVP-002-typed-admission-projection-integrity.md)
+still documents the narrow typed-admission design and its non-goals.
 
 ### `memory_stale` (operational hygiene)
 
@@ -114,6 +209,9 @@ See `src/db.ts` for the canonical DDL. Quick reference:
 - **`synapses`** — graph edges; `source_id`, `target_id`, `connection_type` (`wikilink` / `bm25_auto` / `parent_child`), `weight` (0.0–5.0), `access_count`
 - **`memories_fts`** — FTS5 mirror of `memories` (porter stemmer + 2/3-char prefix), kept in sync by triggers
 - **`decay_matrix`** — `(source_layer, target_layer, connection_type) → decay_rate`; wildcard `*` for target_layer
+- **`cognitive_events`** — append-only, hash-linked Cognitive OS evidence ledger
+- **`policy_candidates`** — scoped candidate-policy projection; evaluation does not automatically promote status
+- **`policy_evaluations`** — explicit policy outcome and guardrail evidence
 
 ### Five layers
 
@@ -140,8 +238,8 @@ See `src/db.ts` for the canonical DDL. Quick reference:
 
 ## Project context
 
-- The MCP is project-local (this directory) but the database is user-global (`~/.config/opencode/mem-graph/memory.db` by default).
-- Register in `~/.config/opencode/opencode.jsonc` under the `mem-graph` MCP name; tools will be prefixed `mem-graph_`.
+- The MCP is project-local, while the default database is user-global at `~/.local/share/mem-graph/memory.db`.
+- Register the server under the `mem-graph` name in any compatible MCP client. Displayed tool prefixes are client-dependent (for example, OpenCode and Codex render them differently).
 - Mem-graph coexists with mem-sol v1 — they are independent servers, independent databases.
 
 ## Out of scope (explicitly deferred)

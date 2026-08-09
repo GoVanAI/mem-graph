@@ -9,10 +9,11 @@ import { registerMemoryWriteTools } from './tools/memory-write.js';
 import { registerMemoryTagTools } from './tools/memory-tags.js';
 import { registerMemoryGraphTools } from './tools/memory-graph.js';
 import { registerMemoryImportTools } from './tools/memory-import.js';
+import { registerCognitiveTools } from './tools/cognitive.js';
 
 const SERVER_INFO = {
   name: 'mem-graph',
-  version: '0.1.0',
+  version: '0.2.1',
 };
 
 async function main(): Promise<void> {
@@ -52,7 +53,7 @@ async function main(): Promise<void> {
   // 3. Build the MCP server
   const server = new McpServer(SERVER_INFO);
 
-  // 4. Register the 27 tools across 7 groups (R3 added memory-import tools)
+  // 4. Register the 35 tools across 8 groups.
   registerSqlTools(server);              // 4 tools
   registerMemoryOrientTools(server);     // 4 tools
   registerMemorySearchTools(server);     // 5 tools
@@ -60,6 +61,7 @@ async function main(): Promise<void> {
   registerMemoryTagTools(server);        // 2 tools (R2)
   registerMemoryGraphTools(server);      // 6 tools
   registerMemoryImportTools(server);     // 1 tool  (R3)
+  registerCognitiveTools(server);        // 8 tools (Cognitive OS)
 
   // 5. Connect via stdio
   const transport = new StdioServerTransport();
