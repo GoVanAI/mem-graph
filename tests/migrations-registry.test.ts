@@ -61,10 +61,10 @@ describe('migration runner — fresh database convergence', () => {
     const result = runMigrations(db, MIGRATIONS, { applied_by: 'test' });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.applied).toHaveLength(1);
+    expect(result.applied.length).toBeGreaterThanOrEqual(1);
     expect(result.applied[0].version).toBe(1);
     expect(result.applied[0].pre_hash).toMatch(/^[0-9a-f]{64}$/);
-    expect(currentSchemaVersion(db)).toBe(1);
+    expect(currentSchemaVersion(db)).toBe(MIGRATIONS[MIGRATIONS.length - 1].version);
   });
 
   it('fresh DB and pre-migration DB converge to the same post-state hash', () => {
@@ -84,11 +84,12 @@ describe('migration runner — fresh database convergence', () => {
     if (!result.ok) return;
     // v1 is applied (pre_hash records the pre-migration snapshot for future
     // drift detection), not skipped.
-    expect(result.applied).toHaveLength(1);
+    expect(result.applied.length).toBeGreaterThanOrEqual(1);
     expect(result.skipped).toHaveLength(0);
-    // Both DBs end up at schema version 1.
-    expect(currentSchemaVersion(fresh)).toBe(1);
-    expect(currentSchemaVersion(pre)).toBe(1);
+    // Both DBs end up at the same latest schema version.
+    const latest = MIGRATIONS[MIGRATIONS.length - 1].version;
+    expect(currentSchemaVersion(fresh)).toBe(latest);
+    expect(currentSchemaVersion(pre)).toBe(latest);
 
     // Same post-state hash for user-visible schema (excluding the
     // migration ledger which records different `pre_hash` per history).
@@ -118,9 +119,9 @@ describe('migration runner — rerun idempotency', () => {
     const second = runMigrations(db, MIGRATIONS, { applied_by: 'test' });
     expect(first.ok && second.ok).toBe(true);
     if (!first.ok || !second.ok) return;
-    expect(first.applied).toHaveLength(1);
+    expect(first.applied.length).toBeGreaterThanOrEqual(1);
     expect(second.applied).toHaveLength(0);
-    expect(second.skipped).toHaveLength(1);
+    expect(second.skipped.length).toBe(first.applied.length);
   });
 });
 
@@ -352,14 +353,14 @@ describe('migration runner — baseline table contents', () => {
     expect(evCols.find((c) => c.name === 'event_type')).toBeDefined();
   });
 
-  it('schema_migrations has exactly one row after first run on fresh DB', () => {
+  it('schema_migrations has one row per registered migration after first run on fresh DB', () => {
     const db = freshDb();
     runMigrations(db, MIGRATIONS, { applied_by: 'test' });
     const rows = db
-      .prepare('SELECT version, name, applied_by FROM schema_migrations')
+      .prepare('SELECT version, name, applied_by FROM schema_migrations ORDER BY version')
       .all() as Array<{ version: number; name: string; applied_by: string }>;
-    expect(rows).toHaveLength(1);
-    expect(rows[0].version).toBe(1);
+    expect(rows).toHaveLength(MIGRATIONS.length);
+    expect(rows[0].version).toBe(MIGRATIONS[0].version);
     expect(rows[0].applied_by).toBe('test');
   });
 });
