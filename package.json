@@ -1,7 +1,7 @@
 {
   "name": "@opencode-ai/mem-graph",
-  "version": "0.2.1",
-  "description": "MCP server for graph-relational memory with an additive Cognitive OS evidence and guidance sidecar. Backed by better-sqlite3.",
+  "version": "0.3.0",
+  "description": "Local-first graph memory and evidence-governed agent practice for MCP clients.",
   "license": "MIT",
   "type": "module",
   "main": "src/index.ts",

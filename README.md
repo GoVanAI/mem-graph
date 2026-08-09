@@ -1,20 +1,25 @@
 # mem-graph
 
-MCP server for graph-relational memory with an additive Cognitive OS evidence,
-guidance, and agent-practice layer. It evolves mem-sol with wikilinks, BM25
-auto-linking, spreading activation, and synaptic decay on top of a layered
-SQLite memory model backed by `better-sqlite3`.
+mem-graph is a local-first MCP server for persistent, graph-relational agent
+memory. It combines layered SQLite storage, FTS5/BM25 retrieval, wikilink and
+automatically discovered synapses, spreading activation, and synaptic decay.
+Its additive Cognitive OS layer provides hash-linked evidence, scoped guidance,
+candidate-policy evaluation, and a read-only bootstrap for portable agent
+practice across MCP-capable clients.
 
 ## Purpose
 
-Experimental learning and proving-ground repository. It is not production-
-aimed or benchmarked against peer systems. The runtime core explores layered
-memory, wikilinks, and graph retrieval; the additive Cognitive OS work explores
-scoped evidence, candidate policies, authority-aware guidance eligibility, and
-portable agent practice without replacing the existing substrate.
+mem-graph is an experimental reference implementation and proving ground for
+memory that agents can inspect, carry across sessions, and use without treating
+retrieval as authority. The memory substrate stores and retrieves durable
+relationships; Cognitive OS adds an evidence-governed workflow for deciding
+which scoped guidance is eligible for direct authority verification. Candidate
+policies remain advisory and cannot expand an agent's permissions.
 
-mem-graph provides persistent memory across MCP-capable agent clients and
-sessions. It builds on mem-sol v1's relational foundation and adds:
+The repository is not presented as production-ready and has not been
+benchmarked against peer systems.
+
+Building on mem-sol v1's relational foundation, the repository includes:
 
 - **Layered memory model** — five discrete layers (`working`, `episodic`, `procedural`, `semantic`, `partner`) with layer-aware decay and retrieval
 - **Wikilinks** — markdown-style `[[reference]]` syntax in memory content creates hard, operator-curated edges
@@ -24,10 +29,9 @@ sessions. It builds on mem-sol v1's relational foundation and adds:
 - **Cognitive OS sidecar** — immutable evidence events, scoped candidate-policy evaluation, governing/contextual guidance lanes, and a read-only agent bootstrap
 - **Portable agent practice** — one machine-readable advisory contract generates Codex, Claude, Gemini, and generic-host adapters plus deterministic compliance evaluation
 
-The latest tagged package version is `v0.2.1`. The Cognitive OS,
-and agent-practice work documented below is the next unreleased repository
-state; selecting a new package/tag version remains a separate release
-decision.
+The current release is `v0.3.0`. It adds the Cognitive OS and portable
+agent-practice implementation documented below without removing the existing
+memory and graph tools.
 
 ## Install
 
@@ -249,6 +253,26 @@ See `src/db.ts` for the canonical DDL. Quick reference:
 - Tag-intersection queries (schema supports it via the junction table; no tool yet)
 - knowledge.db (separate concern)
 - Auto-link-on-read philosophy (R from analysis § 3.1, deferred to Tier 3+)
+
+## v0.3 / Cognitive OS agent practice (2026-08-09)
+
+v0.3.0 adds eight Cognitive OS tools to the existing 27-tool memory and graph
+surface. The release includes an immutable evidence ledger, scoped candidate-
+policy evaluation, governing/contextual guidance lanes, a non-mutating
+diagnostic surface, and the read-only `cognitive_agent_bootstrap` entry point.
+
+The portable agent-practice contract generates Codex, Claude, Gemini, and
+vendor-neutral adapters from one source and includes deterministic compliance
+evaluation. Retrieval and mechanical eligibility remain distinct from
+validation and authority; candidate policies are advisory, and hook-driven or
+hard enforcement remains disabled.
+
+Verification at release: 16 test files / 167 tests, TypeScript compilation,
+generated-adapter freshness, focused agent-practice tests, and deterministic
+frozen-harness reproduction.
+
+See the [v0.3.0 release notes](docs/releases/v0.3.0.md) for highlights,
+safety boundaries, and upgrade guidance.
 
 ## v0.2 / Tier 1 closure (2026-07-04)
 

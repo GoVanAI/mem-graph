@@ -13,7 +13,7 @@ import { registerCognitiveTools } from './tools/cognitive.js';
 
 const SERVER_INFO = {
   name: 'mem-graph',
-  version: '0.2.1',
+  version: '0.3.0',
 };
 
 async function main(): Promise<void> {
