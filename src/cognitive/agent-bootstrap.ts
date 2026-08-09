@@ -9,17 +9,14 @@ import type {
 } from './types.js';
 
 export const AGENT_PRACTICE_ID = 'mem-graph-agent-practice' as const;
-export const AGENT_PRACTICE_VERSION = '1.0.0' as const;
-export const COGNITIVE_OS_CANONICAL_BOOTSTRAP_IDS = [253, 254] as const;
+export const AGENT_PRACTICE_VERSION = '1.1.0' as const;
 
 interface CanonicalMemoryRow extends AgentBootstrapCanonicalRecord {
   content: string;
 }
 
 function normalizeCanonicalIds(input: AgentBootstrapInput): number[] {
-  const requested =
-    input.canonical_ids ??
-    (input.project_id === 'cognitive-os' ? [...COGNITIVE_OS_CANONICAL_BOOTSTRAP_IDS] : []);
+  const requested = input.canonical_ids ?? [];
   return [...new Set(requested)]
     .filter((id) => Number.isSafeInteger(id) && id > 0)
     .slice(0, 20)

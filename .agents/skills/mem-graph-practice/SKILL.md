@@ -17,15 +17,19 @@ that this skill is active and state the resolved project scope.
    not infer applicability from cross-project availability.
 3. Prefer one `cognitive_agent_bootstrap` call with a narrow task query,
    `include_global=false`, and the exact project. For non-trivial Cognitive OS
-   work request `canonical_ids=[253,254]` and
-   `include_canonical_content=true`.
-4. If the bootstrap tool is unavailable, fetch tracker `253` and boundary
-   `254`, read the roadmap and active artifacts referenced by the tracker, run
-   `cognitive_policy_lookup` for
+   work, supply `canonical_ids` only when the operator or project has configured
+   them; otherwise omit the field and discover governing candidates. Request
+   `include_canonical_content=true` when configured IDs are used.
+4. Directly verify candidate tracker, scope-boundary, or role records before
+   use. Never copy memory IDs from bundled examples.
+5. If the bootstrap tool is unavailable, resolve deployment-local canonical
+   IDs from operator/project configuration or exact-project governing guidance,
+   fetch each resolved record, read roadmap and active artifacts referenced by
+   a verified tracker, run `cognitive_policy_lookup` for
    `request_type/current_canonical_guidance`, then run exact-project
    `cognitive_current_guidance_search` or
    `cognitive_current_guidance_diagnose`.
-5. Fetch every selected governing record directly when the bootstrap snapshot
+6. Fetch every selected governing record directly when the bootstrap snapshot
    did not include its full content or its authority still needs verification.
 
 Use narrow search terms. FTS5 uses AND semantics, so broad compound queries can
@@ -52,13 +56,14 @@ decision. Use stable project/task scope, correlation or causation when known,
 and an idempotency key for retryable event appends. Never promote a candidate
 policy merely because an agent produced, retrieved, or repeated it.
 
-For tracker `253` changes:
+For changes to a resolved canonical tracker:
 
 1. Append the qualifying immutable event first.
-2. Reread `253` immediately before updating it.
+2. Reread the resolved tracker immediately before updating it.
 3. Update the existing tracker; do not create a competing current-state node.
 4. Preserve unresolved disagreement under Open Risks.
-5. Verify and report tracker ID, evidence/event IDs, and changed fields.
+5. Verify and report the resolved tracker ID, evidence/event IDs, and changed
+   fields.
 
 ## Keep Beliefs Fresh
 

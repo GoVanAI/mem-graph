@@ -4,8 +4,8 @@
   "scenario": {
     "project_id": "cognitive-os",
     "include_global": false,
-    "required_canonical_ids": [253, 254],
-    "selected_guidance_ids": [229],
+    "required_canonical_ids": [9001, 9002],
+    "selected_guidance_ids": [9003],
     "authorized_mutation_tools": [],
     "requires_tracker_update": false
   },
@@ -22,7 +22,7 @@
     {
       "kind": "tool_call",
       "tool": "memory_update",
-      "arguments": { "id": 253, "summary": "Unverified overwrite" }
+      "arguments": { "id": 9001, "summary": "Unverified overwrite" }
     }
   ],
   "final_response": "I found a result and treated it as authoritative."

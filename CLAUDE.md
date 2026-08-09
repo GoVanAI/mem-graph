@@ -1,4 +1,4 @@
-# Mem-Graph Project Instructions for Claude / M3
+# Mem-Graph Project Instructions for Claude
 
 This file adds repository-specific routing to the global Claude rules. It is a
 startup contract, not the source of live milestone state.
@@ -12,45 +12,51 @@ be edited by hand.
 
 Cognitive OS is a global, cross-project agent framework. This repository is
 its current additive proving ground and persistence substrate; it is not the
-framework's architectural boundary. Canonical scope boundary: mem-graph memory
-`254`.
+framework's architectural boundary. Canonical tracker, scope-boundary, and
+optional role-record IDs are deployment-local and must come from operator or
+project configuration, not from this repository.
 
 Use `project_id=cognitive-os` for Cognitive OS governance, experiments,
 policies, event evidence, roadmap work, and program state. Keep unrelated
 mem-graph substrate work in its applicable project scope. Cross-project
 availability never implies automatic applicability.
 
-## Mandatory M3 Bootstrap
+## Mandatory Cognitive OS Bootstrap
 
 Before reviewing, changing, or recording Cognitive OS work:
 
 1. Prefer `cognitive_agent_bootstrap` with `project_id=cognitive-os`, a narrow
-   task query, `canonical_ids=[252,253,254]`,
-   `include_canonical_content=true`, and `include_global=false` unless global
-   guidance is explicitly required. This snapshots M3's role, the program
-   tracker, and the scope boundary without touching access tracking or writing
-   a receipt.
-2. Read the roadmap and active artifacts referenced by tracker `253` before
-   modifying implementation or judging milestone completion.
+   task query, `include_canonical_content=true`, and `include_global=false`
+   unless global guidance is explicitly required. Supply `canonical_ids` only
+   when the operator or project has configured tracker, scope-boundary, or role
+   records; otherwise omit it and discover governing candidates. The bootstrap
+   does not touch access tracking or write a receipt.
+2. Directly verify any candidate canonical records. When a tracker is resolved,
+   read the roadmap and active artifacts it references before modifying
+   implementation or judging milestone completion.
 3. Fetch selected records directly when their full content or authority still
-   needs verification. Tracker `253`, not a static onboarding snapshot, is the
-   authority for current program state.
-4. If the bootstrap tool is unavailable, use the former explicit sequence:
-   `memory_get` 252, 253, and 254; roadmap/artifacts;
+   needs verification. A verified, operator/project-designated tracker—not a
+   static onboarding example—is the authority for current program state.
+4. If the bootstrap tool is unavailable, use the dynamic fallback sequence:
+   resolve configured canonical IDs or discover exact-project governing
+   candidates; `memory_get` each resolved record; read referenced
+   roadmap/artifacts;
    `cognitive_policy_lookup` for
    `request_type/current_canonical_guidance`; exact-project guidance search or
    diagnosis; and direct fetch of every selected record.
 
-Prefer narrow routing terms or direct canonical IDs because FTS5 multi-term
-searches use AND semantics by default.
+Never copy memory IDs from bundled examples. Prefer narrow routing terms or
+deployment-configured canonical IDs because FTS5 multi-term searches use AND
+semantics by default.
 
-## M3 Review Responsibility
+## Configured Review Responsibility
 
-M3 is both a progress reviewer and an adversarial evidence auditor. Challenge
-claims using current canonical state, explicit invariants, source evidence, or
-the cheapest discriminating test. Verify trigger reachability, contamination,
-exclusions, decision-path causality, event payload accuracy, and guardrail
-results. Do not agree reflexively or disagree performatively.
+Do not assume a built-in M3 or reviewer role. Apply role-specific duties only
+when the operator or project explicitly configures a role record. When acting
+as a reviewer, challenge claims using current canonical state, explicit
+invariants, source evidence, or the cheapest discriminating test. Verify
+trigger reachability, contamination, exclusions, decision-path causality,
+event payload accuracy, and guardrail results.
 
 Do not count deterministic tests, a hash-valid event chain, or a prompted
 diagnostic as independent live proof unless the frozen contract says they
@@ -58,9 +64,10 @@ satisfy the gate.
 
 ## Progress Tracker Mutation
 
-The guarded multi-agent update rule inside memory `253` is mandatory:
+When a canonical progress tracker is resolved, its guarded multi-agent update
+rule is mandatory:
 
-- reread `253` immediately before every attempted update;
+- reread the resolved tracker immediately before every attempted update;
 - update it only from verified evidence or an operator-adopted decision;
 - append qualifying source evidence to the Cognitive OS event ledger with
   stable scope and idempotency before summarizing it in the tracker;
@@ -85,4 +92,5 @@ do not modify the tracker.
 - Candidate policies remain advisory and cannot expand authority or authorize
   their own promotion.
 - Historical milestone contracts remain evidence, not active tripwires. Use
-  tracker `253` and later operator-adopted decisions for current program state.
+  the resolved canonical tracker and later operator-adopted decisions for
+  current program state.

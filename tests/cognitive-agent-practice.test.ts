@@ -14,6 +14,8 @@ import type { AgentPracticeTranscript } from '../src/cognitive/types.js';
 import { createInMemoryDb, seedMemory } from './helpers.js';
 
 const root = resolve(import.meta.dirname, '..');
+const syntheticTrackerId = 9001;
+const syntheticBoundaryId = 9002;
 
 function readTranscript(name: string): AgentPracticeTranscript {
   return JSON.parse(
@@ -58,8 +60,8 @@ describe('cognitive agent practice bootstrap', () => {
   });
 
   it('composes canonical, policy, and diagnostic reads without any mutation', () => {
-    insertCanonical(db, 253, 'cognitive-os', 'handoff');
-    insertCanonical(db, 254, 'cognitive-os', 'decision');
+    insertCanonical(db, syntheticTrackerId, 'cognitive-os', 'handoff');
+    insertCanonical(db, syntheticBoundaryId, 'cognitive-os', 'decision');
     const governingId = seedMemory(db, {
       title: 'Agent practice decision',
       content: 'agent practice scoped workflow',
@@ -107,14 +109,14 @@ describe('cognitive agent practice bootstrap', () => {
       project_id: 'cognitive-os',
       query: 'agent practice',
       include_global: false,
-      canonical_ids: [253, 254],
+      canonical_ids: [syntheticTrackerId, syntheticBoundaryId],
       include_canonical_content: true,
     });
     const replay = bootstrapCognitiveAgent(db, {
       project_id: 'cognitive-os',
       query: 'agent practice',
       include_global: false,
-      canonical_ids: [253, 254],
+      canonical_ids: [syntheticTrackerId, syntheticBoundaryId],
       include_canonical_content: true,
     });
 
@@ -123,7 +125,10 @@ describe('cognitive agent practice bootstrap', () => {
       version: AGENT_PRACTICE_VERSION,
       hard_enforcement: false,
     });
-    expect(result.canonical_snapshot.records.map((record) => record.id)).toEqual([253, 254]);
+    expect(result.canonical_snapshot.records.map((record) => record.id)).toEqual([
+      syntheticTrackerId,
+      syntheticBoundaryId,
+    ]);
     expect(result.canonical_snapshot.records[0].content).toContain('agent practice');
     expect(result.policy_lookup.candidates.map((candidate) => candidate.policy_id)).toEqual([
       policy.policy_id,
@@ -141,6 +146,24 @@ describe('cognitive agent practice bootstrap', () => {
     expect(
       db.prepare('SELECT id, access_count, accessed_at FROM memories ORDER BY id').all(),
     ).toEqual(accessBefore);
+  });
+
+  it('does not assume installation-specific canonical IDs when none are configured', () => {
+    insertCanonical(db, syntheticTrackerId, 'cognitive-os', 'handoff');
+    insertCanonical(db, syntheticBoundaryId, 'cognitive-os', 'decision');
+
+    const result = bootstrapCognitiveAgent(db, {
+      project_id: 'cognitive-os',
+      query: 'agent practice',
+      include_global: false,
+      include_canonical_content: true,
+    });
+
+    expect(result.canonical_snapshot).toMatchObject({
+      requested_ids: [],
+      unresolved_or_out_of_scope_ids: [],
+      records: [],
+    });
   });
 
   it('keeps canonical snapshots exact-project unless global scope is explicit', () => {
@@ -187,6 +210,16 @@ describe('agent practice compliance evaluation', () => {
   it('passes the compliant fixture with deterministic trace evidence', () => {
     const result = gradeAgentPractice(readTranscript('compliant-tracker-update.json'));
     expect(result).toMatchObject({ score: 100, passed: true, critical_failures: [] });
+  });
+
+  it('fails closed when a required tracker update has no configured tracker ID', () => {
+    const transcript = readTranscript('compliant-tracker-update.json');
+    delete transcript.scenario.tracker_id;
+
+    const result = gradeAgentPractice(transcript);
+
+    expect(result.passed).toBe(false);
+    expect(result.critical_failures).toContain('tracker_guard_sequence');
   });
 
   it('fails cross-project, unbootstrapped, unauthorized mutation behavior', () => {

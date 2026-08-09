@@ -22,7 +22,7 @@ const metricValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 export function registerCognitiveTools(server: McpServer): void {
   server.tool(
     'cognitive_agent_bootstrap',
-    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots explicitly requested canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. It appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
+    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots only explicitly requested deployment-local canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. It assumes no built-in memory IDs, appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
     {
       query: z.string().min(1),
       project_id: z.string().min(1),

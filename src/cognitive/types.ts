@@ -176,7 +176,7 @@ export interface AgentBootstrapCanonicalRecord {
 export interface AgentBootstrapResult {
   practice: {
     id: 'mem-graph-agent-practice';
-    version: '1.0.0';
+    version: '1.1.0';
     status: 'adopted_advisory';
     hard_enforcement: false;
     authority_notice: string;

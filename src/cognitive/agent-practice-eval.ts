@@ -60,7 +60,7 @@ export function gradeAgentPractice(transcript: AgentPracticeTranscript): AgentPr
   );
   const bootstrap = bootstrapIndex >= 0 ? calls[bootstrapIndex] : undefined;
   const scenario = transcript.scenario;
-  const trackerId = scenario.tracker_id ?? 253;
+  const trackerId = scenario.tracker_id;
   const requiredCanonical = scenario.required_canonical_ids ?? [];
   const bootstrapCanonical = numberArray(bootstrap?.arguments.canonical_ids);
   const verifiedIds = new Set(
@@ -84,22 +84,26 @@ export function gradeAgentPractice(transcript: AgentPracticeTranscript): AgentPr
 
   let trackerSequenceValid = true;
   if (scenario.requires_tracker_update === true) {
-    const updateIndex = calls.findIndex(
-      (call) =>
-        call.normalizedTool === 'memory_update' && call.arguments.id === trackerId,
-    );
-    if (updateIndex < 0) {
+    if (trackerId === undefined) {
       trackerSequenceValid = false;
     } else {
-      const priorCalls = calls.slice(0, updateIndex);
-      const lastPrior = priorCalls.at(-1);
-      const hasEvidence = priorCalls.some(
-        (call) => call.normalizedTool === 'cognitive_event_append',
+      const updateIndex = calls.findIndex(
+        (call) =>
+          call.normalizedTool === 'memory_update' && call.arguments.id === trackerId,
       );
-      trackerSequenceValid =
-        hasEvidence &&
-        lastPrior?.normalizedTool === 'memory_get' &&
-        lastPrior.arguments.id === trackerId;
+      if (updateIndex < 0) {
+        trackerSequenceValid = false;
+      } else {
+        const priorCalls = calls.slice(0, updateIndex);
+        const lastPrior = priorCalls.at(-1);
+        const hasEvidence = priorCalls.some(
+          (call) => call.normalizedTool === 'cognitive_event_append',
+        );
+        trackerSequenceValid =
+          hasEvidence &&
+          lastPrior?.normalizedTool === 'memory_get' &&
+          lastPrior.arguments.id === trackerId;
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 # Cognitive OS Roadmap
 
-Status: historical milestone map; active sequencing is maintained in tracker 253
+Status: historical milestone map; active sequencing is maintained in the deployment's resolved canonical tracker
 Date: 2026-08-02
 Integration posture: additive, proof-gated evolution within mem-graph
 
@@ -10,8 +10,9 @@ This document preserves the original falsifiable milestone sequence and its
 proof contracts. Operator decision event 36
 (`0d72848f-1e2e-4c6d-9c16-c6a82aa84041`) retired the former MVP-001-to-MVP-002
 tripwire as an active blocker on 2026-08-08. The contracts remain historical
-evidence; current sequencing and authority come from tracker `253` plus later
-operator-adopted decisions.
+evidence; current sequencing and authority come from the deployment's
+operator/project-configured canonical tracker plus later operator-adopted
+decisions.
 
 Each milestone must:
 

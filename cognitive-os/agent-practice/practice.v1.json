@@ -1,6 +1,6 @@
 {
   "practice_id": "mem-graph-agent-practice",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "adopted_advisory",
   "purpose": "Make mem-graph use scoped, inspectable, evidence-governed, and portable across agent hosts.",
   "authority_order": [
@@ -19,10 +19,13 @@
   "bootstrap": {
     "preferred_tool": "cognitive_agent_bootstrap",
     "read_only": true,
-    "cognitive_os_default_canonical_ids": [253, 254],
+    "canonical_ids_source": "operator_or_project_configuration",
+    "default_canonical_ids": [],
+    "when_unconfigured": "Omit canonical_ids, use a narrow exact-project bootstrap query to discover governing candidates, and directly verify any candidate tracker, scope boundary, or role record before use.",
     "include_canonical_content_for_non_trivial_work": true,
     "fallback": [
-      "memory_get the canonical tracker and scope boundary",
+      "resolve canonical tracker, scope-boundary, and optional role IDs from operator or project configuration; otherwise discover candidates through exact-project governing guidance",
+      "memory_get each resolved canonical record",
       "read the roadmap and active contract named by the tracker",
       "cognitive_policy_lookup with request_type/current_canonical_guidance",
       "cognitive_current_guidance_search or cognitive_current_guidance_diagnose in exact project scope",
@@ -50,14 +53,14 @@
     "candidate_policy_cannot_expand_authority": true
   },
   "tracker": {
-    "canonical_id": 253,
+    "canonical_id_source": "operator_or_project_configuration",
     "update_only_for": [
       "verified evidence",
       "operator-adopted decisions"
     ],
     "required_order": [
       "append immutable evidence or decision event with stable scope and idempotency",
-      "reread tracker 253 immediately before update",
+      "reread the resolved canonical tracker immediately before update",
       "update the existing tracker rather than creating a competitor",
       "verify the tracker and report tracker ID, event IDs, and changed fields"
     ]

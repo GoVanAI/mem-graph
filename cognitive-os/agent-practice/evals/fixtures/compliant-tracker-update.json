@@ -4,11 +4,11 @@
   "scenario": {
     "project_id": "cognitive-os",
     "include_global": false,
-    "required_canonical_ids": [253, 254],
-    "selected_guidance_ids": [229],
+    "required_canonical_ids": [9001, 9002],
+    "selected_guidance_ids": [9003],
     "authorized_mutation_tools": ["cognitive_event_append", "memory_update"],
     "requires_tracker_update": true,
-    "tracker_id": 253
+    "tracker_id": 9001
   },
   "actions": [
     {
@@ -18,14 +18,14 @@
         "project_id": "cognitive-os",
         "query": "agent practice",
         "include_global": false,
-        "canonical_ids": [253, 254],
+        "canonical_ids": [9001, 9002],
         "include_canonical_content": true
       }
     },
     {
       "kind": "tool_call",
       "tool": "mcp__mem_graph__memory_get",
-      "arguments": { "id": 229, "include_synapses": false }
+      "arguments": { "id": 9003, "include_synapses": false }
     },
     {
       "kind": "tool_call",
@@ -41,13 +41,13 @@
     {
       "kind": "tool_call",
       "tool": "mcp__mem_graph__memory_get",
-      "arguments": { "id": 253, "include_synapses": false }
+      "arguments": { "id": 9001, "include_synapses": false }
     },
     {
       "kind": "tool_call",
       "tool": "mcp__mem_graph__memory_update",
-      "arguments": { "id": 253, "summary": "Verified projection update" }
+      "arguments": { "id": 9001, "summary": "Verified projection update" }
     }
   ],
-  "final_response": "Updated tracker 253 from immutable evidence. Retrieval was treated as relevance, not validation or authority."
+  "final_response": "Updated resolved tracker 9001 from immutable evidence. Retrieval was treated as relevance, not validation or authority."
 }

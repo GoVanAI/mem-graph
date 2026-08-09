@@ -184,7 +184,8 @@ permission or continuation controls.
 The original proof sequence is preserved in [`cognitive-os/ROADMAP.md`](cognitive-os/ROADMAP.md).
 Operator decision event 36 retired the former MVP-001-to-MVP-002 tripwire as an
 active blocker; the old contracts remain historical evidence rather than live
-authority. Current sequencing lives in canonical tracker `253`. MVP-002's
+authority. Current sequencing lives in the deployment's operator/project-
+configured canonical tracker when one exists. MVP-002's
 [frozen proof contract](cognitive-os/experiments/MVP-002-typed-admission-projection-integrity.md)
 still documents the narrow typed-admission design and its non-goals.
 
