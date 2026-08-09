@@ -10,6 +10,7 @@ import { registerMemoryTagTools } from './tools/memory-tags.js';
 import { registerMemoryGraphTools } from './tools/memory-graph.js';
 import { registerMemoryImportTools } from './tools/memory-import.js';
 import { registerCognitiveTools } from './tools/cognitive.js';
+import { registerEpistemicTools } from './tools/epistemic.js';
 
 const SERVER_INFO = {
   name: 'mem-graph',
@@ -62,6 +63,7 @@ async function main(): Promise<void> {
   registerMemoryGraphTools(server);      // 6 tools
   registerMemoryImportTools(server);     // 1 tool  (R3)
   registerCognitiveTools(server);        // 8 tools (Cognitive OS)
+  registerEpistemicTools(server);        // 5 tools (Epistemic Phase B, Slice 1)
 
   // 5. Connect via stdio
   const transport = new StdioServerTransport();

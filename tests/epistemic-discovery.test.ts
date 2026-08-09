@@ -41,13 +41,25 @@ describe('epistemic kernel public discovery', () => {
     expect(documents).not.toMatch(/\[\[\d+\]\]/);
   });
 
-  it('does not register the pure kernel with the database or MCP runtime', () => {
-    const runtime = [
-      readRepositoryFile('src/index.ts'),
-      readRepositoryFile('src/db.ts'),
-      readRepositoryFile('src/tools/cognitive.ts'),
-    ].join('\n');
+  it('wires the persistence layer through the epistemic tools adapter, not directly through index/db', () => {
+    // Post-Phase B: the persistence layer under src/epistemic/ is wired
+    // through src/tools/epistemic.ts and registered in src/index.ts.
+    // The original Phase A "dormant" invariant (no epistemic imports in
+    // src/index.ts / src/db.ts / src/tools/cognitive.ts) was retired when
+    // Phase B activated the runtime via the dedicated epistemic tools
+    // adapter. This test now asserts the new, correct wiring:
+    //   - src/index.ts imports registerEpistemicTools from tools/epistemic
+    //   - src/tools/cognitive.ts does NOT directly import src/epistemic
+    //   - src/db.ts does NOT directly import src/epistemic
+    const indexFile = readRepositoryFile('src/index.ts');
+    const dbFile = readRepositoryFile('src/db.ts');
+    const cognitiveTools = readRepositoryFile('src/tools/cognitive.ts');
+    const epistemicTools = readRepositoryFile('src/tools/epistemic.ts');
 
-    expect(runtime).not.toMatch(/from ['"][^'"]*epistemic/);
+    expect(indexFile).toMatch(/from ['"]\.\/tools\/epistemic\.js['"]/);
+    expect(dbFile).not.toMatch(/from ['"][^'"]*epistemic\//);
+    expect(cognitiveTools).not.toMatch(/from ['"][^'"]*epistemic\//);
+    expect(epistemicTools).toMatch(/from ['"]\.\.\/epistemic\/persistence\.js['"]/);
+    expect(epistemicTools).toMatch(/from ['"]\.\.\/epistemic\/projections\.js['"]/);
   });
 });

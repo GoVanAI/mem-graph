@@ -11,7 +11,7 @@
  *    migration; create a new version instead.
  */
 
-import { SCHEMA_SQL, DECAY_MATRIX_SEED } from '../db.js';
+import { SCHEMA_SQL, DECAY_MATRIX_SEED } from './baseline.js';
 import { COGNITIVE_SCHEMA_SQL } from '../cognitive/schema.js';
 import type { Migration } from './registry.js';
 
