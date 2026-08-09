@@ -6,7 +6,10 @@ import type {
   AgentBootstrapCanonicalRecord,
   AgentBootstrapInput,
   AgentBootstrapResult,
+  EpistemicBootstrapLane,
 } from './types.js';
+import { projectCurrentState } from '../epistemic/projections.js';
+import { projectMaintenance } from '../epistemic/maintenance-runtime.js';
 
 export const AGENT_PRACTICE_ID = 'mem-graph-agent-practice' as const;
 export const AGENT_PRACTICE_VERSION = '1.1.0' as const;
@@ -127,4 +130,58 @@ export function bootstrapCognitiveAgent(
     },
     bootstrap_digest: createHash('sha256').update(JSON.stringify(digestInput)).digest('hex'),
   };
+}
+
+/**
+ * Bootstrap variant that attaches an epistemic lane. Surfaces unverified
+ * epistemic records (with their maintenance projections) for the requested
+ * scope WITHOUT granting them authority. Unverified claims never enter
+ * the governing lane.
+ *
+ * Read-only: no mutations, no events, no receipt persistence, no access
+ * counter bumps. Composes the existing bootstrap (so the cognitive-os
+ * retrieval surface and policy lookup are unchanged) and adds a third
+ * lane under `epistemic_lane`.
+ */
+export function bootstrapCognitiveAgentWithEpistemicLane(
+  db: Database.Database,
+  input: AgentBootstrapInput,
+  options: { lane_limit?: number } = {},
+): AgentBootstrapResult & { epistemic_lane: EpistemicBootstrapLane } {
+  const base = bootstrapCognitiveAgent(db, input);
+  const includeGlobal = input.include_global === true;
+  const laneLimit = options.lane_limit ?? 50;
+  const projected = projectCurrentState(db);
+  const filtered = projected.filter((r) => {
+    if (includeGlobal) return true;
+    return r.project_id === input.project_id;
+  });
+  // Compute maintenance projection for each (zero-write view).
+  const records = filtered.slice(0, laneLimit).map((r) => {
+    const maint = projectMaintenance(db, { record_id: r.record_id });
+    return {
+      record_id: r.record_id,
+      project_id: r.project_id,
+      scope: r.scope,
+      statement: r.statement,
+      epistemic_status: r.epistemic_status,
+      confidence: r.confidence,
+      valid_from: r.valid_from,
+      ordinary_priming_factor: maint.ordinary_priming_factor,
+      review_state: maint.review_state,
+      review_reasons: maint.review_reasons,
+    };
+  });
+  const epistemicLane: EpistemicBootstrapLane = {
+    scope: {
+      project_id: input.project_id,
+      include_global: includeGlobal,
+    },
+    records,
+    total_matched: filtered.length,
+    returned: records.length,
+    authority_notice:
+      'Epistemic records surfaced in this lane are unverified. They do not enter the governing lane. Retrieval rank, scope match, and priming factor do not grant authority. Verify canonical role, adoption, scope, applicability, and current evidence before relying on any epistemic claim.',
+  };
+  return { ...base, epistemic_lane: epistemicLane };
 }

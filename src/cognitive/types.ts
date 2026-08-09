@@ -214,6 +214,34 @@ export interface AgentBootstrapResult {
   bootstrap_digest: string;
 }
 
+/**
+ * Optional epistemic lane populated by `bootstrapCognitiveAgentWithEpistemicLane`.
+ * Surfaces unverified epistemic records (and their maintenance projections)
+ * without granting them authority. Unverified claims never enter the
+ * governing lane.
+ */
+export interface EpistemicBootstrapLane {
+  scope: {
+    project_id: string;
+    include_global: boolean;
+  };
+  records: Array<{
+    record_id: number;
+    project_id: string;
+    scope: string;
+    statement: string;
+    epistemic_status: string;
+    confidence: number;
+    valid_from: string;
+    ordinary_priming_factor: number;
+    review_state: string;
+    review_reasons: string[];
+  }>;
+  total_matched: number;
+  returned: number;
+  authority_notice: string;
+}
+
 export interface AgentPracticeScenario {
   project_id: string;
   include_global?: boolean;
