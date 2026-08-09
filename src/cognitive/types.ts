@@ -21,6 +21,8 @@ export interface AppendCognitiveEventInput {
   causation_id?: string;
   idempotency_key?: string;
   observed_at?: string;
+  /** Override the default schema_version (1 = legacy opaque; 2 = typed contract). */
+  schema_version?: 1 | 2;
 }
 
 export interface CognitiveEvent {

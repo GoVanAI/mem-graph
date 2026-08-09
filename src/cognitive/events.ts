@@ -6,7 +6,17 @@ import {
   type CognitiveEvent,
   type CognitiveEventType,
 } from './types.js';
+import { validateCognitiveEventPayload } from './event-contracts.js';
 
+/**
+ * Default schema_version for new admissions. v1 is the legacy opaque-payload
+ * shape (still readable and hash-verifiable per [[283]] Locked Invariant #2);
+ * v2 enforces the per-event-type payload contract from `event-contracts.ts`.
+ *
+ * Default is v1 for backward compatibility with existing test fixtures and
+ * any live callers. Callers opt into the typed contract by passing
+ * `schema_version: 2`. Future versions append.
+ */
 const SCHEMA_VERSION = 1;
 
 export interface CognitiveEventListFilters {
@@ -109,6 +119,22 @@ function assertInput(input: AppendCognitiveEventInput): void {
   if (input.payload === null || Array.isArray(input.payload) || typeof input.payload !== 'object') {
     throw new Error('payload must be a JSON object');
   }
+
+  // Per-event-type payload contract (EPB-001 D3, [[283]] Step 3).
+  // Backward compat: callers writing schema_version=1 skip the contract
+  // validator so legacy opaque payloads remain admissible. New admissions
+  // default to v2 and enforce the contract. Failures carry a stable
+  // uppercase error code so callers can branch without parsing prose.
+  const targetVersion = input.schema_version ?? SCHEMA_VERSION;
+  if (targetVersion === 2) {
+    const validation = validateCognitiveEventPayload(input.event_type, input.payload);
+    if (!validation.ok) {
+      const codes = validation.failures.map((f) => `${f.code}@${f.path}: ${f.message}`).join('; ');
+      throw new Error(`EPISTEMIC_PAYLOAD_INVALID: ${codes}`);
+    }
+  }
+  // targetVersion === 1: legacy opaque payload; existing append-only history
+  // remains readable and hash-verifiable per Locked Invariant #2.
 }
 
 function idempotencyHash(input: AppendCognitiveEventInput, payload: string): string {
@@ -201,7 +227,7 @@ export function appendCognitiveEvent(
       causation_id: input.causation_id ?? null,
       idempotency_key: input.idempotency_key ?? null,
       payload,
-      schema_version: SCHEMA_VERSION,
+      schema_version: input.schema_version ?? SCHEMA_VERSION,
       observed_at: input.observed_at ?? createdAt,
       created_at: createdAt,
       previous_hash: tail?.event_hash ?? null,
@@ -295,4 +321,111 @@ export function verifyCognitiveEventChain(db: Database.Database): CognitiveEvent
     previousHash = row.event_hash;
   }
   return { valid: true, event_count: rows.length };
+}
+
+export interface CognitiveEventShapeAuditIssue {
+  sequence: number;
+  event_id: string;
+  event_type: CognitiveEventType;
+  schema_version: number;
+  failures: Array<{ code: string; path: string; message: string }>;
+}
+
+export interface CognitiveEventShapeAudit {
+  total_events: number;
+  v1_events: number;
+  v2_events: number;
+  shape_violations: CognitiveEventShapeAuditIssue[];
+}
+
+/**
+ * Read-only integrity audit over the existing `cognitive_events` table.
+ *
+ * Per [[283]] Step 3 acceptance: every new event type/version has a
+ * validator and stable invariant codes; malformed or unsupported input
+ * consumes no sequence and changes no hash; v1 history remains readable.
+ *
+ * This audit reports — but does NOT mutate — the ledger. Legacy v1 rows
+ * with opaque payloads are not violations; only rows whose declared
+ * `schema_version` is unsupported or whose payload fails the v2 contract
+ * are reported as `shape_violations`.
+ */
+export function auditCognitiveEventShapes(db: Database.Database): CognitiveEventShapeAudit {
+  const rows = db
+    .prepare(
+      'SELECT sequence, event_id, event_type, payload, schema_version FROM cognitive_events ORDER BY sequence ASC',
+    )
+    .all() as Array<{
+    sequence: number;
+    event_id: string;
+    event_type: CognitiveEventType;
+    payload: string;
+    schema_version: number;
+  }>;
+
+  let v1 = 0;
+  let v2 = 0;
+  const violations: CognitiveEventShapeAuditIssue[] = [];
+
+  for (const row of rows) {
+    const version = Number(row.schema_version);
+    if (version === 1) {
+      v1 += 1;
+      continue;
+    }
+    if (version === 2) {
+      v2 += 1;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(row.payload);
+      } catch (e) {
+        violations.push({
+          sequence: Number(row.sequence),
+          event_id: row.event_id,
+          event_type: row.event_type,
+          schema_version: version,
+          failures: [
+            {
+              code: 'INVALID_FIELD_TYPE',
+              path: '$',
+              message: `payload is not valid JSON: ${e instanceof Error ? e.message : String(e)}`,
+            },
+          ],
+        });
+        continue;
+      }
+      const result = validateCognitiveEventPayload(row.event_type, parsed);
+      if (!result.ok) {
+        violations.push({
+          sequence: Number(row.sequence),
+          event_id: row.event_id,
+          event_type: row.event_type,
+          schema_version: version,
+          failures: result.failures,
+        });
+      }
+      continue;
+    }
+    // Unknown schema version
+    violations.push({
+      sequence: Number(row.sequence),
+      event_id: row.event_id,
+      event_type: row.event_type,
+      schema_version: version,
+      failures: [
+        {
+          code: 'INVALID_EVENT_VERSION',
+          path: 'schema_version',
+          message: `unsupported schema_version ${version}; supported: 1, 2`,
+        },
+      ],
+    });
+  }
+
+  return {
+    total_events: rows.length,
+    v1_events: v1,
+    v2_events: v2,
+    shape_violations: violations,
+  };
 }
