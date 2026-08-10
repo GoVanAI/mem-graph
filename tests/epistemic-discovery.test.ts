@@ -26,6 +26,9 @@ describe('epistemic kernel public discovery', () => {
     expect(epistemic.synthesizeAssessments).toBeTypeOf('function');
     expect(epistemic.projectBeliefMaintenance).toBeTypeOf('function');
     expect(epistemic.buildBeliefReviewQueue).toBeTypeOf('function');
+    expect(epistemic.EpistemicTaskLedger).toBeTypeOf('function');
+    expect(epistemic.recordSelfCorrectRepair).toBeTypeOf('function');
+    expect(epistemic.createDreamAdmissionEnvelope).toBeTypeOf('function');
   });
 
   it('keeps public epistemic documents free of deployment-local paths and memory IDs', () => {

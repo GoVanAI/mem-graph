@@ -179,6 +179,29 @@ This repository state does not install host hooks or hook-driven blocking.
 The bootstrap and compliance grader are observable advisory mechanisms, not
 permission or continuation controls.
 
+### Epistemic Memory Phase 0 kernel
+
+The repository includes a pure, side-effect-free epistemic reasoning kernel at
+[`src/epistemic/`](src/epistemic/). It provides strict v0.3 records and
+validation, bounded compact-prime compilation, neutral synthesis, and v0.4
+stale-belief maintenance with deliberate challenge, belief-use, linked-outcome,
+contradiction, freshness, influence, and review-queue projections.
+
+The stable public import surface is
+[`src/epistemic/index.ts`](src/epistemic/index.ts). Start with the
+[Phase 0 implementation report](docs/EPISTEMIC_MEMORY_PHASE0_IMPLEMENTATION_REPORT.md),
+then consult the
+[v0.3 implementation handoff](docs/EPISTEMIC_MEMORY_V0_3_IMPLEMENTATION_HANDOFF.md)
+and [v0.4 stale-belief contract](docs/EPISTEMIC_MEMORY_V0_4_STALE_BELIEF_CONTROL.md).
+All fixtures are synthetic and live under
+[`tests/fixtures/epistemic/`](tests/fixtures/epistemic/).
+
+Phase 0 is deliberately dormant: it performs no SQLite access, memory writes,
+event appends, MCP registration, retrieval integration, scheduling, policy
+promotion, or authority grant. Schema-valid authority remains non-binding unless
+the caller independently verifies it. Later persistence and runtime integration
+require separate operator-approved contracts.
+
 ### Cognitive OS roadmap and historical milestone contracts
 
 The original proof sequence is preserved in [`cognitive-os/ROADMAP.md`](cognitive-os/ROADMAP.md).

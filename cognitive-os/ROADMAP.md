@@ -25,6 +25,21 @@ Each milestone must:
 - define measurable acceptance and regression gates; and
 - require dependency vetting before any new package or service is introduced.
 
+## Phase A: Pure Epistemic Kernel Recovery and Publication
+
+Status: worktree verified; commit and publication require separate operator authorization
+
+Phase A restores the previously verified, side-effect-free Epistemic Memory
+kernel under stable repository-relative paths and makes it discoverable through
+the README and versioned design documents. The recovered surface is limited to
+pure TypeScript types, validators, compact-prime compilation, neutral synthesis,
+stale-belief maintenance, synthetic fixtures, and tests.
+
+Phase A does not authorize SQLite epistemic schema, migrations, MCP tools,
+bootstrap lanes, hooks, schedulers, policy promotion, hard enforcement, or any
+other runtime integration. Those require separate operator-adopted contracts.
+See [`../docs/EPISTEMIC_MEMORY_PHASE0_IMPLEMENTATION_REPORT.md`](../docs/EPISTEMIC_MEMORY_PHASE0_IMPLEMENTATION_REPORT.md).
+
 ## MVP-001: Current-Guidance Retrieval
 
 Status: historical implemented milestone; former exit tripwire retired

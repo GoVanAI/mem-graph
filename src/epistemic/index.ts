@@ -10,3 +10,6 @@ export * from './validate.js';
 export * from './prime.js';
 export * from './synthesize.js';
 export * from './maintenance.js';
+export * from './task-ledger.js';
+export * from './self-correct-bridge.js';
+export * from './dream-bridge.js';

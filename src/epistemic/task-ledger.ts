@@ -34,6 +34,8 @@ export type TurnShapePhase =
   | 'report'
   | 'complete';
 
+export type ActiveTurnShapePhase = Exclude<TurnShapePhase, 'complete'>;
+
 export type LedgerEntryKind =
   | 'phase'
   | 'decision'
@@ -62,6 +64,8 @@ export interface EpistemicWorkingSetEntry {
 
 export interface TaskLedgerCheckpoint {
   kind: 'phase' | 'decision' | 'evidence' | 'repair' | 'handoff' | 'completion';
+  /** Explicit Turn Shape phase when the caller is recording a phase boundary. */
+  phase?: ActiveTurnShapePhase;
   recorded_at: string;
   summary: string;
   references?: string[];
@@ -77,6 +81,10 @@ export interface TaskLedgerSnapshot {
   updated_at: string;
   closed_at: string | null;
   status: 'open' | 'closed';
+  /** One-sentence completion criterion retained for Dream admission. */
+  done_condition: string;
+  /** Material task intent retained for Dream admission. */
+  intent: string;
   phase_trail: PhaseTrailEntry[];
   epistemic_working_set: EpistemicWorkingSetEntry[];
   total_checkpoints: number;
@@ -148,11 +156,14 @@ export class EpistemicTaskLedger {
       );
     }
     this.phase_trail.push({
-      phase: checkpoint.kind === 'completion' ? 'complete' : inferPhase(checkpoint.kind),
+      phase:
+        checkpoint.kind === 'completion'
+          ? 'complete'
+          : checkpoint.phase ?? inferPhase(checkpoint.kind),
       kind: checkpoint.kind === 'completion' ? 'completion' : checkpoint.kind,
       recorded_at: checkpoint.recorded_at,
       summary: checkpoint.summary,
-      references: checkpoint.references,
+      references: checkpoint.references ? [...checkpoint.references] : undefined,
     });
     this.updated_at = checkpoint.recorded_at;
     this.total_checkpoints += 1;
@@ -169,7 +180,12 @@ export class EpistemicTaskLedger {
    * Dream later).
    */
   recordWorkingBelief(entry: EpistemicWorkingSetEntry): void {
-    this.epistemic_working_set.push(entry);
+    if (this.status === 'closed') {
+      throw new Error(
+        `Cannot append to closed ledger (${this.project_id}/${this.task_id})`,
+      );
+    }
+    this.epistemic_working_set.push({ ...entry });
     this.updated_at = new Date().toISOString();
   }
 
@@ -197,8 +213,13 @@ export class EpistemicTaskLedger {
       updated_at: this.updated_at,
       closed_at: this.closed_at,
       status: this.status,
-      phase_trail: [...this.phase_trail],
-      epistemic_working_set: [...this.epistemic_working_set],
+      done_condition: this.done_condition,
+      intent: this.intent,
+      phase_trail: this.phase_trail.map((entry) => ({
+        ...entry,
+        references: entry.references ? [...entry.references] : undefined,
+      })),
+      epistemic_working_set: this.epistemic_working_set.map((entry) => ({ ...entry })),
       total_checkpoints: this.total_checkpoints,
     };
   }
@@ -267,15 +288,18 @@ export function ledgerFromSnapshot(snap: TaskLedgerSnapshot): EpistemicTaskLedge
     task_id: snap.task_id,
     session_id: snap.agent_id, // not used for resume; identity comes from snapshot
     agent_id: snap.agent_id,
-    done_condition: '(restored from snapshot)',
-    intent: '(restored from snapshot)',
+    done_condition: snap.done_condition,
+    intent: snap.intent,
   });
   ledger.created_at = snap.created_at;
   ledger.updated_at = snap.updated_at;
   ledger.closed_at = snap.closed_at;
   ledger.status = snap.status;
-  ledger.phase_trail = [...snap.phase_trail];
-  ledger.epistemic_working_set = [...snap.epistemic_working_set];
+  ledger.phase_trail = snap.phase_trail.map((entry) => ({
+    ...entry,
+    references: entry.references ? [...entry.references] : undefined,
+  }));
+  ledger.epistemic_working_set = snap.epistemic_working_set.map((entry) => ({ ...entry }));
   ledger.total_checkpoints = snap.total_checkpoints;
   return ledger;
 }

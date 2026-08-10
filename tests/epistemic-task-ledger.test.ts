@@ -232,18 +232,21 @@ describe('EpistemicTaskLedger — cognitive event envelope', () => {
 describe('EpistemicTaskLedger — 5-phase deterministic task fixture', () => {
   it('walks Understand → Gather → Build → Verify → Report with one checkpoint each', () => {
     const ledger = new EpistemicTaskLedger(baseInput());
-    const phases: Array<'phase' | 'decision' | 'evidence' | 'handoff' | 'completion'> = [
-      'phase', // Understand
-      'decision', // Gather
-      'phase', // Build
-      'evidence', // Verify
-      'handoff', // Report
+    const checkpoints: Array<{
+      phase: 'understand' | 'gather' | 'build' | 'verify' | 'report';
+      kind: 'phase' | 'decision' | 'evidence' | 'handoff';
+    }> = [
+      { phase: 'understand', kind: 'phase' },
+      { phase: 'gather', kind: 'decision' },
+      { phase: 'build', kind: 'phase' },
+      { phase: 'verify', kind: 'evidence' },
+      { phase: 'report', kind: 'handoff' },
     ];
-    for (let i = 0; i < phases.length; i += 1) {
+    for (let i = 0; i < checkpoints.length; i += 1) {
       ledger.recordCheckpoint({
-        kind: phases[i],
+        ...checkpoints[i],
         recorded_at: `2026-08-09T00:0${i}:00.000Z`,
-        summary: `${phases[i]} step ${i}`,
+        summary: `${checkpoints[i].phase} step ${i}`,
       });
     }
     expect(ledger.phase_trail).toHaveLength(5);
@@ -254,6 +257,13 @@ describe('EpistemicTaskLedger — 5-phase deterministic task fixture', () => {
       'phase',
       'evidence',
       'handoff',
+    ]);
+    expect(ledger.phase_trail.map((entry) => entry.phase)).toEqual([
+      'understand',
+      'gather',
+      'build',
+      'verify',
+      'report',
     ]);
   });
 });
@@ -283,5 +293,26 @@ describe('EpistemicTaskLedger — contradiction fixture', () => {
     expect(material[0].statement).not.toBe(material[1].statement);
     // Dream admission (caller's job) would evaluate update/create/defer/discard
     // based on this snapshot.
+  });
+});
+
+describe('EpistemicTaskLedger — terminal immutability', () => {
+  it('rejects checkpoints and working beliefs after close', () => {
+    const ledger = new EpistemicTaskLedger(baseInput());
+    ledger.close();
+
+    expect(() => ledger.recordCheckpoint({
+      kind: 'evidence',
+      phase: 'verify',
+      recorded_at: '2026-08-09T00:06:00.000Z',
+      summary: 'late evidence',
+    })).toThrow(/closed ledger/i);
+    expect(() => ledger.recordWorkingBelief({
+      material: true,
+      statement: 'late belief',
+      confidence: 1,
+    })).toThrow(/closed ledger/i);
+    expect(ledger.phase_trail).toEqual([]);
+    expect(ledger.epistemic_working_set).toEqual([]);
   });
 });
