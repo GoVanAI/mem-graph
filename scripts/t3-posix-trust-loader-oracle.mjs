@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { constants, existsSync, lstatSync, openSync, closeSync, fstatSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 if (process.platform !== 'linux') throw new Error('T3 POSIX oracle requires Linux');
@@ -48,7 +48,20 @@ let created = false;
 try {
   runRoot(['install', '-d', '-o', 'root', '-g', 'root', '-m', '0755', oracleDir]); created = true;
   const secure = `${oracleDir}/registry.json`; writeRootFile(secure, '0644');
-  assert.deepEqual(loadProtectedOperatorTrustRegistry(runtime(secure)), transport, 'root-owned protected transport must load');
+  const secureRuntime = runtime(secure);
+  const loadedSecure = loadProtectedOperatorTrustRegistry(secureRuntime);
+  if (loadedSecure === undefined) {
+    const metadata = ['/', '/opt', oracleDir, secure].map((path) => {
+      const stat = lstatSync(path);
+      return { path, uid: stat.uid, gid: stat.gid, mode: (stat.mode & 0o7777).toString(8), nlink: stat.nlink, size: stat.size, dev: stat.dev, ino: stat.ino, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs, file: stat.isFile(), directory: stat.isDirectory(), symlink: stat.isSymbolicLink() };
+    });
+    const fd = openSync(secure, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    try {
+      const opened = fstatSync(fd);
+      process.stderr.write(`${JSON.stringify({ metadata, opened: { uid: opened.uid, gid: opened.gid, mode: (opened.mode & 0o7777).toString(8), nlink: opened.nlink, size: opened.size, dev: opened.dev, ino: opened.ino, mtimeMs: opened.mtimeMs, ctimeMs: opened.ctimeMs }, canonical_bytes: canonicalizeJcs(JSON.parse(readFileSync(secure, 'utf8'))) === readFileSync(secure, 'utf8') }, null, 2)}\n`);
+    } finally { closeSync(fd); }
+  }
+  assert.deepEqual(loadedSecure, transport, 'root-owned protected transport must load');
 
   const sameUid = `${oracleDir}/same-uid.json`; writeRootFile(sameUid, '0644'); runRoot(['chown', `${uid}:${gid}`, sameUid]);
   expectRejected('same-UID-owned final file', sameUid);
