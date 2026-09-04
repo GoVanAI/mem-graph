@@ -4,8 +4,9 @@
  *   node_modules/.bin/tsx scripts/t3-posix-trust-loader-oracle.mjs
  *
  * This intentionally fails on every unmet precondition; it never skips a
- * Linux security check. The generated path is deliberately under /opt rather
- * than /tmp, whose world-writable parent the production loader must reject.
+ * Linux security check. The generated path is deliberately under /var/lib
+ * rather than /tmp or hosted-runner /opt, whose writable parents the
+ * production loader must reject.
  */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -22,7 +23,8 @@ try { runRoot(['true']); } catch { throw new Error('T3 POSIX oracle requires pas
 const { canonicalizeJcs } = await import('../src/cognitive/operator-adoption.ts');
 const { createOperatorTrustRuntime, loadProtectedOperatorTrustRegistry } = await import('../src/cognitive/operator-trust-loader.ts');
 const nonce = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-const oracleDir = `/opt/mem-graph-t3-${nonce}`;
+const oracleBase = '/var/lib';
+const oracleDir = `${oracleBase}/mem-graph-t3-${nonce}`;
 const uid = process.getuid(); const gid = process.getgid();
 const rootPublicKey = Buffer.alloc(32, 7); const rootSignature = Buffer.alloc(64, 9).toString('base64url');
 const transport = { payload_b64u: 'e30', root_signature_b64u: rootSignature };
@@ -46,12 +48,15 @@ function expectRejected(name, path) {
 
 let created = false;
 try {
+  const baseStat = lstatSync(oracleBase);
+  assert.equal(baseStat.uid, 0, `${oracleBase} must be root-owned`);
+  assert.equal(baseStat.mode & 0o022, 0, `${oracleBase} must not be group/world writable`);
   runRoot(['install', '-d', '-o', 'root', '-g', 'root', '-m', '0755', oracleDir]); created = true;
   const secure = `${oracleDir}/registry.json`; writeRootFile(secure, '0644');
   const secureRuntime = runtime(secure);
   const loadedSecure = loadProtectedOperatorTrustRegistry(secureRuntime);
   if (loadedSecure === undefined) {
-    const metadata = ['/', '/opt', oracleDir, secure].map((path) => {
+    const metadata = ['/', oracleBase, oracleDir, secure].map((path) => {
       const stat = lstatSync(path);
       return { path, uid: stat.uid, gid: stat.gid, mode: (stat.mode & 0o7777).toString(8), nlink: stat.nlink, size: stat.size, dev: stat.dev, ino: stat.ino, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs, file: stat.isFile(), directory: stat.isDirectory(), symlink: stat.isSymbolicLink() };
     });
@@ -81,7 +86,7 @@ try {
   process.stdout.write('T3 POSIX trust-loader oracle passed\n');
 } finally {
   if (created) {
-    if (!oracleDir.startsWith('/opt/mem-graph-t3-')) throw new Error('refusing unsafe cleanup target');
+    if (!oracleDir.startsWith('/var/lib/mem-graph-t3-')) throw new Error('refusing unsafe cleanup target');
     runRoot(['rm', '-rf', '--', oracleDir]);
     if (existsSync(oracleDir)) throw new Error(`oracle cleanup failed: ${oracleDir}`);
     process.stdout.write('T3 POSIX trust-loader oracle cleanup complete\n');
