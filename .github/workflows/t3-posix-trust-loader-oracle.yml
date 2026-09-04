@@ -1,0 +1,33 @@
+name: T3 POSIX trust-loader oracle (manual)
+
+on:
+  push:
+    branches:
+      - codex/t3-posix-oracle-20260903
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Require a non-root Linux runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(id -u)" -ne 0
+          sudo -n true
+          test -x node_modules/.bin/tsx
+      - name: Execute protected filesystem oracle
+        run: node_modules/.bin/tsx scripts/t3-posix-trust-loader-oracle.mjs
