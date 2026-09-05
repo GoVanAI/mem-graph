@@ -1,0 +1,63 @@
+name: T4 live operator-presence oracle
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_bundle_b64u:
+        description: Base64url-encoded public T4 ceremony bundle; contains no private key material
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify runner preconditions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(id -u)" -ne 0
+          sudo -n true
+      - name: Decode public ceremony bundle
+        shell: bash
+        env:
+          T4_PUBLIC_BUNDLE_B64U: ${{ inputs.public_bundle_b64u }}
+        run: |
+          set -euo pipefail
+          node -e "const fs=require('fs'); const s=process.env.T4_PUBLIC_BUNDLE_B64U; if(!/^[A-Za-z0-9_-]+$/.test(s)) throw Error('invalid bundle encoding'); fs.writeFileSync(process.env.RUNNER_TEMP+'/t4-public-bundle.json',Buffer.from(s,'base64url'),{mode:0o600});"
+      - name: Install protected public registries
+        shell: bash
+        run: |
+          set -euo pipefail
+          export T4_PROTECTED_DIR="/var/lib/mem-graph-t4-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          test ! -e "$T4_PROTECTED_DIR"
+          sudo install -d -o root -g root -m 0755 "$T4_PROTECTED_DIR"
+          node -e "const fs=require('fs'); const b=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/t4-public-bundle.json')); for(const n of ['active','revoked']) fs.writeFileSync(process.env.RUNNER_TEMP+'/'+n+'.json',JSON.stringify(b[n+'_registry_transport']));"
+          sudo install -o root -g root -m 0644 "$RUNNER_TEMP/active.json" "$T4_PROTECTED_DIR/active.json"
+          sudo install -o root -g root -m 0644 "$RUNNER_TEMP/revoked.json" "$T4_PROTECTED_DIR/revoked.json"
+          echo "T4_PROTECTED_DIR=$T4_PROTECTED_DIR" >> "$GITHUB_ENV"
+      - name: Run frozen T4 oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          node_modules/.bin/tsx scripts/t4-live-operator-oracle.mjs "$RUNNER_TEMP/t4-public-bundle.json" "$T4_PROTECTED_DIR/active.json" "$T4_PROTECTED_DIR/revoked.json"
+      - name: Cleanup protected public registries
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${T4_PROTECTED_DIR:-}" in /var/lib/mem-graph-t4-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}) ;; *) exit 1 ;; esac
+          sudo rm -rf -- "$T4_PROTECTED_DIR"
+          test ! -e "$T4_PROTECTED_DIR"
+          rm -f -- "$RUNNER_TEMP/t4-public-bundle.json" "$RUNNER_TEMP/active.json" "$RUNNER_TEMP/revoked.json"
