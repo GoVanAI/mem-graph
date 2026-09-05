@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - name: Verify runner preconditions
         shell: bash
         run: |
