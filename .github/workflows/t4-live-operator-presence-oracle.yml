@@ -1,4 +1,5 @@
 name: T4 live operator-presence oracle
+# Disposable ceremony trigger: f69ce748-69eb-491b-bf78-d399124067f1
 
 on:
   push:
