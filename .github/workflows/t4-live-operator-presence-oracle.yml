@@ -1,6 +1,6 @@
 name: T4 live operator-presence oracle
 # Disposable ceremony trigger: f69ce748-69eb-491b-bf78-d399124067f1
-# Dependency-complete retry: 1
+# Dependency-complete ceremony: 3e19f4ca-8ac7-40c1-995c-76257741ac93
 
 on:
   push:
