@@ -160,6 +160,25 @@ export interface AgentBootstrapInput extends GoverningGuidanceSearchInput {
   include_canonical_content?: boolean;
 }
 
+/** Optional opaque public input. The server validates the manifest manually. */
+export interface TaskStateBootstrapRequest {
+  project_id: string;
+  task_id: string;
+  include_global?: boolean;
+  manifest: unknown;
+  adoption_receipt?: unknown;
+}
+
+export interface TaskStateBootstrapEnvelope {
+  envelope_version: '1.0.0' | '1.1.0';
+  status: 'assembled' | 'unavailable';
+  scope: { project_id: string | null; task_id: string | null };
+  authority_notice: string;
+  reason?: 'invalid_request' | 'manifest_invalid' | 'source_resolution_failed';
+  packet?: import('./task-state.js').TaskStatePacket;
+  envelope_digest: string;
+}
+
 export interface AgentBootstrapCanonicalRecord {
   id: number;
   layer: string;
