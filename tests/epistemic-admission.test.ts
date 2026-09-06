@@ -1,7 +1,7 @@
 /**
  * Epistemic admission tests — Step 5 of EPB-001.
  *
- * Oracle requirements (verbatim from [[283]] Step 5 acceptance):
+ * Oracle requirements (verbatim from the Step 3 acceptance contract Step 5 acceptance):
  *   - the transaction follows the locked order;
  *   - identical retries return the same event/revision/receipt;
  *   - changed payload under the same key fails;
@@ -293,5 +293,86 @@ describe('appendEpistemicReceipt', () => {
         project_id: 'cognitive-os',
       }),
     ).toThrow(/STALE_REVISION/);
+  });
+});
+
+describe('admitEpistemicRecord — projection propagation', () => {
+  it('propagates project_id from revise to projection', () => {
+    const db = freshDb();
+    // Initial admit in project A
+    const first = admitEpistemicRecord(
+      db,
+      baseInput({ record_id: 100, idempotency_key: 'k-100-a' }),
+    );
+    expect(first.record_id).toBe(100);
+    expect(first.revision_number).toBe(1);
+
+    // Projection.project_id should match initial admit
+    const beforeProj = db
+      .prepare('SELECT project_id FROM epistemic_records WHERE record_id = 100')
+      .get() as { project_id: string };
+    expect(beforeProj.project_id).toBe('cognitive-os');
+
+    // Revise with new project_id — this is the path that was broken
+    const second = admitEpistemicRecord(
+      db,
+      baseInput({
+        idempotency_key: 'k-100-b',
+        record_id: 100,
+        project_id: 'granblue',
+        expected_revision: 1,
+        previous_revision_id: first.revision_id,
+      }),
+    );
+    expect(second.revision_number).toBe(2);
+
+    // Critical assertion: projection.project_id follows the revise.
+    // Before this fix, the projection upsert never propagated project_id
+    // from revise payloads — the column stayed at its original insert
+    // value, breaking the "refresh affected projections" invariant.
+    const afterProj = db
+      .prepare('SELECT project_id FROM epistemic_records WHERE record_id = 100')
+      .get() as { project_id: string };
+    expect(afterProj.project_id).toBe('granblue');
+  });
+
+  it('preserves immutable revision history across cross-project revisions', () => {
+    const db = freshDb();
+    const first = admitEpistemicRecord(
+      db,
+      baseInput({ record_id: 101, idempotency_key: 'k-101-a' }),
+    );
+    admitEpistemicRecord(
+      db,
+      baseInput({
+        idempotency_key: 'k-101-b',
+        record_id: 101,
+        project_id: 'granblue',
+        expected_revision: 1,
+        previous_revision_id: first.revision_id,
+      }),
+    );
+
+    // Immutable history: each revision's record_payload carries the
+    // project_id that was claimed AT ADMIT TIME. The projection follows
+    // the latest revision's payload (post-fix).
+    const revs = db
+      .prepare(
+        `SELECT revision_number, record_payload FROM epistemic_revisions
+         WHERE record_id = 101 ORDER BY revision_number`,
+      )
+      .all() as Array<{ revision_number: number; record_payload: string }>;
+    expect(revs).toHaveLength(2);
+
+    const payload1 = JSON.parse(revs[0].record_payload) as { project_id: string };
+    const payload2 = JSON.parse(revs[1].record_payload) as { project_id: string };
+    expect(payload1.project_id).toBe('cognitive-os');
+    expect(payload2.project_id).toBe('granblue');
+
+    // Projection correctly reflects revision 2 (the latest)
+    const proj = db
+      .prepare('SELECT project_id FROM epistemic_records WHERE record_id = 101')
+      .get() as { project_id: string };
+    expect(proj.project_id).toBe('granblue');
   });
 });

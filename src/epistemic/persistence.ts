@@ -1,7 +1,7 @@
 /**
  * Epistemic Memory Phase B — atomic admission and projection persistence.
  *
- * Per EPB-001 D6/D7/D17/D19 and [[283]] Step 5 acceptance, this module:
+ * Per EPB-001 D6/D7/D17/D19 and the Step 3 acceptance contract Step 5 acceptance, this module:
  *   - validates and normalizes a record + provenance envelope;
  *   - resolves idempotency (D7) by SHA-256 of the canonical JSON envelope;
  *   - enforces expected_revision concurrency (D6) with stable STALE_REVISION;
@@ -529,6 +529,7 @@ export function admitEpistemicRecord(
         source_event_id, source_memory_id, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(record_id) DO UPDATE SET
+         project_id = excluded.project_id,
          scope = excluded.scope,
          statement = excluded.statement,
          epistemic_status = excluded.epistemic_status,
