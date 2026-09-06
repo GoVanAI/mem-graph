@@ -141,7 +141,7 @@ describe('admitEpistemicRecord — STALE_REVISION', () => {
 
   it('rejects revise with wrong expected_revision', () => {
     const db = freshDb();
-    const first = admitEpistemicRecord(db, baseInput({ record_id: 7 }));
+    admitEpistemicRecord(db, baseInput({ record_id: 7 }));
     expect(() =>
       admitEpistemicRecord(
         db,
