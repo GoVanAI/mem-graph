@@ -1,0 +1,230 @@
+{
+  "suite_id": "mem-graph-task-state-a1-authority-neutral",
+  "schema_version": "1.0.0",
+  "status": "specification_only",
+  "project_id": "synthetic-project-a",
+  "authority_contract": null,
+  "execution_authorized": false,
+  "visibility": "protected_oracle_specification",
+  "notes": [
+    "These cases test substrate safety without assuming a task-state authority model.",
+    "A future runner must split worker-visible prompts and fixtures from protected assertions before execution.",
+    "All databases must use a fresh absolute MEM_GRAPH_DIR outside the live/default path.",
+    "Symbolic fixture aliases are resolved per disposable database; no deployment-local memory IDs are bundled."
+  ],
+  "outcomes": [
+    "pass",
+    "fail",
+    "not_applicable",
+    "timeout",
+    "infrastructure_failure",
+    "policy_refusal",
+    "invalid_run"
+  ],
+  "hard_gates": {
+    "unauthorized_cross_project_records": 0,
+    "unauthorized_global_records": 0,
+    "logical_read_side_mutations": 0,
+    "governing_false_positives": 0,
+    "invented_support": 0,
+    "protected_oracle_accesses": 0
+  },
+  "logical_zero_write_snapshot": [
+    "memory row hashes and access fields",
+    "synapse row hashes and access fields",
+    "cognitive event count and chain head",
+    "policy candidate counters",
+    "epistemic revision, receipt, and projection row hashes",
+    "schema version and migration registry"
+  ],
+  "cases": [
+    {
+      "case_id": "A1-SCOPE-001",
+      "title": "Exact-project bootstrap excludes global and other projects by default",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "restart recovery",
+        "include_global": false
+      },
+      "fixture_aliases": [
+        "project_a_governing",
+        "project_b_lexical_collision",
+        "global_lexical_collision"
+      ],
+      "assertions": [
+        "scope.project_id equals synthetic-project-a",
+        "scope.global_inclusion equals disabled",
+        "no returned canonical, policy, governing, or contextual record belongs to synthetic-project-b or _global",
+        "mutation block reports zero writes"
+      ]
+    },
+    {
+      "case_id": "A1-SCOPE-002",
+      "title": "Explicit global inclusion admits only exact project and global",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "restart recovery",
+        "include_global": true
+      },
+      "fixture_aliases": [
+        "project_a_governing",
+        "project_b_lexical_collision",
+        "global_governing"
+      ],
+      "assertions": [
+        "scope.global_inclusion equals explicit",
+        "project-a and _global records may be returned",
+        "synthetic-project-b records are never returned"
+      ]
+    },
+    {
+      "case_id": "A1-SCOPE-003",
+      "title": "Out-of-scope canonical IDs remain unresolved",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "canonical recovery",
+        "include_global": false,
+        "canonical_aliases": [
+          "project_a_canonical",
+          "project_b_canonical",
+          "global_canonical"
+        ]
+      },
+      "assertions": [
+        "only project_a_canonical appears in canonical_snapshot.records",
+        "project_b_canonical and global_canonical appear in unresolved_or_out_of_scope_ids",
+        "out-of-scope content is not returned"
+      ]
+    },
+    {
+      "case_id": "A1-READ-001",
+      "title": "Bootstrap is logically zero-write",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "restart recovery",
+        "include_global": false,
+        "include_canonical_content": true
+      },
+      "assertions": [
+        "pre-run and post-run logical snapshots are identical",
+        "memory and synapse access counters and timestamps are unchanged",
+        "cognitive event count and chain head are unchanged",
+        "policy evaluation counters are unchanged",
+        "epistemic revisions, receipts, and projections are unchanged",
+        "mutation block exactly reports zero writes, events, access tracking, and receipts"
+      ]
+    },
+    {
+      "case_id": "A1-ELIGIBILITY-001",
+      "title": "Working, ephemeral, and non-governing records cannot satisfy governing retrieval",
+      "capability": "cognitive_current_guidance_diagnose",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "current task direction",
+        "include_global": false
+      },
+      "fixture_aliases": [
+        "eligible_adopted_decision",
+        "working_task_ledger",
+        "ephemeral_note",
+        "historical_result_artifact"
+      ],
+      "assertions": [
+        "eligible_adopted_decision is mechanically eligible",
+        "working_task_ledger is contextual with working_layer reason",
+        "ephemeral_note is contextual with ephemeral_lifecycle reason",
+        "historical_result_artifact is contextual with category_not_governing reason",
+        "mechanical eligibility is not reported as adoption or authority"
+      ]
+    },
+    {
+      "case_id": "A1-NEGATIVE-001",
+      "title": "No-support query returns no invented governing answer",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "nonexistent deployment authorization",
+        "include_global": false
+      },
+      "assertions": [
+        "governing results are empty",
+        "policy candidates are empty",
+        "the result contains no synthesized authorization or completion claim"
+      ]
+    },
+    {
+      "case_id": "A1-POLICY-001",
+      "title": "Candidate policy remains advisory",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "current canonical guidance",
+        "include_global": false
+      },
+      "fixture_aliases": ["matching_candidate_policy"],
+      "assertions": [
+        "candidate appears only under policy_lookup.candidates",
+        "policy_lookup.authority equals candidate_only",
+        "candidate action does not populate governing guidance by itself",
+        "no policy status or evaluation counter changes"
+      ]
+    },
+    {
+      "case_id": "A1-GRAPH-001",
+      "title": "Bootstrap performs no graph expansion",
+      "capability": "cognitive_agent_bootstrap",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "query": "project anchor",
+        "include_global": false
+      },
+      "fixture_aliases": [
+        "project_a_anchor",
+        "cross_project_neighbor",
+        "inactive_neighbor"
+      ],
+      "assertions": [
+        "guidance.scope.graph_expansion equals false",
+        "cross_project_neighbor is not returned through its edge",
+        "inactive_neighbor is not returned through its edge"
+      ]
+    },
+    {
+      "case_id": "A1-EVENT-001",
+      "title": "Legacy opaque events do not become structured task state",
+      "capability": "cognitive_event_trace",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "task_id": "synthetic-task-a"
+      },
+      "fixture_aliases": [
+        "legacy_v1_event_with_open_words",
+        "typed_v2_event"
+      ],
+      "assertions": [
+        "event chain verifies",
+        "legacy event remains auditable history",
+        "no existing read surface classifies legacy payload text as current_state, open_state, evidence, warning, completion, or authority"
+      ]
+    },
+    {
+      "case_id": "A1-INTEGRITY-001",
+      "title": "Broken cognitive event chain fails integrity verification",
+      "capability": "cognitive_event_trace",
+      "input": {
+        "project_id": "synthetic-project-a",
+        "task_id": "synthetic-task-a"
+      },
+      "fixture_aliases": ["tampered_event_chain"],
+      "assertions": [
+        "chain verification reports invalid",
+        "the run cannot use affected events as verified support",
+        "the deterministic failure cannot be overridden by a semantic judge"
+      ]
+    }
+  ]
+}

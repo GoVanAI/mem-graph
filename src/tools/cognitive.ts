@@ -13,16 +13,17 @@ import {
   findPolicyCandidates,
 } from '../cognitive/policy.js';
 import { diagnoseCurrentGuidance, searchGoverningGuidance } from '../cognitive/retrieval.js';
-import { bootstrapCognitiveAgent } from '../cognitive/agent-bootstrap.js';
+import { bootstrapCognitiveAgent, bootstrapCognitiveAgentWithTaskState } from '../cognitive/agent-bootstrap.js';
+import type { OperatorTrustRuntime } from '../cognitive/operator-trust-loader.js';
 import { COGNITIVE_EVENT_TYPES } from '../cognitive/types.js';
 
 const jsonObject = z.record(z.string(), z.unknown());
 const metricValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
-export function registerCognitiveTools(server: McpServer): void {
+export function registerCognitiveTools(server: McpServer, options: { operatorTrustRuntime?: OperatorTrustRuntime } = {}): void {
   server.tool(
     'cognitive_agent_bootstrap',
-    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots only explicitly requested deployment-local canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. It assumes no built-in memory IDs, appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
+    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots only explicitly requested deployment-local canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. An optional opaque task_state object with task_id and a Contract-v1 manifest requests a separate source-backed packet; malformed task state fails softly without discarding the base bootstrap. It assumes no built-in memory IDs, appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
     {
       query: z.string().min(1),
       project_id: z.string().min(1),
@@ -32,10 +33,19 @@ export function registerCognitiveTools(server: McpServer): void {
       layer: z.enum(['working', 'episodic', 'procedural', 'semantic', 'partner']).optional(),
       canonical_ids: z.array(z.number().int().positive()).max(20).optional(),
       include_canonical_content: z.boolean().optional(),
+      // Per mem-graph-upgrade-v1.md §6 (Fix D): default false returns summary-only excluded records.
+      include_excluded_details: z.boolean().optional(),
+      // Kept opaque so malformed optional task state cannot prevent base bootstrap.
+      task_state: z.unknown().optional(),
     },
     async (input) => {
       try {
-        return jsonResult(bootstrapCognitiveAgent(getDatabase('memory'), input));
+        const { task_state, ...baseInput } = input;
+        if (task_state === undefined) return jsonResult(bootstrapCognitiveAgent(getDatabase('memory'), baseInput));
+        const request = typeof task_state === 'object' && task_state !== null && !Array.isArray(task_state)
+          ? { project_id: input.project_id, include_global: input.include_global, task_id: (task_state as Record<string, unknown>).task_id, manifest: (task_state as Record<string, unknown>).manifest, adoption_receipt: (task_state as Record<string, unknown>).adoption_receipt } as import('../cognitive/types.js').TaskStateBootstrapRequest
+          : undefined;
+        return jsonResult(bootstrapCognitiveAgentWithTaskState(getDatabase('memory'), baseInput, request, options.operatorTrustRuntime));
       } catch (error) {
         return errorResult(`Cognitive agent bootstrap error: ${(error as Error).message}`);
       }

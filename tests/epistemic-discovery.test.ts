@@ -12,9 +12,10 @@ describe('epistemic kernel public discovery', () => {
     const readme = readRepositoryFile('README.md');
     const roadmap = readRepositoryFile('cognitive-os/ROADMAP.md');
 
-    expect(readme).toContain('### Epistemic Memory Phase 0 kernel');
+    expect(readme).toContain('### Epistemic Memory Phase A kernel and Phase B runtime');
     expect(readme).toContain('src/epistemic/index.ts');
     expect(readme).toContain('docs/EPISTEMIC_MEMORY_PHASE0_IMPLEMENTATION_REPORT.md');
+    expect(readme).toContain('docs/COGNITIVE_OS_EPISTEMIC_MEMORY_TRANSFER_GUIDE.md');
     expect(roadmap).toContain('## Phase A: Pure Epistemic Kernel Recovery and Publication');
     expect(roadmap).toContain('../docs/EPISTEMIC_MEMORY_PHASE0_IMPLEMENTATION_REPORT.md');
   });

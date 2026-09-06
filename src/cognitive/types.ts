@@ -158,6 +158,32 @@ export interface AgentBootstrapInput extends GoverningGuidanceSearchInput {
   canonical_ids?: number[];
   /** Include record bodies in the read-only canonical snapshot. */
   include_canonical_content?: boolean;
+  /**
+   * Include full excluded-record details (snippets, BM25 ranks, full
+   * metadata) in the bootstrap output. Default false: returns only
+   * {id, title, exclusion_reasons} per excluded record. Set true for
+   * diagnostic / review scenarios. Per mem-graph-upgrade-v1.md §6 (Fix D).
+   */
+  include_excluded_details?: boolean;
+}
+
+/** Optional opaque public input. The server validates the manifest manually. */
+export interface TaskStateBootstrapRequest {
+  project_id: string;
+  task_id: string;
+  include_global?: boolean;
+  manifest: unknown;
+  adoption_receipt?: unknown;
+}
+
+export interface TaskStateBootstrapEnvelope {
+  envelope_version: '1.0.0' | '1.1.0';
+  status: 'assembled' | 'unavailable';
+  scope: { project_id: string | null; task_id: string | null };
+  authority_notice: string;
+  reason?: 'invalid_request' | 'manifest_invalid' | 'source_resolution_failed';
+  packet?: import('./task-state.js').TaskStatePacket;
+  envelope_digest: string;
 }
 
 export interface AgentBootstrapCanonicalRecord {

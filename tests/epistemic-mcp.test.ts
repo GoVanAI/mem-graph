@@ -282,6 +282,30 @@ describe('epistemic_get (read, zero-write)', () => {
     expect(r.code).toBe('OUT_OF_SCOPE');
   });
 
+  it('returns OUT_OF_SCOPE for cross-project as_of request (Sol H8-1 regression)', async () => {
+    const { server, tools } = createFakeServer();
+    registerEpistemicTools(server);
+    const admitted = (await callTool(tools, 'epistemic_admit', {
+      idempotency_key: 'scope-asof-1',
+      project_id: 'cognitive-os',
+      scope: 'exact-project',
+      statement: 'asof-scope',
+      epistemic_status: 'inferred',
+      verification_level: 'direct',
+      source_quality: 'observed',
+      confidence: 0.5,
+      valid_from: '2026-08-09T00:00:00.000Z',
+      task_id: 't',
+    })) as { record_id: number };
+    const r = (await callTool(tools, 'epistemic_get', {
+      record_id: admitted.record_id,
+      project_id: 'other-project',
+      as_of: '2026-08-10T00:00:00.000Z',
+    })) as { ok: boolean; code: string };
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('OUT_OF_SCOPE');
+  });
+
   it('supports as_of query', async () => {
     const { server, tools } = createFakeServer();
     registerEpistemicTools(server);
@@ -351,6 +375,76 @@ describe('epistemic_append_receipt (mutation)', () => {
     expect(r.ok).toBe(true);
     expect(r.receipt_id).toMatch(/^[0-9a-f-]{36}$/);
     expect(countRows('epistemic_receipts')).toBe(1);
+  });
+
+  it('returns RECORD_REVISION_MISMATCH for record_id mismatch (Sol H8-2 regression)', async () => {
+    const { server, tools } = createFakeServer();
+    registerEpistemicTools(server);
+    const a = (await callTool(tools, 'epistemic_admit', {
+      idempotency_key: 'mismatch-rec-a',
+      project_id: 'cognitive-os',
+      scope: 'exact-project',
+      statement: 'a',
+      epistemic_status: 'inferred',
+      verification_level: 'direct',
+      source_quality: 'observed',
+      confidence: 0.5,
+      valid_from: '2026-08-09T00:00:00.000Z',
+      task_id: 't',
+    })) as { record_id: number; revision_id: string };
+    const b = (await callTool(tools, 'epistemic_admit', {
+      idempotency_key: 'mismatch-rec-b',
+      project_id: 'cognitive-os',
+      scope: 'exact-project',
+      statement: 'b',
+      epistemic_status: 'inferred',
+      verification_level: 'direct',
+      source_quality: 'observed',
+      confidence: 0.5,
+      valid_from: '2026-08-09T00:00:00.000Z',
+      task_id: 't',
+    })) as { record_id: number };
+    const r = (await callTool(tools, 'epistemic_append_receipt', {
+      idempotency_key: 'receipt-mismatch-rec',
+      record_id: b.record_id, // different record
+      revision_id: a.revision_id, // revision of record a
+      receipt_type: 'ChallengeReceipt',
+      receipt_payload: { challenge: 'wrong record' },
+      observed_at: '2026-08-09T01:00:00.000Z',
+      task_id: 't',
+      project_id: 'cognitive-os',
+    })) as { ok: boolean; code: string };
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('RECORD_REVISION_MISMATCH');
+  });
+
+  it('returns RECORD_REVISION_MISMATCH for project_id mismatch (Sol H8-2 regression)', async () => {
+    const { server, tools } = createFakeServer();
+    registerEpistemicTools(server);
+    const admitted = (await callTool(tools, 'epistemic_admit', {
+      idempotency_key: 'mismatch-proj',
+      project_id: 'cognitive-os',
+      scope: 'exact-project',
+      statement: 'proj',
+      epistemic_status: 'inferred',
+      verification_level: 'direct',
+      source_quality: 'observed',
+      confidence: 0.5,
+      valid_from: '2026-08-09T00:00:00.000Z',
+      task_id: 't',
+    })) as { record_id: number; revision_id: string };
+    const r = (await callTool(tools, 'epistemic_append_receipt', {
+      idempotency_key: 'receipt-mismatch-proj',
+      record_id: admitted.record_id,
+      revision_id: admitted.revision_id,
+      receipt_type: 'ChallengeReceipt',
+      receipt_payload: { challenge: 'wrong project' },
+      observed_at: '2026-08-09T01:00:00.000Z',
+      task_id: 't',
+      project_id: 'other-project', // different project
+    })) as { ok: boolean; code: string };
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('RECORD_REVISION_MISMATCH');
   });
 });
 

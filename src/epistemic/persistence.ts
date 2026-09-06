@@ -22,6 +22,7 @@ import { appendCognitiveEvent } from '../cognitive/events.js';
 /** Stable error codes from EPB-001 D17. */
 export const EPISTEMIC_ERROR_CODES = {
   STALE_REVISION: 'STALE_REVISION',
+  RECORD_REVISION_MISMATCH: 'RECORD_REVISION_MISMATCH',
   IDEMPOTENCY_KEY_CONFLICT: 'IDEMPOTENCY_KEY_CONFLICT',
   IDEMPOTENCY_PAYLOAD_MISMATCH: 'IDEMPOTENCY_PAYLOAD_MISMATCH',
   FUTURE_EVIDENCE: 'FUTURE_EVIDENCE',
@@ -622,12 +623,33 @@ export function appendEpistemicReceipt(
   return db.transaction(() => {
     // Verify the referenced revision exists.
     const rev = db
-      .prepare('SELECT revision_id FROM epistemic_revisions WHERE revision_id = ?')
-      .get(input.revision_id);
+      .prepare(
+        `SELECT revision_id, record_id,
+                json_extract(record_payload, '$.project_id') AS project_id
+           FROM epistemic_revisions
+          WHERE revision_id = ?`,
+      )
+      .get(input.revision_id) as
+      | { revision_id: string; record_id: number; project_id: string | null }
+      | undefined;
     if (!rev) {
       throw new EpistemicAdmissionError(
         EPISTEMIC_ERROR_CODES.STALE_REVISION,
         `revision_id ${input.revision_id} does not exist`,
+      );
+    }
+    if (rev.record_id !== input.record_id || rev.project_id !== input.project_id) {
+      throw new EpistemicAdmissionError(
+        EPISTEMIC_ERROR_CODES.RECORD_REVISION_MISMATCH,
+        `revision_id ${input.revision_id} does not belong to record_id ${input.record_id} in project ${input.project_id}`,
+        {
+          details: {
+            revision_record_id: rev.record_id,
+            revision_project_id: rev.project_id,
+            supplied_record_id: input.record_id,
+            supplied_project_id: input.project_id,
+          },
+        },
       );
     }
 

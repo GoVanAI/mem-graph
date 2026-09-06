@@ -1,0 +1,5 @@
+# Reference docs (loaded on demand into context)
+#
+# Failure-mode catalog: 8-category taxonomy (requirement, evidence, plan,
+# implementation, verification, operational, security, human) with causal
+# independence guidance and mini-patterns. To be populated per item 6.

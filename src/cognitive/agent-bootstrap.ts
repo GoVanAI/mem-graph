@@ -10,6 +10,9 @@ import type {
 } from './types.js';
 import { projectCurrentState } from '../epistemic/projections.js';
 import { projectMaintenance } from '../epistemic/maintenance-runtime.js';
+import { composeTaskStateBootstrap } from './task-state-server.js';
+import type { OperatorTrustRuntime } from './operator-trust-loader.js';
+import type { TaskStateBootstrapEnvelope, TaskStateBootstrapRequest } from './types.js';
 
 export const AGENT_PRACTICE_ID = 'mem-graph-agent-practice' as const;
 export const AGENT_PRACTICE_VERSION = '1.1.0' as const;
@@ -75,6 +78,22 @@ export function bootstrapCognitiveAgent(
     ? scopedCandidates
     : scopedCandidates.filter((candidate) => candidate.project_id === input.project_id);
   const guidance = diagnoseCurrentGuidance(db, input);
+  const includeExcludedDetails = input.include_excluded_details === true;
+  // Per Fix D (mem-graph-upgrade-v1.md §6): when include_excluded_details is
+  // false (default), strip excluded records to summary {id, title,
+  // exclusion_reasons} to avoid ~6KB of bloat from full snippets + BM25 ranks.
+  // The trimmed shape is intentional; cast through unknown to satisfy the
+  // strict CurrentGuidanceDiagnostic type without losing the runtime shape.
+  const trimmedGuidance = includeExcludedDetails
+    ? guidance
+    : ({
+        ...guidance,
+        excluded: guidance.excluded.map((record) => ({
+          id: record.id,
+          title: record.title,
+          exclusion_reasons: record.exclusion_reasons,
+        })),
+      } as unknown as typeof guidance);
   const digestInput = {
     practice: `${AGENT_PRACTICE_ID}@${AGENT_PRACTICE_VERSION}`,
     project_id: input.project_id,
@@ -116,7 +135,7 @@ export function bootstrapCognitiveAgent(
       authority: 'candidate_only',
       candidates,
     },
-    guidance,
+    guidance: trimmedGuidance,
     verification: {
       required: true,
       instruction:
@@ -130,6 +149,22 @@ export function bootstrapCognitiveAgent(
     },
     bootstrap_digest: createHash('sha256').update(JSON.stringify(digestInput)).digest('hex'),
   };
+}
+
+/** Additive Option 1 wrapper. The legacy bootstrap and its digest stay intact. */
+export function bootstrapCognitiveAgentWithTaskState(
+  db: Database.Database,
+  input: AgentBootstrapInput,
+  taskState: TaskStateBootstrapRequest | undefined,
+  trustRuntime?: OperatorTrustRuntime,
+): AgentBootstrapResult & { task_state: TaskStateBootstrapEnvelope } {
+  const base = bootstrapCognitiveAgent(db, input);
+  const scopedRequest = taskState === undefined ? undefined : {
+    ...taskState,
+    project_id: input.project_id,
+    include_global: input.include_global,
+  };
+  return { ...base, task_state: composeTaskStateBootstrap(db, scopedRequest, trustRuntime) };
 }
 
 /**

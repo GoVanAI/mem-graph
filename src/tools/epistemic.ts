@@ -1,7 +1,7 @@
 /**
  * Epistemic Memory MCP tools — Step 7 of EPB-001.
  *
- * Per [[283]] Step 7 acceptance:
+ * Per the Step 3 acceptance contract Step 7 acceptance:
  *   - thin Zod adapters only; domain logic lives below the adapter;
  *   - read tools (epistemic_get, epistemic_query, epistemic_integrity_check)
  *     are zero-write and never touch access counters, events, receipts,
@@ -93,7 +93,7 @@ const RECEIPT_INPUT = {
   record_id: z.number().int().positive(),
   revision_id: z.string().uuid(),
   receipt_type: z.enum(RECEIPT_TYPES),
-  receipt_payload: z.unknown(),
+  receipt_payload: z.record(z.string(), z.unknown()),
   independence_key: z.string().nullable().optional(),
   observed_at: z.string().min(1),
   task_id: z.string().min(1),
@@ -178,6 +178,15 @@ export function registerEpistemicTools(server: McpServer): void {
               ok: false,
               code: 'OUT_OF_SCOPE',
               message: `record ${input.record_id} has no state at or before ${input.as_of}`,
+            });
+          }
+          // Enforce project_id scope unless include_global is set.
+          // Mirrors the current-projection path below; closes Sol H8-1.
+          if (!input.include_global && asOf.project_id !== input.project_id) {
+            return jsonResult({
+              ok: false,
+              code: 'OUT_OF_SCOPE',
+              message: `record ${input.record_id} belongs to project ${asOf.project_id}`,
             });
           }
           return jsonResult({ ok: true, record: asOf, mode: 'as_of' });

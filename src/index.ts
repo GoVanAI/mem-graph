@@ -11,6 +11,7 @@ import { registerMemoryGraphTools } from './tools/memory-graph.js';
 import { registerMemoryImportTools } from './tools/memory-import.js';
 import { registerCognitiveTools } from './tools/cognitive.js';
 import { registerEpistemicTools } from './tools/epistemic.js';
+import { createOperatorTrustRuntime } from './cognitive/operator-trust-loader.js';
 
 const SERVER_INFO = {
   name: 'mem-graph',
@@ -54,7 +55,7 @@ async function main(): Promise<void> {
   // 3. Build the MCP server
   const server = new McpServer(SERVER_INFO);
 
-  // 4. Register the 35 tools across 8 groups.
+  // 4. Register the 40 tools across 9 registration groups.
   registerSqlTools(server);              // 4 tools
   registerMemoryOrientTools(server);     // 4 tools
   registerMemorySearchTools(server);     // 5 tools
@@ -62,7 +63,10 @@ async function main(): Promise<void> {
   registerMemoryTagTools(server);        // 2 tools (R2)
   registerMemoryGraphTools(server);      // 6 tools
   registerMemoryImportTools(server);     // 1 tool  (R3)
-  registerCognitiveTools(server);        // 8 tools (Cognitive OS)
+  // Captured once before tool registration; requests cannot select or replace it.
+  let operatorTrustRuntime;
+  try { operatorTrustRuntime = process.env.MEM_GRAPH_OPERATOR_TRUST_STARTUP ? createOperatorTrustRuntime(JSON.parse(process.env.MEM_GRAPH_OPERATOR_TRUST_STARTUP)) : undefined; } catch { operatorTrustRuntime = undefined; }
+  registerCognitiveTools(server, { operatorTrustRuntime }); // 8 tools (Cognitive OS)
   registerEpistemicTools(server);        // 5 tools (Epistemic Phase B, Slice 1)
 
   // 5. Connect via stdio
