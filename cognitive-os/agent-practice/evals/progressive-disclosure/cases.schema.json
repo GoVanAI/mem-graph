@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mem-graph://evals/progressive-disclosure/cases.schema.json",
+  "title": "Step 2A progressive-disclosure baseline cases",
+  "type": "object",
+  "required": ["schema_version", "fixture_policy", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "const": "./cases.schema.json" },
+    "schema_version": { "const": "1.0.0" },
+    "fixture_policy": { "const": "synthetic-only" },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "workflow",
+          "request",
+          "source_snapshot",
+          "expected",
+          "baseline_trace"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^pd-[0-9]{2}-[a-z0-9-]+$" },
+          "workflow": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": ["orient", "find-and-inspect", "record-and-revise", "review-and-learn"]
+            }
+          },
+          "request": { "type": "object" },
+          "source_snapshot": {
+            "type": "object",
+            "required": ["snapshot_id", "project_id", "records"],
+            "properties": {
+              "snapshot_id": { "type": "string" },
+              "project_id": { "type": "string" },
+              "records": { "type": "array" }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": ["outcome", "required_signals", "forbidden_signals"],
+            "properties": {
+              "outcome": { "type": "string" },
+              "required_signals": { "type": "array", "items": { "type": "string" } },
+              "forbidden_signals": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "baseline_trace": {
+            "type": "object",
+            "required": ["legacy_tools", "calls", "measurement_status"],
+            "properties": {
+              "legacy_tools": { "type": "array", "items": { "type": "string" } },
+              "calls": { "type": "integer", "minimum": 1 },
+              "measurement_status": { "const": "contract-only-not-executed" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
