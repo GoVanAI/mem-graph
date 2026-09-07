@@ -80,7 +80,8 @@ for (const [index, item] of (casesDocument.cases ?? []).entries()) {
   requireCondition(item.source_snapshot?.project_id === item.request?.project_id, `${label} request and snapshot projects must match`);
   requireKeys(item.expected, ['outcome', 'required_signals', 'forbidden_signals'], `${label}.expected`);
   requireKeys(item.baseline_trace, ['legacy_tools', 'calls', 'measurement_status'], `${label}.baseline_trace`);
-  requireCondition(item.baseline_trace?.measurement_status === 'contract-only-not-executed', `${label} must not claim an executed baseline`);
+  const allowedStatuses = new Set(['contract-only-not-executed', 'executed-pass', 'executed-gap', 'executed-unavailable']);
+  requireCondition(allowedStatuses.has(item.baseline_trace?.measurement_status), `${label} has invalid measurement_status`);
 }
 requireCondition(JSON.stringify(actualCaseIds) === JSON.stringify(expectedCaseIds), 'baseline case IDs/order differ from the frozen Step 2 list');
 const fixtureText = JSON.stringify(casesDocument);

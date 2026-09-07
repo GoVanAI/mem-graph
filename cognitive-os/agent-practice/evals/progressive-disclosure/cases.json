@@ -19,7 +19,7 @@
         "required_signals": ["project_id=fixture-alpha", "objective=unresolved", "done_condition=unresolved"],
         "forbidden_signals": ["invented manifest", "_global content", "foreign project content"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap"], "calls": 1, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap"], "calls": 1, "measurement_status": "executed-pass" }
     },
     {
       "id": "pd-02-valid-manifest",
@@ -38,7 +38,7 @@
         "required_signals": ["objective", "done_condition", "constraints", "governing_decisions", "current_state", "open_state", "next_action"],
         "forbidden_signals": ["context promoted to governing", "database write"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get"], "calls": 2, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get"], "calls": 2, "measurement_status": "executed-pass" }
     },
     {
       "id": "pd-03-fresh-contradiction",
@@ -57,7 +57,7 @@
         "required_signals": ["contradiction warning", "affected_source=104", "requires_expansion=true"],
         "forbidden_signals": ["automatic rejection", "silent reliance on source 104"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "epistemic_get", "cognitive_event_trace"], "calls": 3, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "epistemic_get", "cognitive_event_trace"], "calls": 3, "measurement_status": "executed-pass" }
     },
     {
       "id": "pd-04-long-governing-record",
@@ -75,7 +75,7 @@
         "required_signals": ["preview", "source_id=106", "requires_expansion=true", "omitted_content_bytes"],
         "forbidden_signals": ["complete=true", "silent truncation"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get"], "calls": 2, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get"], "calls": 2, "measurement_status": "executed-gap" }
     },
     {
       "id": "pd-05-wrong-project",
@@ -95,7 +95,7 @@
         "required_signals": ["source_id=107", "include_global=false"],
         "forbidden_signals": ["source_id=108", "source_id=109", "foreign expansion instruction"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap"], "calls": 1, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap"], "calls": 1, "measurement_status": "executed-gap" }
     },
     {
       "id": "pd-06-source-revised",
@@ -113,7 +113,7 @@
         "required_signals": ["version_mismatch", "refresh_required=true"],
         "forbidden_signals": ["mixed snapshot", "stale source adopted"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get", "cognitive_agent_bootstrap"], "calls": 3, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_get", "cognitive_agent_bootstrap"], "calls": 3, "measurement_status": "executed-pass" }
     },
     {
       "id": "pd-07-history-heavy",
@@ -133,7 +133,7 @@
         "required_signals": ["current_source=111", "history_available=true", "history_count=2"],
         "forbidden_signals": ["history treated as governing", "all history in first response"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_search"], "calls": 2, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_search"], "calls": 2, "measurement_status": "executed-pass" }
     },
     {
       "id": "pd-08-degraded-input",
@@ -152,7 +152,7 @@
         "required_signals": ["base_orientation_available=true", "manifest_invalid", "missing_source=115", "fallback"],
         "forbidden_signals": ["bootstrap failure", "invented missing content", "hidden legacy tool"]
       },
-      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_search"], "calls": 2, "measurement_status": "contract-only-not-executed" }
+      "baseline_trace": { "legacy_tools": ["cognitive_agent_bootstrap", "memory_search"], "calls": 2, "measurement_status": "executed-pass" }
     }
   ]
 }

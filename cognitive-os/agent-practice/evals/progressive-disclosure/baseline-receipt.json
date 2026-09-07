@@ -1,0 +1,187 @@
+{
+  "run_id": "step-2a-baseline",
+  "clock_anchor": "2026-09-07T12:00:00.000Z",
+  "runs": [
+    {
+      "run_id": "3bf2c8f8-b104-44b5-b73e-7399cb0866c8",
+      "results_dir_relative": "cognitive-os/agent-practice/evals/progressive-disclosure/results/3bf2c8f8-b104-44b5-b73e-7399cb0866c8"
+    },
+    {
+      "run_id": "33742f31-4ad5-43f6-a705-969481f05ff9",
+      "results_dir_relative": "cognitive-os/agent-practice/evals/progressive-disclosure/results/33742f31-4ad5-43f6-a705-969481f05ff9"
+    }
+  ],
+  "environment_run1": {
+    "node_version": "v25.6.1",
+    "cases_contract_hash": "67950e71c1e36a6c96ebc2e1da944f04fc1795584fe7aa361a6df6c45ef47a39",
+    "tool_mapping_hash": "ed19359f7e6cddd57874d415874ea20a529bb5eba9ea7801a3e86a1f9203dd4c",
+    "registered_tool_count": 41
+  },
+  "environment_run2": {
+    "node_version": "v25.6.1",
+    "cases_contract_hash": "67950e71c1e36a6c96ebc2e1da944f04fc1795584fe7aa361a6df6c45ef47a39",
+    "tool_mapping_hash": "ed19359f7e6cddd57874d415874ea20a529bb5eba9ea7801a3e86a1f9203dd4c",
+    "registered_tool_count": 41
+  },
+  "aggregate_outcomes_across_both_runs": {
+    "executed-pass": 12,
+    "executed-gap": 4,
+    "executed-unavailable": 0,
+    "executed-unmappable": 0
+  },
+  "per_case_outcomes_run1": [
+    {
+      "case_id": "pd-01-ordinary-restart",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-02-valid-manifest",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-03-fresh-contradiction",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-04-long-governing-record",
+      "outcome": "executed-gap"
+    },
+    {
+      "case_id": "pd-05-wrong-project",
+      "outcome": "executed-gap"
+    },
+    {
+      "case_id": "pd-06-source-revised",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-07-history-heavy",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-08-degraded-input",
+      "outcome": "executed-pass"
+    }
+  ],
+  "per_case_outcomes_run2": [
+    {
+      "case_id": "pd-01-ordinary-restart",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-02-valid-manifest",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-03-fresh-contradiction",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-04-long-governing-record",
+      "outcome": "executed-gap"
+    },
+    {
+      "case_id": "pd-05-wrong-project",
+      "outcome": "executed-gap"
+    },
+    {
+      "case_id": "pd-06-source-revised",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-07-history-heavy",
+      "outcome": "executed-pass"
+    },
+    {
+      "case_id": "pd-08-degraded-input",
+      "outcome": "executed-pass"
+    }
+  ],
+  "per_case_normalized_hashes_run1": {
+    "pd-01-ordinary-restart": "1b1d35e89d9365f24abbbcc45534d8d0f7f9c64f3a688d9cb66ccdba66a7a823",
+    "pd-02-valid-manifest": "1647e8ddfc20bc7c29e777f3596d3aae1e53a65593b9c606516f3f7c2069700b",
+    "pd-03-fresh-contradiction": "25582ed1a3f19a8282e3a8d872dc109a5715232d041a47b1995428d0cef1936a",
+    "pd-04-long-governing-record": "f493d8bd6ef2e808f29bf322ce656aaa0a1ddc7abafdaec2818e34df9cb869e2",
+    "pd-05-wrong-project": "9453ccb51f51809820425cceea107ae55b6303ebec576a8b2064f12cc1284adb",
+    "pd-06-source-revised": "69bba2e8a4d35d53067baa43fe06925fdde42f712c02d804e69c7c5e6e20f4be",
+    "pd-07-history-heavy": "7e7dff7e0c1180907501df382a23b9547529935ac213342765640b38d3250f7d",
+    "pd-08-degraded-input": "129b276f6ea02bfb5379f7bfa72006bc2b265ef99f61e8b0a94d7295cbc3796a"
+  },
+  "per_case_normalized_hashes_run2": {
+    "pd-01-ordinary-restart": "1b1d35e89d9365f24abbbcc45534d8d0f7f9c64f3a688d9cb66ccdba66a7a823",
+    "pd-02-valid-manifest": "1647e8ddfc20bc7c29e777f3596d3aae1e53a65593b9c606516f3f7c2069700b",
+    "pd-03-fresh-contradiction": "25582ed1a3f19a8282e3a8d872dc109a5715232d041a47b1995428d0cef1936a",
+    "pd-04-long-governing-record": "f493d8bd6ef2e808f29bf322ce656aaa0a1ddc7abafdaec2818e34df9cb869e2",
+    "pd-05-wrong-project": "9453ccb51f51809820425cceea107ae55b6303ebec576a8b2064f12cc1284adb",
+    "pd-06-source-revised": "69bba2e8a4d35d53067baa43fe06925fdde42f712c02d804e69c7c5e6e20f4be",
+    "pd-07-history-heavy": "7e7dff7e0c1180907501df382a23b9547529935ac213342765640b38d3250f7d",
+    "pd-08-degraded-input": "129b276f6ea02bfb5379f7bfa72006bc2b265ef99f61e8b0a94d7295cbc3796a"
+  },
+  "per_case_determinism": {
+    "pd-01-ordinary-restart": {
+      "run1": "1b1d35e89d9365f24abbbcc45534d8d0f7f9c64f3a688d9cb66ccdba66a7a823",
+      "run2": "1b1d35e89d9365f24abbbcc45534d8d0f7f9c64f3a688d9cb66ccdba66a7a823",
+      "match": true
+    },
+    "pd-02-valid-manifest": {
+      "run1": "1647e8ddfc20bc7c29e777f3596d3aae1e53a65593b9c606516f3f7c2069700b",
+      "run2": "1647e8ddfc20bc7c29e777f3596d3aae1e53a65593b9c606516f3f7c2069700b",
+      "match": true
+    },
+    "pd-03-fresh-contradiction": {
+      "run1": "25582ed1a3f19a8282e3a8d872dc109a5715232d041a47b1995428d0cef1936a",
+      "run2": "25582ed1a3f19a8282e3a8d872dc109a5715232d041a47b1995428d0cef1936a",
+      "match": true
+    },
+    "pd-04-long-governing-record": {
+      "run1": "f493d8bd6ef2e808f29bf322ce656aaa0a1ddc7abafdaec2818e34df9cb869e2",
+      "run2": "f493d8bd6ef2e808f29bf322ce656aaa0a1ddc7abafdaec2818e34df9cb869e2",
+      "match": true
+    },
+    "pd-05-wrong-project": {
+      "run1": "9453ccb51f51809820425cceea107ae55b6303ebec576a8b2064f12cc1284adb",
+      "run2": "9453ccb51f51809820425cceea107ae55b6303ebec576a8b2064f12cc1284adb",
+      "match": true
+    },
+    "pd-06-source-revised": {
+      "run1": "69bba2e8a4d35d53067baa43fe06925fdde42f712c02d804e69c7c5e6e20f4be",
+      "run2": "69bba2e8a4d35d53067baa43fe06925fdde42f712c02d804e69c7c5e6e20f4be",
+      "match": true
+    },
+    "pd-07-history-heavy": {
+      "run1": "7e7dff7e0c1180907501df382a23b9547529935ac213342765640b38d3250f7d",
+      "run2": "7e7dff7e0c1180907501df382a23b9547529935ac213342765640b38d3250f7d",
+      "match": true
+    },
+    "pd-08-degraded-input": {
+      "run1": "129b276f6ea02bfb5379f7bfa72006bc2b265ef99f61e8b0a94d7295cbc3796a",
+      "run2": "129b276f6ea02bfb5379f7bfa72006bc2b265ef99f61e8b0a94d7295cbc3796a",
+      "match": true
+    }
+  },
+  "determinism_passes": true,
+  "schema_bytes_for_legacy_surface": 31553,
+  "total_response_bytes_run1": 17020,
+  "total_response_bytes_run2": 17020,
+  "total_calls_run1": 16,
+  "total_calls_run2": 16,
+  "documented_normalization_paths": [
+    "per_call[].elapsed_ms (excluded from determinism hash)",
+    "total_elapsed_ms (excluded from determinism hash)",
+    "environment.run_id and run_started_at (preserved in raw; excluded via case-level normalization not applied here)"
+  ],
+  "notes": [
+    "Both runs use the same clock anchor (2026-09-07T12:00:00.000Z) so fixture-controlled semantic timestamps (created_at, updated_at on seeded memories) are deterministic across runs.",
+    "Per-call elapsed_ms is preserved in raw outputs (results/<run-id>/<case-id>.json) and excluded from the normalized determinism hash.",
+    "Runtime-generated volatile timestamps (e.g. observed_at from cognitive_event_append) are not exercised by the current eight legacy traces. If future cases require it, document the JSON path and add a stable normalization token.",
+    "Generated UUIDs (revision_id, event_id) are not exercised by current traces; normalization through stable first-seen mapping deferred.",
+    "Absolute paths to disposable dirs are recorded as repo-relative in environment.json; raw output is gitignored."
+  ],
+  "isolation": {
+    "run1_disposable_basename": "mem-graph-step2a-3bf2c8f8-b104-44b5-b73e-7399cb0866c8-1f7Hwe",
+    "run2_disposable_basename": "mem-graph-step2a-33742f31-4ad5-43f6-a705-969481f05ff9-ZxSFrT",
+    "run1_dir_removed_post_run": true,
+    "run2_dir_removed_post_run": true,
+    "live_database_not_touched": "MEM_GRAPH_DIR was set per run to a fresh tmp dir; the live ~/.local/share/mem-graph path was never opened"
+  }
+}

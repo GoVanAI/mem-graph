@@ -58,7 +58,15 @@
             "properties": {
               "legacy_tools": { "type": "array", "items": { "type": "string" } },
               "calls": { "type": "integer", "minimum": 1 },
-              "measurement_status": { "const": "contract-only-not-executed" }
+              "measurement_status": {
+                "enum": [
+                  "contract-only-not-executed",
+                  "executed-pass",
+                  "executed-gap",
+                  "executed-unavailable",
+                  "executed-unmappable"
+                ]
+              }
             }
           }
         }
