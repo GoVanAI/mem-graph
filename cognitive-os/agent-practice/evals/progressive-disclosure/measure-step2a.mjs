@@ -80,8 +80,7 @@ for (const [index, item] of (casesDocument.cases ?? []).entries()) {
   requireCondition(item.source_snapshot?.project_id === item.request?.project_id, `${label} request and snapshot projects must match`);
   requireKeys(item.expected, ['outcome', 'required_signals', 'forbidden_signals'], `${label}.expected`);
   requireKeys(item.baseline_trace, ['legacy_tools', 'calls', 'measurement_status'], `${label}.baseline_trace`);
-  const allowedStatuses = new Set(['contract-only-not-executed', 'executed-pass', 'executed-gap', 'executed-unavailable']);
-  requireCondition(allowedStatuses.has(item.baseline_trace?.measurement_status), `${label} has invalid measurement_status`);
+  requireCondition(item.baseline_trace?.measurement_status === 'contract-only-not-executed', `${label} must not claim an executed baseline`);
 }
 requireCondition(JSON.stringify(actualCaseIds) === JSON.stringify(expectedCaseIds), 'baseline case IDs/order differ from the frozen Step 2 list');
 const fixtureText = JSON.stringify(casesDocument);
@@ -89,8 +88,14 @@ requireCondition(!/VanCh|C:\\\\Users|Documents\\\\Projects/i.test(fixtureText), 
 
 requireKeys(mapping, ['schema_version', 'source_of_truth', 'proposed_everyday_routes', 'workflow_routes', 'tools'], 'mapping');
 requireCondition(mapping.schema_version === '1.0.0', 'mapping schema_version must be 1.0.0');
-requireCondition(Array.isArray(mapping.proposed_everyday_routes) && mapping.proposed_everyday_routes.length >= 8 && mapping.proposed_everyday_routes.length <= 10, 'everyday route target must contain 8-10 routes');
+requireCondition(Array.isArray(mapping.proposed_everyday_routes) && mapping.proposed_everyday_routes.length === 10, 'everyday route target must contain exactly 10 routes');
 requireCondition(new Set(mapping.proposed_everyday_routes).size === mapping.proposed_everyday_routes.length, 'proposed everyday routes must be unique');
+requireCondition(mapping.proposed_everyday_routes.includes('memory_prime'), 'memory_prime must be among the everyday routes');
+
+const prohibitedFamilyNames = ['memory_admin', 'cognitive_policy', 'cognitive_bootstrap', 'sql_substrate'];
+for (const route of mapping.proposed_everyday_routes ?? []) {
+  requireCondition(!prohibitedFamilyNames.includes(route), `route ${route} uses a prohibited family name`);
+}
 
 const workflowNames = ['orient', 'find-and-inspect', 'record-and-revise', 'review-and-learn'];
 const workflowRouteSet = new Set();
@@ -100,6 +105,7 @@ for (const workflow of workflowNames) {
   for (const route of routes ?? []) {
     workflowRouteSet.add(route);
     requireCondition(mapping.proposed_everyday_routes.includes(route), `workflow ${workflow} names undeclared route ${route}`);
+    requireCondition(!prohibitedFamilyNames.includes(route), `workflow ${workflow} references prohibited family ${route}`);
   }
 }
 for (const route of mapping.proposed_everyday_routes ?? []) {
@@ -118,6 +124,27 @@ requireCondition(extra.length === 0, `mapping entries absent from source: ${extr
 const registrationByName = new Map(registrations.map((entry) => [entry.name, entry]));
 const allowedClassifications = new Set(['everyday', 'specialist', 'legacy-only']);
 const allowedReturnTypes = new Set(['json', 'text-json', 'rows']);
+const everydayRoutes = new Set(mapping.proposed_everyday_routes);
+const maintenanceTools = new Set([
+  'cognitive_policy_create',
+  'cognitive_policy_evaluate',
+  'cognitive_policy_lookup',
+  'epistemic_integrity_check',
+  'list_databases',
+  'memory_boost',
+  'memory_categories',
+  'memory_decay',
+  'memory_import_from_mem_sol',
+  'memory_overview',
+  'memory_projects',
+  'memory_spread_stats',
+  'memory_stale',
+  'memory_stats',
+  'memory_synapse_create',
+  'sql_execute',
+  'sql_introspect',
+  'sql_query',
+]);
 for (const [index, entry] of (mapping.tools ?? []).entries()) {
   const label = `tool[${index}] ${entry.name ?? '<unnamed>'}`;
   requireKeys(entry, ['name', 'source', 'input_schema', 'scope', 'return_type', 'side_effects', 'classification', 'destination', 'fallback', 'practice_callers'], label);
@@ -131,6 +158,28 @@ for (const [index, entry] of (mapping.tools ?? []).entries()) {
   requireCondition(Array.isArray(entry.side_effects), `${label} side_effects must be an array`);
   requireCondition(Array.isArray(entry.practice_callers) && entry.practice_callers.length > 0, `${label} needs practice callers`);
   requireCondition(registrationByName.get(entry.name)?.source === entry.source, `${label} source path disagrees with registration`);
+
+  // Validate destination matches the legacy classification.
+  // everyday -> destination must be one of the 10 routes (variant form allowed).
+  // specialist -> destination must be "maintenance: <tool>" with tool in maintenanceTools.
+  // legacy-only -> destination is the tool itself (full-profile fallback).
+  const dest = entry.destination ?? '';
+  if (entry.classification === 'everyday') {
+    const base = dest.split(':')[0];
+    requireCondition(everydayRoutes.has(base), `${label} everyday destination ${dest} is not one of the 10 routes`);
+    requireCondition(!prohibitedFamilyNames.includes(base), `${label} destination uses prohibited family name`);
+  } else if (entry.classification === 'specialist') {
+    const m = /^maintenance:\s*(.+)$/.exec(dest);
+    requireCondition(!!m, `${label} specialist destination must match 'maintenance: <tool>'`);
+    if (m) requireCondition(maintenanceTools.has(m[1]), `${label} specialist destination ${dest} names a non-maintenance tool`);
+  } else if (entry.classification === 'legacy-only') {
+    requireCondition(dest === entry.name || dest.startsWith('full profile'), `${label} legacy-only destination must be self or full-profile reference; got ${dest}`);
+  }
+
+  // memory_prime reclassifies from legacy-only to everyday.
+  if (entry.name === 'memory_prime') {
+    requireCondition(entry.classification === 'everyday', 'memory_prime must be reclassified everyday');
+  }
 }
 
 const classifications = Object.fromEntries(

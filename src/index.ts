@@ -2,16 +2,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { initDatabase, isMemoryEmpty, closeAllDatabases, getMemoryDir } from './db.js';
 import { runBootstrapIfEmpty } from './bootstrap.js';
-import { registerSqlTools } from './tools/sql.js';
-import { registerMemoryOrientTools } from './tools/memory-orient.js';
-import { registerMemorySearchTools } from './tools/memory-search.js';
-import { registerMemoryWriteTools } from './tools/memory-write.js';
-import { registerMemoryTagTools } from './tools/memory-tags.js';
-import { registerMemoryGraphTools } from './tools/memory-graph.js';
-import { registerMemoryImportTools } from './tools/memory-import.js';
-import { registerCognitiveTools } from './tools/cognitive.js';
-import { registerEpistemicTools } from './tools/epistemic.js';
 import { createOperatorTrustRuntime } from './cognitive/operator-trust-loader.js';
+import { parseMcpProfile, registerToolsForProfile } from './tool-profiles.js';
 
 const SERVER_INFO = {
   name: 'mem-graph',
@@ -19,6 +11,9 @@ const SERVER_INFO = {
 };
 
 async function main(): Promise<void> {
+  // Parse before any database initialization so a misspelled deployment
+  // profile cannot create/open state as a side effect.
+  const profile = parseMcpProfile();
   process.stderr.write(`[mem-graph] starting; data dir: ${getMemoryDir()}\n`);
 
   // 1. Initialize the memory database (idempotent schema)
@@ -55,19 +50,12 @@ async function main(): Promise<void> {
   // 3. Build the MCP server
   const server = new McpServer(SERVER_INFO);
 
-  // 4. Register the 40 tools across 9 registration groups.
-  registerSqlTools(server);              // 4 tools
-  registerMemoryOrientTools(server);     // 4 tools
-  registerMemorySearchTools(server);     // 5 tools
-  registerMemoryWriteTools(server);      // 5 tools
-  registerMemoryTagTools(server);        // 2 tools (R2)
-  registerMemoryGraphTools(server);      // 6 tools
-  registerMemoryImportTools(server);     // 1 tool  (R3)
   // Captured once before tool registration; requests cannot select or replace it.
   let operatorTrustRuntime;
   try { operatorTrustRuntime = process.env.MEM_GRAPH_OPERATOR_TRUST_STARTUP ? createOperatorTrustRuntime(JSON.parse(process.env.MEM_GRAPH_OPERATOR_TRUST_STARTUP)) : undefined; } catch { operatorTrustRuntime = undefined; }
-  registerCognitiveTools(server, { operatorTrustRuntime }); // 8 tools (Cognitive OS)
-  registerEpistemicTools(server);        // 5 tools (Epistemic Phase B, Slice 1)
+  // Full retains the exact legacy registrations; restricted profiles expose
+  // only their allowlisted tools.
+  registerToolsForProfile(server, profile, { operatorTrustRuntime });
 
   // 5. Connect via stdio
   const transport = new StdioServerTransport();

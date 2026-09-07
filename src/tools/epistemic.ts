@@ -36,6 +36,7 @@ import {
   projectCurrentState,
   asOfQuery,
 } from '../epistemic/projections.js';
+import { conceptDiff } from '../cognitive/concept-diff/concept-diff.js';
 
 const EPISTEMIC_STATUSES = [
   'verified',
@@ -116,7 +117,24 @@ const GET_INPUT = {
   as_of: z.string().optional(),
 } as const;
 
-function formatError(e: unknown): { code: string; message: string } {
+const DIFF_INPUT = {
+  record_id: z.number().int().positive(),
+  project_id: z.string().min(1),
+  include_global: z.boolean().optional(),
+  from_as_of: z.string().min(1),
+  to_as_of: z.string().min(1),
+  include_unchanged: z.boolean().optional(),
+  include_retracted: z.boolean().optional(),
+} as const;
+
+export class EpistemicReadError extends Error {
+  constructor(public readonly code: 'OUT_OF_SCOPE', message: string) {
+    super(message);
+  }
+}
+
+export function formatEpistemicError(e: unknown): { code: string; message: string } {
+  if (e instanceof EpistemicReadError) return { code: e.code, message: e.message };
   if (e instanceof EpistemicAdmissionError) {
     return { code: e.code, message: e.message };
   }
@@ -130,6 +148,93 @@ function formatError(e: unknown): { code: string; message: string } {
   return { code: 'INTERNAL_ERROR', message };
 }
 
+/**
+ * Epistemic scope check:
+ * - exact-project records are readable only when record.project_id === projectId;
+ * - globally applicable records are readable only when includeGlobal=true and record.scope === '_global';
+ * - includeGlobal=true must never authorize an exact-project record belonging to another project.
+ */
+export function isEpistemicRecordInScope(
+  record: { project_id: string; scope: string },
+  projectId: string,
+  includeGlobal?: boolean,
+): boolean {
+  if (record.scope === '_global') {
+    return Boolean(includeGlobal);
+  }
+  return record.project_id === projectId;
+}
+
+export interface EpistemicReadInput {
+  record_id: number;
+  project_id: string;
+  include_global?: boolean;
+  as_of?: string;
+}
+
+/** Shared zero-write projection read for legacy and consolidated adapters. */
+export function readEpistemicRecord(db: ReturnType<typeof getDatabase>, input: EpistemicReadInput) {
+  const record = input.as_of
+    ? asOfQuery(db, input.record_id, input.as_of)
+    : projectCurrentState(db).find((row) => row.record_id === input.record_id);
+  if (!record) {
+    const suffix = input.as_of ? ` has no state at or before ${input.as_of}` : ' does not exist';
+    throw new EpistemicReadError('OUT_OF_SCOPE', `record ${input.record_id}${suffix}`);
+  }
+  if (!isEpistemicRecordInScope(record, input.project_id, input.include_global)) {
+    throw new EpistemicReadError('OUT_OF_SCOPE', `record ${input.record_id} belongs to project ${record.project_id}`);
+  }
+  return { record, mode: input.as_of ? 'as_of' as const : 'current' as const };
+}
+
+export interface EpistemicQueryInput {
+  project_id: string;
+  include_global?: boolean;
+  scope?: string;
+  epistemic_status?: string;
+  limit?: number;
+}
+
+/** Shared zero-write filtered current projection query. */
+export function queryEpistemicRecords(db: ReturnType<typeof getDatabase>, input: EpistemicQueryInput) {
+  const filtered = projectCurrentState(db).filter((record) =>
+    isEpistemicRecordInScope(record, input.project_id, input.include_global)
+    && (!input.scope || record.scope === input.scope)
+    && (!input.epistemic_status || record.epistemic_status === input.epistemic_status),
+  );
+  const limit = input.limit ?? 50;
+  const records = filtered.slice(0, limit);
+  return { total_matched: filtered.length, returned: records.length, limit, records };
+}
+
+export interface EpistemicDiffInput {
+  record_id: number;
+  project_id: string;
+  include_global?: boolean;
+  from_as_of: string;
+  to_as_of: string;
+  include_unchanged?: boolean;
+  include_retracted?: boolean;
+}
+
+/** Shared zero-write time-travel diff with both endpoint scope checks. */
+export function diffEpistemicRecord(db: ReturnType<typeof getDatabase>, input: EpistemicDiffInput) {
+  const diff = conceptDiff(db, input.record_id, input.from_as_of, input.to_as_of, {
+    includeUnchanged: input.include_unchanged ?? false,
+    includeRetracted: input.include_retracted ?? false,
+  });
+  const offendingState =
+    (diff.from_state !== null && !isEpistemicRecordInScope(diff.from_state, input.project_id, input.include_global))
+      ? 'from_state'
+      : (diff.to_state !== null && !isEpistemicRecordInScope(diff.to_state, input.project_id, input.include_global))
+        ? 'to_state'
+        : null;
+  if (offendingState) {
+    throw new EpistemicReadError('OUT_OF_SCOPE', `record ${input.record_id} ${offendingState} belongs to a different project or scope`);
+  }
+  return { diff };
+}
+
 export function registerEpistemicTools(server: McpServer): void {
   // ─── Mutation: epistemic_admit ─────────────────────────────────────
   server.tool(
@@ -141,7 +246,7 @@ export function registerEpistemicTools(server: McpServer): void {
         const result = admitEpistemicRecord(getDatabase('memory'), input);
         return jsonResult({ ok: true, ...result });
       } catch (e) {
-        const err = formatError(e);
+        const err = formatEpistemicError(e);
         return jsonResult({ ok: false, ...err });
       }
     },
@@ -157,7 +262,7 @@ export function registerEpistemicTools(server: McpServer): void {
         const result = appendEpistemicReceipt(getDatabase('memory'), input);
         return jsonResult({ ok: true, ...result });
       } catch (e) {
-        const err = formatError(e);
+        const err = formatEpistemicError(e);
         return jsonResult({ ok: false, ...err });
       }
     },
@@ -171,46 +276,9 @@ export function registerEpistemicTools(server: McpServer): void {
     async (input) => {
       const db = getDatabase('memory');
       try {
-        if (input.as_of) {
-          const asOf = asOfQuery(db, input.record_id, input.as_of);
-          if (!asOf) {
-            return jsonResult({
-              ok: false,
-              code: 'OUT_OF_SCOPE',
-              message: `record ${input.record_id} has no state at or before ${input.as_of}`,
-            });
-          }
-          // Enforce project_id scope unless include_global is set.
-          // Mirrors the current-projection path below; closes Sol H8-1.
-          if (!input.include_global && asOf.project_id !== input.project_id) {
-            return jsonResult({
-              ok: false,
-              code: 'OUT_OF_SCOPE',
-              message: `record ${input.record_id} belongs to project ${asOf.project_id}`,
-            });
-          }
-          return jsonResult({ ok: true, record: asOf, mode: 'as_of' });
-        }
-        const rows = projectCurrentState(db).filter((r) => r.record_id === input.record_id);
-        if (rows.length === 0) {
-          return jsonResult({
-            ok: false,
-            code: 'OUT_OF_SCOPE',
-            message: `record ${input.record_id} does not exist`,
-          });
-        }
-        const row = rows[0];
-        // Enforce project_id scope unless include_global is set.
-        if (!input.include_global && row.project_id !== input.project_id) {
-          return jsonResult({
-            ok: false,
-            code: 'OUT_OF_SCOPE',
-            message: `record ${input.record_id} belongs to project ${row.project_id}`,
-          });
-        }
-        return jsonResult({ ok: true, record: row, mode: 'current' });
+        return jsonResult({ ok: true, ...readEpistemicRecord(db, input) });
       } catch (e) {
-        return jsonResult({ ok: false, ...formatError(e) });
+        return jsonResult({ ok: false, ...formatEpistemicError(e) });
       }
     },
   );
@@ -223,24 +291,9 @@ export function registerEpistemicTools(server: McpServer): void {
     async (input) => {
       const db = getDatabase('memory');
       try {
-        const all = projectCurrentState(db);
-        const filtered = all.filter((r) => {
-          if (!input.include_global && r.project_id !== input.project_id) return false;
-          if (input.include_global && r.project_id !== input.project_id && r.scope !== '_global') return false;
-          if (input.scope && r.scope !== input.scope) return false;
-          if (input.epistemic_status && r.epistemic_status !== input.epistemic_status) return false;
-          return true;
-        });
-        const records = filtered.slice(0, input.limit);
-        return jsonResult({
-          ok: true,
-          total_matched: filtered.length,
-          returned: records.length,
-          limit: input.limit,
-          records,
-        });
+        return jsonResult({ ok: true, ...queryEpistemicRecords(db, input) });
       } catch (e) {
-        return jsonResult({ ok: false, ...formatError(e) });
+        return jsonResult({ ok: false, ...formatEpistemicError(e) });
       }
     },
   );
@@ -256,7 +309,27 @@ export function registerEpistemicTools(server: McpServer): void {
         const report = integrityAudit(db);
         return jsonResult(report);
       } catch (e) {
-        return jsonResult({ ok: false, ...formatError(e) });
+        return jsonResult({ ok: false, ...formatEpistemicError(e) });
+      }
+    },
+  );
+
+  // ─── Read: epistemic_concept_diff ──────────────────────────────────
+  // Per Item 9 (Goal 8) and the Sol review corrections record Sol H1: read-only structured time-travel
+  // diff over an epistemic record between two ISO-8601 cutoff timestamps.
+  // Wraps src/cognitive/concept-diff/concept-diff.ts; default behavior
+  // excludes retracted records from the to-state (privacy gate). Enforces
+  // project_id scope unless include_global is set; mirrors epistemic_get.
+  server.tool(
+    'epistemic_concept_diff',
+    'Compute a structured field-level diff of an epistemic record between two ISO-8601 cutoff timestamps. Zero-write; never touches access counters, events, receipts, or projections. Default behavior excludes retracted records from the to-state; pass include_retracted=true to opt in (re-exposes withdrawn content).',
+    DIFF_INPUT,
+    async (input) => {
+      const db = getDatabase('memory');
+      try {
+        return jsonResult({ ok: true, ...diffEpistemicRecord(db, input) });
+      } catch (e) {
+        return jsonResult({ ok: false, ...formatEpistemicError(e) });
       }
     },
   );

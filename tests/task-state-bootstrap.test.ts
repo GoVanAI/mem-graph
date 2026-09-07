@@ -211,12 +211,14 @@ describe('Option 1 task-state bootstrap integration', () => {
     expect(result.bootstrap_digest).toBe(bootstrapCognitiveAgent(getDatabase('memory'), { project_id: 'project-a', query: 'packet' }).bootstrap_digest);
   });
 
-  it('retains the exact 40-tool public surface while task-state adoption remains additive', () => {
+  it('retains the public surface while task-state adoption remains additive', () => {
     const { tools, server } = fakeServer();
     registerSqlTools(server); registerMemoryOrientTools(server); registerMemorySearchTools(server); registerMemoryWriteTools(server);
     registerMemoryTagTools(server); registerMemoryGraphTools(server); registerMemoryImportTools(server); registerCognitiveTools(server); registerEpistemicTools(server);
-    expect(tools.size).toBe(40);
+    // 41 = 40 baseline (post-Phase-B Slice 1) + epistemic_concept_diff (Item 9 Goal 8)
+    expect(tools.size).toBe(41);
     expect(tools.has('cognitive_agent_bootstrap')).toBe(true);
+    expect(tools.has('epistemic_concept_diff')).toBe(true);
   });
 
   it('binds task-state scope to the outer bootstrap project rather than nested input', async () => {
