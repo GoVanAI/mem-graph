@@ -150,6 +150,15 @@ describe('MCP profiles', () => {
       }
       expect(listed.tools.find((tool) => tool.name === 'memory_find')!.inputSchema.properties).toHaveProperty('query');
       expect(listed.tools.find((tool) => tool.name === 'memory_read')!.inputSchema.properties).toHaveProperty('direction');
+      const bootstrap = listed.tools.find((tool) => tool.name === 'cognitive_agent_bootstrap')!;
+      const bootstrapProperties = bootstrap.inputSchema.properties as Record<string, unknown>;
+      expect(bootstrapProperties).toHaveProperty('response_mode');
+      expect(bootstrapProperties.response_mode).toMatchObject({ enum: ['legacy', 'compact'] });
+      const compactResponse = await client.callTool({ name: 'cognitive_agent_bootstrap', arguments: { project_id: 'p', query: 'compact-schema', response_mode: 'compact' } });
+      const compactText = (compactResponse.content as Array<{ text: string }>)[0].text;
+      const compactEnvelope = JSON.parse(compactText) as { budget: { serialized_bytes: number }; response_mode: string };
+      expect(compactEnvelope.response_mode).toBe('compact');
+      expect(compactEnvelope.budget.serialized_bytes).toBe(Buffer.byteLength(compactText, 'utf8'));
       const malformed = await client.callTool({ name: 'memory_find', arguments: { operation: 'search', project_id: 'p', since: 'unexpected' } });
       expect(malformed.isError).toBe(true);
     } finally { await Promise.all([client.close(), server.close()]); }
@@ -169,6 +178,46 @@ describe('MCP profiles', () => {
         if (profile === 'full') expect(actual).toHaveLength(41);
         else expect(actual).toEqual([...expected!].sort());
       } finally { await Promise.all([client.close(), server.close()]); }
+    }
+  });
+
+  it('closes compact profile selection at registration and preserves compact scope fences', async () => {
+    const db = getDatabase('memory');
+    const exact = seedMemory(db, { title: 'Scoped process', content: 'scope-token', category: 'process', project_id: 'p' });
+    const global = seedMemory(db, { title: 'Global process', content: 'scope-token', category: 'process', project_id: '_global' });
+    const foreign = seedMemory(db, { title: 'Foreign process', content: 'scope-token', category: 'process', project_id: 'q' });
+
+    for (const [profile, expectedProfile, allowedNames] of [
+      ['full', 'full', undefined],
+      ['agent', 'agent', [...AGENT_TOOL_NAMES]],
+    ] as const) {
+      const setup = fakeServer();
+      registerToolsForProfile(setup.server, profile);
+      const baseline = db.prepare('SELECT id, access_count FROM memories ORDER BY id').all();
+      const exactOnly = JSON.parse((await invoke(setup.entries, 'cognitive_agent_bootstrap', {
+        project_id: 'p', query: 'scope-token', canonical_ids: [exact, global, foreign], response_mode: 'compact',
+      })).content[0].text) as any;
+      expect(exactOnly.profile).toBe(expectedProfile);
+      expect(exactOnly.scope).toMatchObject({ project_id: 'p', include_global: false });
+      expect(exactOnly.guidance.canonical.map((record: { id: number }) => record.id)).toEqual([exact]);
+      expect(exactOnly.guidance.canonical.some((record: { project_id: string }) => record.project_id === 'q')).toBe(false);
+      const globalEnabled = JSON.parse((await invoke(setup.entries, 'cognitive_agent_bootstrap', {
+        project_id: 'p', query: 'scope-token', canonical_ids: [exact, global, foreign], include_global: true, response_mode: 'compact',
+      })).content[0].text) as any;
+      expect(globalEnabled.guidance.canonical.map((record: { id: number }) => record.id)).toEqual([exact, global]);
+      expect(globalEnabled.guidance.canonical.some((record: { project_id: string }) => record.project_id === 'q')).toBe(false);
+      for (const expansion of [...exactOnly.expansions, ...globalEnabled.expansions]) {
+        if (expansion.route) {
+          const namesForProfile = allowedNames ?? names(setup.entries);
+          expect(namesForProfile).toContain(expansion.route.tool);
+          if (profile === 'agent') expect(MAINTENANCE_TOOL_NAMES).not.toContain(expansion.route.tool);
+          // The pure projector suite validates each route against the matching
+          // destination schema. This integration assertion verifies that its
+          // tool name is actually exposed by this registered profile.
+          expect(setup.entries.get(expansion.route.tool)).toBeDefined();
+        }
+      }
+      expect(db.prepare('SELECT id, access_count FROM memories ORDER BY id').all()).toEqual(baseline);
     }
   });
 });

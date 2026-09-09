@@ -165,6 +165,11 @@ export interface AgentBootstrapInput extends GoverningGuidanceSearchInput {
    * diagnostic / review scenarios. Per mem-graph-upgrade-v1.md §6 (Fix D).
    */
   include_excluded_details?: boolean;
+  /**
+   * Output mode for bootstrap: 'legacy' (default) returns the full composed
+   * payload; 'compact' returns the deterministic <= 8KiB disclosure envelope.
+   */
+  response_mode?: 'legacy' | 'compact';
 }
 
 /** Optional opaque public input. The server validates the manifest manually. */
@@ -323,4 +328,207 @@ export interface AgentPracticeGrade {
   passed: boolean;
   critical_failures: string[];
   checks: AgentPracticeCheck[];
+}
+
+// ---------------------------------------------------------------------------
+// Compact Context Delivery (Step 3) Types
+// ---------------------------------------------------------------------------
+
+export interface TrustedSemanticRoleContext {
+  bootstrap_query?: string;
+  constraints_declared_empty?: boolean;
+  affected_contradiction_sources?: Array<{
+    kind: string;
+    id?: number;
+    record_id?: string | number;
+    project_id?: string;
+    task_id?: string;
+    event_id?: string;
+  }>;
+  required_content_omitted?: boolean;
+  version_mismatches?: Array<{
+    source: CompactSourceReference;
+    expected_version: string | number | null;
+  }>;
+}
+
+export type CompactStatementAuthority =
+  | 'adopted_task_orientation_only'
+  | 'governing_candidate_unverified'
+  | 'policy_advisory'
+  | 'evidence_only'
+  | 'context_only';
+
+export type CompactStatementLane =
+  | 'governing'
+  | 'current_state'
+  | 'open_state'
+  | 'evidence'
+  | 'context_only';
+
+export type CompactStatementRole =
+  | 'objective'
+  | 'definition_of_done'
+  | 'constraint'
+  | 'expected_next_action'
+  | 'current_state'
+  | 'open_state'
+  | 'evidence';
+
+export interface CompactSourceReference {
+  kind: 'memory' | 'cognitive_event' | 'epistemic_record' | 'cognitive_policy' | 'artifact' | 'operator_receipt';
+  id?: number;
+  project_id: string;
+  event_id?: string;
+  task_id?: string;
+  record_id?: string;
+  policy_id?: string;
+  path?: string;
+  receipt_id?: string;
+  version?: string | number | null;
+  title?: string;
+  preview?: string;
+  truncated?: boolean;
+}
+
+export interface CompactStatement {
+  semantic_role?: CompactStatementRole;
+  preview: string;
+  lane: CompactStatementLane;
+  authority: CompactStatementAuthority;
+  review_state: 'none' | 'contradiction_review_required';
+  sources: CompactSourceReference[];
+  truncated: boolean;
+}
+
+export interface CompactTaskSlot {
+  status: 'governing' | 'context_only' | 'unresolved';
+  statement?: CompactStatement;
+  reason?: string;
+}
+
+export interface CompactMemoryReference {
+  id: number;
+  project_id: string;
+  layer: string;
+  category: string | null;
+  title: string;
+  status: string;
+  lifecycle: string;
+  preview?: string;
+  truncated: boolean;
+  review_state: 'none' | 'contradiction_review_required';
+  eligibility?: 'governing_eligible' | 'contextual_ineligible';
+}
+
+export interface CompactPolicyReference {
+  policy_id: string;
+  project_id: string;
+  title: string;
+  status: string;
+  authority: 'candidate_only';
+  preview?: string;
+  truncated: boolean;
+}
+
+export interface CompactExpansion {
+  reason:
+    | 'verify_authority'
+    | 'content_omitted'
+    | 'history_requested'
+    | 'contradiction_requires_review'
+    | 'version_mismatch'
+    | 'source_unavailable'
+    | 'route_unavailable';
+  source: CompactSourceReference | null;
+  expected_version: string | number | null;
+  route_available: boolean;
+  access_tracking: 'none' | 'touches_access_counters' | 'unknown';
+  route?: {
+    tool: string;
+    operation?: string;
+    arguments: Record<string, unknown>;
+  };
+}
+
+export interface CompactBootstrapV1 {
+  disclosure_version: '1.0.0';
+  response_mode: 'compact';
+  profile: 'full' | 'agent';
+
+  scope: {
+    project_id: string;
+    include_global: boolean;
+    global_inclusion: 'disabled' | 'explicit';
+  };
+
+  orientation: {
+    status: 'complete' | 'partial' | 'unavailable';
+    requires_expansion: boolean;
+    task_state: 'not_requested' | 'assembled' | 'unavailable';
+    applicability: 'unknown' | 'review_due' | 'reviewed';
+  };
+
+  task: {
+    objective: CompactTaskSlot;
+    definition_of_done: CompactTaskSlot;
+    constraints: {
+      status: 'resolved' | 'context_only' | 'unresolved';
+      items: CompactStatement[];
+      reason?: string;
+    };
+    next_action: CompactTaskSlot;
+  };
+
+  guidance: {
+    canonical: CompactMemoryReference[];
+    governing_candidates: CompactMemoryReference[];
+    contextual_candidates: CompactMemoryReference[];
+    policy_candidates: CompactPolicyReference[];
+  };
+
+  state: {
+    current: CompactStatement[];
+    open: CompactStatement[];
+    evidence: CompactStatement[];
+    context_only: CompactStatement[];
+  };
+
+  warnings: string[];
+  unresolved: string[];
+  expansions: CompactExpansion[];
+
+  omissions: {
+    previews_truncated: number;
+    items_omitted: number;
+    content_bytes_omitted: number | null;
+    required_content_omitted: boolean;
+  };
+
+  source_snapshot: {
+    bootstrap_digest: string;
+    task_state_envelope_digest: string | null;
+    task_state_packet_digest: string | null;
+  };
+
+  verification: {
+    required: true;
+    authority_notice: string;
+    adoption_status: 'not_applicable' | 'verified' | 'unverified';
+  };
+
+  mutation: {
+    database_writes: 0;
+    events_appended: 0;
+    access_tracking: 'not_touched';
+    receipt_persistence: 'none';
+  };
+
+  budget: {
+    limit_bytes: number;
+    serialized_bytes: number;
+    within_budget: boolean;
+  };
+
+  compact_digest: string;
 }

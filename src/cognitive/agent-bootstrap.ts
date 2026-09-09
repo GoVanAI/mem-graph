@@ -79,7 +79,7 @@ export function bootstrapCognitiveAgent(
     : scopedCandidates.filter((candidate) => candidate.project_id === input.project_id);
   const guidance = diagnoseCurrentGuidance(db, input);
   const includeExcludedDetails = input.include_excluded_details === true;
-  // Per Fix D (mem-graph-upgrade-v1.md §6): when include_excluded_details is
+  // When include_excluded_details is
   // false (default), strip excluded records to summary {id, title,
   // exclusion_reasons} to avoid ~6KB of bloat from full snippets + BM25 ranks.
   // The trimmed shape is intentional; cast through unknown to satisfy the

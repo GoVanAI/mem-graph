@@ -7,9 +7,12 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appendCognitiveEvent } from '../src/cognitive/events.js';
 import { bootstrapCognitiveAgent, bootstrapCognitiveAgentWithTaskState } from '../src/cognitive/agent-bootstrap.js';
+import * as agentBootstrapModule from '../src/cognitive/agent-bootstrap.js';
 import { initDatabase, closeAllDatabases, getDatabase } from '../src/db.js';
 import { admitEpistemicRecord } from '../src/epistemic/persistence.js';
 import { registerCognitiveTools } from '../src/tools/cognitive.js';
+import { canonicalJson } from '../src/cognitive/bootstrap-disclosure.js';
+import * as bootstrapDisclosureModule from '../src/cognitive/bootstrap-disclosure.js';
 import { registerSqlTools } from '../src/tools/sql.js';
 import { registerMemoryOrientTools } from '../src/tools/memory-orient.js';
 import { registerMemorySearchTools } from '../src/tools/memory-search.js';
@@ -107,6 +110,58 @@ describe('Option 1 task-state bootstrap integration', () => {
     const result = JSON.parse((await tools.get('cognitive_agent_bootstrap')!.cb(input)).content[0].text);
     expect(result).toEqual(bootstrapCognitiveAgent(getDatabase('memory'), input));
     expect('task_state' in result).toBe(false);
+  });
+
+  it('keeps omitted and explicit legacy responses byte-identical to the direct composer', async () => {
+    const { tools, server } = fakeServer();
+    registerCognitiveTools(server);
+    const input = { project_id: 'project-a', query: 'packet' };
+    const omitted = await tools.get('cognitive_agent_bootstrap')!.cb(input);
+    const explicit = await tools.get('cognitive_agent_bootstrap')!.cb({ ...input, response_mode: 'legacy' });
+    const direct = bootstrapCognitiveAgent(getDatabase('memory'), input);
+    expect(JSON.parse(omitted.content[0].text)).toEqual(direct);
+    expect(JSON.parse(explicit.content[0].text)).toEqual(direct);
+    expect(explicit.content[0].text).toBe(omitted.content[0].text);
+    expect(JSON.parse(explicit.content[0].text).bootstrap_digest).toBe(direct.bootstrap_digest);
+  });
+
+  it('composes once, projects once, and returns the canonical compact wire without writes', async () => {
+    const { tools, server } = fakeServer();
+    registerCognitiveTools(server);
+    const db = getDatabase('memory');
+    const before = snapshot(db);
+    const composeSpy = vi.spyOn(agentBootstrapModule, 'bootstrapCognitiveAgent');
+    const projectorSpy = vi.spyOn(bootstrapDisclosureModule, 'projectCompactBootstrap');
+    try {
+      const response = await tools.get('cognitive_agent_bootstrap')!.cb({
+        project_id: 'project-a', query: 'packet', response_mode: 'compact',
+      });
+      const text = response.content[0].text;
+      const envelope = JSON.parse(text) as { response_mode: string; profile: string; orientation: { task_state: string }; budget: { serialized_bytes: number }; mutation: { access_tracking: string } };
+      expect(composeSpy).toHaveBeenCalledTimes(1);
+      expect(projectorSpy).toHaveBeenCalledTimes(1);
+      expect(envelope.response_mode).toBe('compact');
+      expect(envelope.profile).toBe('full');
+      expect(envelope.orientation.task_state).toBe('not_requested');
+      expect(envelope.budget.serialized_bytes).toBe(Buffer.byteLength(text, 'utf8'));
+      expect(text).toBe(canonicalJson(envelope));
+      expect(envelope.mutation.access_tracking).toBe('not_touched');
+      expect(snapshot(db)).toEqual(before);
+    } finally {
+      composeSpy.mockRestore();
+      projectorSpy.mockRestore();
+    }
+  });
+
+  it('keeps base orientation while honestly marking malformed task state partial in compact mode', async () => {
+    const { tools, server } = fakeServer();
+    registerCognitiveTools(server);
+    const result = JSON.parse((await tools.get('cognitive_agent_bootstrap')!.cb({
+      project_id: 'project-a', query: 'packet', response_mode: 'compact',
+      task_state: { task_id: 'task-a', manifest: { malformed: true } },
+    })).content[0].text) as { orientation: { status: string; task_state: string }; scope: { project_id: string } };
+    expect(result.scope.project_id).toBe('project-a');
+    expect(result.orientation).toEqual(expect.objectContaining({ status: 'partial', task_state: 'unavailable' }));
   });
 
   it('uses a separate fail-closed packet envelope and ignores caller authority flags', () => {

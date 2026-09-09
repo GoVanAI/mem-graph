@@ -1,8 +1,9 @@
-# Progressive disclosure — Step 2A contract and legacy measurement
+# Progressive disclosure — Step 2A contract, Step 3 evaluation contract
 
 Status: contract and source-surface baseline for the adopted ten-tool Step 2B
-agent design. This directory freezes the contract that the Step 2B runtime
-implementation must satisfy; it does not itself register MCP tools.
+agent design plus the Step 3 compact-mode structured-predicate evaluation
+contract. This directory freezes the contract that the Step 2B and Step 3
+runtime implementations must satisfy; it does not itself register MCP tools.
 
 ## Profile memberships
 
@@ -140,14 +141,208 @@ not adopted into the agent profile.
   registration files measured even when the working tree is dirty. The receipt
   is labeled `legacy-full-surface`.
 - `agent-tool-surface-baseline.json` records the real MCP `tools/list` surface
-  for the ten-tool agent profile. It measures 10,524 combined description and
-  input-schema bytes versus 31,553 for the full legacy surface: a 75.61% tool
-  count reduction and a 66.65% serialized-byte reduction. These are interface
-  measurements, not agent-effectiveness results.
+  at the Step 2 boundary, before Step 3 added `response_mode` to the shared
+  bootstrap schema. That frozen receipt measures 10,524 combined description
+  and input-schema bytes versus 31,553 for the full legacy surface. The current
+  Step 3 surface measures 10,697 versus 31,726 bytes; both preserve a 75.61%
+  tool-count reduction, while the current serialized-byte reduction is 66.28%.
+  These are interface measurements, not agent-effectiveness results.
 
-The eight cases are deferred Step 3 evaluation contracts, not executed
-Step 2B evidence. The oracle preserves this honest caveat: every
-`measurement_status` in `cases.json` is `contract-only-not-executed`.
+The eight cases began as deferred Step 3 evaluation contracts rather than Step
+2B evidence. Phase D has now executed their declared layers: seven are
+`executed-pass` and `pd-06-source-revised` is an honest `executed-gap` backed by
+both independent-run witnesses.
+
+## Phase D executed-status rules
+
+After Phase D execution lands and the receipt at
+`phase-d-receipt.json` (in this directory) passes every receipt
+validation check, each case may have its `baseline_trace.measurement_status`
+updated from the default `contract-only-not-executed` to one of:
+
+- `executed-pass` — the case ran its declared execution layer, produced
+  raw and normalized evidence, passed determinism, passed DB/access
+  checks, passed the structured predicate plan, and the receipt
+  independently verifies its compact_digest, byte count, and semantic
+  hash.
+- `executed-gap` — the case ran its declared execution layer, produced
+  raw and normalized evidence, passed determinism, passed DB/access
+  checks, but at least one structurally-valid predicate resolved
+  against a captured response that did not match what the case
+  contract required. This is a deterministic product-level miss.
+- `executed-unavailable` — the case cannot execute in the current
+  runtime because the required typed path is not implemented.
+
+Every status other than `contract-only-not-executed` MUST carry a
+`baseline_trace.phase_d_receipt_pointer` whose value is the case id.
+`validate-step3-contract.mjs` cross-checks both receipt runs against the case
+status and execution layer. It independently verifies canonical raw wire and
+UTF-8 bytes, compact digest, semantic hash, mutation and scope verdicts,
+cross-run determinism, and the retained three-call witness for `pd-06`. It exits
+nonzero on any mismatch.
+
+`run-step3-cases.mts` writes a validated receipt and exits zero only when every
+case passes. A correctly evidenced `executed-gap` is preserved in the receipt
+but produces exit code 1 with `status="phase-d-runner-product-gap"`; this keeps
+automation fail-closed without discarding evidence for unrelated passing cases.
+
+Do NOT change a case's status from `contract-only-not-executed` until
+the corresponding Phase D receipt entry has been generated, validated,
+and recorded.
+
+## Step 3 structured-predicate evaluation contract
+
+Phase A of the Step 3 phase-gated execution plan
+(`docs/Update/STEP_3_PHASE_GATED_EXECUTION_PLAN.md` §4) migrates the eight
+cases from literal-substring grading to structured-predicate grading. The
+legacy `required_signals` and `forbidden_signals` strings remain in each case
+as human-readable documentation; they no longer govern compact-mode grading.
+Compact-mode grading uses `required_predicates` and `forbidden_predicates`,
+each entry a v1 JSON-Pointer predicate from
+`STEP_3_COMPACT_CONTEXT_DELIVERY_DESIGN.md` §3 D8:
+
+```ts
+interface CompactCasePredicate {
+  pointer: string;        // RFC 6901 JSON Pointer
+  operator: 'equals' | 'includes' | 'excludes' | 'exists' | 'not_exists';
+  value?: string | number | boolean | null | object;
+}
+```
+
+Rules enforced by `structured-predicate.mjs`:
+
+- RFC 6901 pointer decoding with `~0` and `~1` tilde escapes; bare `~` or
+  any escape other than `~0` / `~1` fails closed (rejected).
+- Empty pointer `""` addresses the root document.
+- `value` is required for `equals` / `includes` / `excludes` and forbidden
+  for `exists` / `not_exists`. Array values are forbidden across all operators.
+- Predicates are exact-equality on scalars and recursive partial-match on
+  object array elements (extra candidate keys are ignored).
+- No coercion, no regular expressions, no executable expressions, no
+  free-form query language.
+- Malformed pointers, malformed predicates, and unresolved pointers all
+  fail the case rather than being silently treated as absent.
+
+Each case declares a `fixture_intent`:
+
+- `lexical_discovery` (pd-01 only) — the case tests whether the synthetic
+  summary contains the declared query vocabulary. Until the summary is
+  aligned, the case cannot pass even when the structured predicates
+  describe the expected envelope shape.
+- `deterministic_source_projection` (pd-02 through pd-08) — the case
+  tests compact projection of a known source; the snapshot can use
+  `canonical_ids` and the case does not require a lexical hit.
+
+Each case began with
+`baseline_trace.measurement_status: "contract-only-not-executed"`. Phase D
+evidence has now updated seven cases to `executed-pass` and pd-06 to
+`executed-gap`, each with its declared execution layer and receipt pointer.
+
+### Step 3 artifacts
+
+- `structured-predicate.mjs` — pure RFC 6901 + operator evaluator; no I/O,
+  importable from any Node context.
+- `structured-predicate.test.mjs` — `node --test` suite; covers all five
+  operators, escaped tokens, missing pointers, scalar mismatch without
+  coercion, recursive partial matching, malformed operators, forbidden
+  extra properties, and proof that evaluation does not search raw
+  serialized text.
+- `case-fixtures.mjs` — eight representative compact envelopes plus
+  eight counterexample envelopes. The representative envelopes model
+  the projector output for each case; the counterexamples model the
+  failure mode each case is designed to detect.
+- `case-fixtures.test.mjs` — `node --test` suite that runs every case
+  plan against its representative envelope (must pass), every case
+  plan against its counterexample (must fail), and a contract-path
+  resolution check on every required and forbidden predicate.
+- `validate-step3-contract.mjs` — Step 3 contract validator. Confirms
+  every case has `fixture_intent` (matching design Section 11), every
+  predicate passes `validatePredicate`, every pointer decodes, every
+  case status agrees with both receipt runs, pd-04, pd-05, pd-07, and
+  pd-08 carry the required `canonical_ids` in their machine-readable request,
+  each case declares the expected `execution_layer` per Codex review,
+  every required predicate resolves against the representative
+  envelope (catches nonexistent paths), every case plan passes
+  against its fixture, every case plan fails against its counterexample,
+  and no M3-owned file leaks a personal path or live database
+  reference.
+
+### Operator-level semantics
+
+`evaluatePredicate` reports `passed = true` when the predicate's literal
+condition is met:
+
+- `equals`: values strictly match.
+- `includes`: array contains a matching element (scalar strict-equal
+  or object recursive partial-match).
+- `excludes`: array contains NO matching element.
+- `exists`: pointer resolves in the envelope.
+- `not_exists`: pointer does not resolve in the envelope.
+
+### Plan semantics
+
+`evaluatePlan` splits predicates into required and forbidden. Required
+predicates must all pass; forbidden predicates must describe the BAD
+condition literally so a `passed = true` on a forbidden predicate fires
+the plan.
+
+To express "this must NOT happen" inside `required_predicates`, use the
+operator that returns `passed = true` when the thing is absent:
+
+- `required_predicates: [{ operator: excludes, value: X }]` — passes
+  when X is absent.
+- `required_predicates: [{ operator: not_exists }]` — passes when the
+  pointer does not resolve.
+
+To express "this MUST NOT happen" inside `forbidden_predicates`, describe
+the bad condition itself:
+
+- `forbidden_predicates: [{ operator: includes, value: X }]` — fires
+  when X is present.
+
+Never place `excludes` or `not_exists` inside `forbidden_predicates`;
+those operators pass when the thing is absent, which would be a
+forbidden predicate that always holds.
+
+### Run the Step 3 evaluator suite
+
+From the repository root:
+
+```powershell
+python scripts/validate-progressive-disclosure-schemas.py
+node cognitive-os/agent-practice/evals/progressive-disclosure/measure-step2a.mjs
+node --test cognitive-os/agent-practice/evals/progressive-disclosure/structured-predicate.test.mjs
+node --test cognitive-os/agent-practice/evals/progressive-disclosure/case-fixtures.test.mjs
+node cognitive-os/agent-practice/evals/progressive-disclosure/validate-step3-contract.mjs
+git diff --check -- cognitive-os/agent-practice/evals/progressive-disclosure
+```
+
+A Phase A pass requires:
+
+- Draft 2020-12 validation: both schemas and instances PASS.
+- `measure-step2a.mjs`: 41 registered, 41 mapped, exactly 10 proposed
+  everyday routes, `memory_prime` reclassified everyday, prohibited
+  family names absent, every workflow covered.
+- `structured-predicate.test.mjs`: all 65 unit tests pass (61
+  base + 4 explicit required+excludes / forbidden+includes semantics
+  tests added per Codex review).
+- `case-fixtures.test.mjs`: all 32 contract-harness tests pass
+  (8 representative envelopes pass their plans, 8 counterexample
+  envelopes fail their plans, 16 contract-path resolution checks pass).
+- `validate-step3-contract.mjs`: every case carries `fixture_intent`,
+  `required_predicates`, `forbidden_predicates`, `canonical_ids`
+  (where required), and the expected `execution_layer`; every
+  predicate is structurally valid; the eight frozen case IDs are
+  present in order; every executed `measurement_status` agrees with both
+  receipt runs; every required predicate resolves
+  against its representative envelope; every plan passes its
+  representative envelope and fails its counterexample; no M3-owned
+  file leaks a personal path.
+- `git diff --check`: no whitespace errors within the directory.
+
+The Phase A fixtures remain contract-level examples. Phase D separately ran
+the declared execution layer twice for every case and is the sole authority for
+the executed statuses recorded in `cases.json`.
 
 ## Run the oracle
 

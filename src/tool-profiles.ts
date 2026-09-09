@@ -70,7 +70,7 @@ function registerLegacy(server: McpServer, options: { operatorTrustRuntime?: Ope
   registerMemoryTagTools(server);
   registerMemoryGraphTools(server);
   registerMemoryImportTools(server);
-  registerCognitiveTools(server, options);
+  registerCognitiveTools(server, { ...options, profile: 'full' });
   registerEpistemicTools(server);
 }
 
@@ -234,7 +234,7 @@ function strictFamily<T extends z.ZodTypeAny>(schema: T, handler: (input: z.infe
 function registerAgentTools(server: McpServer, options: { operatorTrustRuntime?: OperatorTrustRuntime }): void {
   // These four retain their original domain handlers and schemas; no handler is called from another handler.
   const existing = onlyTools(server, ['cognitive_agent_bootstrap', 'cognitive_event_append', 'epistemic_admit', 'epistemic_append_receipt']);
-  registerCognitiveTools(existing, options); registerEpistemicTools(existing);
+  registerCognitiveTools(existing, { ...options, profile: 'agent' }); registerEpistemicTools(existing);
   register(server, 'memory_find', 'Scoped agent retrieval: search, recent, changes, or related.', findInputSchema, strictFamily(findSchema, findMemories));
   register(server, 'memory_read', 'Scoped agent memory read: get or links.', readInputSchema, strictFamily(readSchema, readMemory));
   register(server, 'memory_write', 'Scoped agent mutation: add, update, mark, supersede, tag_add, or tag_remove.', writeInputSchema, strictFamily(writeSchema, writeMemory));
