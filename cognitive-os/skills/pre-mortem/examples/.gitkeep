@@ -1,9 +1,0 @@
-# Worked pre-mortem examples
-#
-# To be populated per M4 (redact field logs for portability).
-# Source field logs:
-#   - ~/.claude/skills/self-correct-loop/field-logs/2026-08-02-process-miss-rca-and-turn-shape-gap.md
-#   - ~/.claude/skills/self-correct-loop/field-logs/2026-08-09-stream-1-step-6-missed-acceptance-gate.md
-#
-# Files in this directory should be reconstructed representatives labeled
-# explicitly as such, not current live tasks.
