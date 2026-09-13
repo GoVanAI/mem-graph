@@ -207,8 +207,8 @@
                   { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
                   { "pointer": "/scope/include_global", "operator": "equals", "value": false },
                   { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
-                  { "pointer": "/orientation/status", "operator": "equals", "value": "complete" },
-                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": false },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
                   { "pointer": "/orientation/task_state", "operator": "equals", "value": "not_requested" },
                   { "pointer": "/task/objective/status", "operator": "equals", "value": "unresolved" },
                   { "pointer": "/task/objective/statement", "operator": "not_exists" },
@@ -238,8 +238,8 @@
             { "pointer": "/transcript/0/response_envelope/response_mode", "operator": "equals", "value": "compact" },
             { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
             { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" },
-            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "complete" },
-            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": false },
+            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "partial" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true },
             { "pointer": "/transcript/0/response_envelope/task/objective/status", "operator": "equals", "value": "unresolved" },
             { "pointer": "/transcript/0/response_envelope/task/objective/statement", "operator": "not_exists" },
             { "pointer": "/transcript/0/response_envelope/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } }
@@ -292,8 +292,43 @@
             "include_global": false,
             "task_state": {
               "task_id": "fixture-task-2",
-              "manifest": { "schema_version": "1.1.0", "fixture_status": "operator-adopted" },
-              "adoption_receipt": { "receipt_id": "fixture-receipt-2" }
+              "manifest": {
+                "schema_version": "1.1.0",
+                "manifest_id": "fixture-parser-manifest",
+                "revision": 1,
+                "project_id": "fixture-alpha",
+                "task_id": "fixture-task-2",
+                "include_global": false,
+                "adoption": {
+                  "status": "operator_adopted",
+                  "source": {
+                    "kind": "operator_receipt",
+                    "receipt_id": "b1b2b3b4-c5c6-4d47-8e89-a1b2c3d4e5f6",
+                    "project_id": "fixture-alpha",
+                    "task_id": "fixture-task-2"
+                  }
+                },
+                "task": {
+                  "objective": { "statement": "Finish parser", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "definition_of_done": { "statement": "All parser fixtures pass", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "constraints": [{ "statement": "No schema migration", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }],
+                  "expected_next_action": { "statement": "Inspect failing fixture", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }
+                },
+                "lane_requirements": {
+                  "governing": "optional",
+                  "current_state": "optional",
+                  "open_state": "optional",
+                  "evidence": "optional",
+                  "context_only": "optional",
+                  "warnings": "optional"
+                },
+                "event_scope": { "project_id": "fixture-alpha", "task_id": "fixture-task-2", "allow_legacy_v1_context": false },
+                "limits": { "max_items_per_lane": 10, "max_preview_characters": 200 }
+              },
+              "adoption_receipt": {
+                "payload_b64u": "eyJhY3Rpb24iOiJhZG9wdF90YXNrX3N0YXRlX21hbmlmZXN0IiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImdyYW50Ijp7ImF1dGhvcml0eV9jZWlsaW5nIjoidGFza19vcmllbnRhdGlvbl9vbmx5IiwiY2FwYWJpbGl0aWVzIjpbInRhc2tfc3RhdGVfZ292ZXJuaW5nIl0sImluY2x1ZGVfZ2xvYmFsIjpmYWxzZX0sImlzc3VlZF9hdCI6IjIwMjAtMDEtMDFUMDA6MDA6MDAuMDAwWiIsImlzc3VlciI6eyJhbGdvcml0aG0iOiJFZDI1NTE5IiwiZGVwbG95bWVudF9hdWRpZW5jZSI6InBoYXNlLTRjLXBkMDIiLCJrZXlfaWQiOiJmaXh0dXJlLW9wZXJhdG9yIiwicmVnaXN0cnlfaWQiOiJmaXh0dXJlLXJlZ2lzdHJ5IiwidHJ1c3RfZXBvY2giOjEsInRydXN0X3BvbGljeV9zaGEyNTYiOiIwMDdjOWE5OGM3MDE4ZTcyMzQ3ZWU1ZGIwMGNhNGNjZjRjOGEwMGZhZTU1NTRkMjA3NWE2NzQzZmM1M2YzMjYzIn0sIm5vbmNlIjoiQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZyIsIm5vdF9iZWZvcmUiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJyZWNlaXB0X2lkIjoiYjFiMmIzYjQtYzVjNi00ZDQ3LThlODktYTFiMmMzZDRlNWY2Iiwic2NoZW1hX3ZlcnNpb24iOiIxLjAuMCIsInN1YmplY3QiOnsibWFuaWZlc3RfaWQiOiJmaXh0dXJlLXBhcnNlci1tYW5pZmVzdCIsIm1hbmlmZXN0X3JldmlzaW9uIjoxLCJtYW5pZmVzdF9zaGEyNTYiOiJmMTQ0N2ZlNzM3MDI3YTBlYWRkYWIyNGU3NTdhMGU0YTAxZmQ3ZDhhNzBkNjkxZDY4ZDM5YWExMjU4ZGU5OWY2IiwicHJvamVjdF9pZCI6ImZpeHR1cmUtYWxwaGEiLCJ0YXNrX2lkIjoiZml4dHVyZS10YXNrLTIifX0",
+                "signature_b64u": "KGRwd7wSL1_PLEtGGqgKPoDOd2OqODR8UwC9aIiJ3lIr7jz2ZYao54UXUZqKsQ8Fx0Ogy9zwkHS-yax4-SkTDA"
+              }
             }
           },
           "allowed_tool_names": ["__FROM_MIRROR__"],
@@ -384,14 +419,37 @@
             "response_mode": "compact",
             "task_state": {
               "task_id": "fixture-task-2",
-              "manifest": { "schema_version": "1.1.0", "fixture_status": "operator-adopted" },
-              "adoption_receipt": { "receipt_id": "fixture-receipt-2" }
+              "manifest": {
+                "schema_version": "1.1.0",
+                "manifest_id": "fixture-parser-manifest",
+                "revision": 1,
+                "project_id": "fixture-alpha",
+                "task_id": "fixture-task-2",
+                "include_global": false,
+                "adoption": {
+                  "status": "operator_adopted",
+                  "source": { "kind": "operator_receipt", "receipt_id": "b1b2b3b4-c5c6-4d47-8e89-a1b2c3d4e5f6", "project_id": "fixture-alpha", "task_id": "fixture-task-2" }
+                },
+                "task": {
+                  "objective": { "statement": "Finish parser", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "definition_of_done": { "statement": "All parser fixtures pass", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "constraints": [{ "statement": "No schema migration", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }],
+                  "expected_next_action": { "statement": "Inspect failing fixture", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }
+                },
+                "lane_requirements": { "governing": "optional", "current_state": "optional", "open_state": "optional", "evidence": "optional", "context_only": "optional", "warnings": "optional" },
+                "event_scope": { "project_id": "fixture-alpha", "task_id": "fixture-task-2", "allow_legacy_v1_context": false },
+                "limits": { "max_items_per_lane": 10, "max_preview_characters": 200 }
+              },
+              "adoption_receipt": {
+                "payload_b64u": "eyJhY3Rpb24iOiJhZG9wdF90YXNrX3N0YXRlX21hbmlmZXN0IiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImdyYW50Ijp7ImF1dGhvcml0eV9jZWlsaW5nIjoidGFza19vcmllbnRhdGlvbl9vbmx5IiwiY2FwYWJpbGl0aWVzIjpbInRhc2tfc3RhdGVfZ292ZXJuaW5nIl0sImluY2x1ZGVfZ2xvYmFsIjpmYWxzZX0sImlzc3VlZF9hdCI6IjIwMjAtMDEtMDFUMDA6MDA6MDAuMDAwWiIsImlzc3VlciI6eyJhbGdvcml0aG0iOiJFZDI1NTE5IiwiZGVwbG95bWVudF9hdWRpZW5jZSI6InBoYXNlLTRjLXBkMDIiLCJrZXlfaWQiOiJmaXh0dXJlLW9wZXJhdG9yIiwicmVnaXN0cnlfaWQiOiJmaXh0dXJlLXJlZ2lzdHJ5IiwidHJ1c3RfZXBvY2giOjEsInRydXN0X3BvbGljeV9zaGEyNTYiOiIwMDdjOWE5OGM3MDE4ZTcyMzQ3ZWU1ZGIwMGNhNGNjZjRjOGEwMGZhZTU1NTRkMjA3NWE2NzQzZmM1M2YzMjYzIn0sIm5vbmNlIjoiQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZyIsIm5vdF9iZWZvcmUiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJyZWNlaXB0X2lkIjoiYjFiMmIzYjQtYzVjNi00ZDQ3LThlODktYTFiMmMzZDRlNWY2Iiwic2NoZW1hX3ZlcnNpb24iOiIxLjAuMCIsInN1YmplY3QiOnsibWFuaWZlc3RfaWQiOiJmaXh0dXJlLXBhcnNlci1tYW5pZmVzdCIsIm1hbmlmZXN0X3JldmlzaW9uIjoxLCJtYW5pZmVzdF9zaGEyNTYiOiJmMTQ0N2ZlNzM3MDI3YTBlYWRkYWIyNGU3NTdhMGU0YTAxZmQ3ZDhhNzBkNjkxZDY4ZDM5YWExMjU4ZGU5OWY2IiwicHJvamVjdF9pZCI6ImZpeHR1cmUtYWxwaGEiLCJ0YXNrX2lkIjoiZml4dHVyZS10YXNrLTIifX0",
+                "signature_b64u": "KGRwd7wSL1_PLEtGGqgKPoDOd2OqODR8UwC9aIiJ3lIr7jz2ZYao54UXUZqKsQ8Fx0Ogy9zwkHS-yax4-SkTDA"
+              }
             }
           },
           "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
           "prohibited_tool_names_or_families": [],
           "required_tool_calls": {
-            "min_count": 2,
+            "min_count": 1,
             "calls": [
               {
                 "tool": "cognitive_agent_bootstrap",
@@ -412,40 +470,19 @@
                   { "pointer": "/task/next_action/status", "operator": "equals", "value": "governing" },
                   { "pointer": "/task/constraints/status", "operator": "equals", "value": "resolved" },
                   { "pointer": "/task/constraints/items/0/sources/0/id", "operator": "equals", "value": 102 },
-                  { "pointer": "/state/current/0/sources/0/id", "operator": "equals", "value": 103 },
-                  { "pointer": "/state/current/0/lane", "operator": "equals", "value": "current_state" },
                   { "pointer": "/mutation/database_writes", "operator": "equals", "value": 0 }
                 ]
-              },
-              {
-                "tool": "memory_read",
-                "occurrence": 0,
-                "args_predicates": [
-                  { "pointer": "/operation", "operator": "equals", "value": "get" },
-                  { "pointer": "/id", "operator": "equals", "value": 103 }
-                ],
-                "response_predicates": [],
-                "expansion_route": {
-                  "route_available": true,
-                  "tool_in_active_profile": true,
-                  "args_validate_structurally": true,
-                  "preserve_scope": true
-                }
               }
             ],
             "excluded_tools": []
           },
-          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "allowed_call_cardinality": { "min": 1, "max": 1 },
           "required_ordering_relationships": [
-            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_read" },
             { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
           ],
           "required_argument_predicates": [
             { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
-            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
-            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_read" },
-            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "get" },
-            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 103 }
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" }
           ],
           "response_predicates": [
             { "pointer": "/transcript/0/response_envelope/orientation/task_state", "operator": "equals", "value": "assembled" },
@@ -462,7 +499,7 @@
             "touches_access_tracking": false
           },
           "expected_expansion_behavior": {
-            "must_call_required_expansions": true,
+            "must_call_required_expansions": false,
             "may_call_optional_expansions": false
           },
           "expected_outcome": "orient-and-verify",
@@ -603,8 +640,8 @@
                   { "pointer": "/guidance/governing_candidates/0/id", "operator": "equals", "value": 104 },
                   { "pointer": "/guidance/governing_candidates/0/review_state", "operator": "equals", "value": "contradiction_review_required" },
                   { "pointer": "/expansions/0/reason", "operator": "equals", "value": "contradiction_requires_review" },
-                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 104 },
-                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "touches_access_counters" },
+                  { "pointer": "/expansions/0/source/record_id", "operator": "equals", "value": "104" },
+                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "none" },
                   { "pointer": "/expansions/0/route_available", "operator": "equals", "value": true }
                 ]
               },
@@ -984,7 +1021,8 @@
                   { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
                   { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
                   { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
-                  { "pointer": "/orientation/status", "operator": "equals", "value": "complete" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
                   { "pointer": "/guidance/canonical/0/id", "operator": "equals", "value": 107 },
                   { "pointer": "/guidance/canonical/0/project_id", "operator": "equals", "value": "fixture-alpha" },
                   { "pointer": "/guidance/canonical/1", "operator": "not_exists" },
@@ -1011,6 +1049,8 @@
           "response_predicates": [
             { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
             { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "partial" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true },
             { "pointer": "/transcript/0/response_envelope/guidance/canonical/0/id", "operator": "equals", "value": 107 },
             { "pointer": "/transcript/0/response_envelope/expansions/0/route_available", "operator": "equals", "value": false },
             { "pointer": "/transcript/0/response_envelope/expansions/1/route_available", "operator": "equals", "value": false }
@@ -1743,7 +1783,7 @@
       "family": 6,
       "case_id": "pd-02-valid-manifest",
       "arm": "candidate",
-      "expected_failure_code": "required_call_missing",
+      "expected_failure_code": "required_call_response_mismatch",
       "detection_reason": "governing_guidance_used_without_required_verification"
     },
     {

@@ -7,6 +7,8 @@ import { McpServer as RealMcpServer } from '@modelcontextprotocol/sdk/server/mcp
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { closeAllDatabases, getDatabase, initDatabase } from '../src/db.js';
+import { resolveBootstrapContradictionSources } from '../src/cognitive/agent-bootstrap.js';
+import { admitEpistemicRecord, appendEpistemicReceipt } from '../src/epistemic/persistence.js';
 import { AGENT_TOOL_NAMES, MAINTENANCE_TOOL_NAMES, parseMcpProfile, registerToolsForProfile } from '../src/tool-profiles.js';
 import { seedMemory, seedSynapse } from './helpers.js';
 
@@ -135,6 +137,61 @@ describe('MCP profiles', () => {
     expect(globalAllowed.ok).toBe(true);
   });
 
+  it('requires explicit global opt-in before global contradiction evidence can affect compact bootstrap', () => {
+    const db = getDatabase('memory');
+    const sourceMemoryId = seedMemory(db, {
+      title: 'Global contradiction source',
+      content: 'global contradiction scope evidence',
+      project_id: 'p',
+      category: 'policy',
+      layer: 'procedural',
+      lifecycle: 'milestone',
+    });
+    const admitted = admitEpistemicRecord(db, {
+      idempotency_key: 'global-contradiction-admit',
+      record_id: 704,
+      project_id: 'p',
+      scope: '_global',
+      statement: 'Global contradiction evidence requires explicit opt-in.',
+      epistemic_status: 'verified',
+      verification_level: 'direct',
+      source_quality: 'observed',
+      confidence: 1,
+      valid_from: '2026-09-12T00:00:00.000Z',
+      task_id: 'global-contradiction-test',
+      source_memory_id: sourceMemoryId,
+    });
+    appendEpistemicReceipt(db, {
+      idempotency_key: 'global-contradiction-receipt',
+      record_id: admitted.record_id,
+      revision_id: admitted.revision_id,
+      receipt_type: 'ContradictionSignal',
+      receipt_payload: { affected_source_memory_id: sourceMemoryId },
+      observed_at: '2026-09-12T00:01:00.000Z',
+      task_id: 'global-contradiction-test',
+      project_id: 'p',
+    });
+    const composed = {
+      guidance: { governing: [{ id: sourceMemoryId }] },
+    } as any;
+
+    expect(resolveBootstrapContradictionSources(
+      db,
+      { project_id: 'p', query: 'global contradiction', include_global: false },
+      composed,
+    )).toEqual([]);
+    expect(resolveBootstrapContradictionSources(
+      db,
+      { project_id: 'p', query: 'global contradiction', include_global: true },
+      composed,
+    )).toEqual([{
+      kind: 'memory',
+      id: sourceMemoryId,
+      record_id: String(admitted.record_id),
+      project_id: 'p',
+    }]);
+  });
+
   it('advertises real family schemas and rejects malformed variants through MCP', async () => {
     const server = new RealMcpServer({ name: 'profile-test', version: '1' });
     registerToolsForProfile(server, 'agent');
@@ -154,6 +211,8 @@ describe('MCP profiles', () => {
       const bootstrapProperties = bootstrap.inputSchema.properties as Record<string, unknown>;
       expect(bootstrapProperties).toHaveProperty('response_mode');
       expect(bootstrapProperties.response_mode).toMatchObject({ enum: ['legacy', 'compact'] });
+      expect(bootstrapProperties).not.toHaveProperty('affected_contradiction_sources');
+      expect(bootstrapProperties).not.toHaveProperty('trustedRoleContext');
       const compactResponse = await client.callTool({ name: 'cognitive_agent_bootstrap', arguments: { project_id: 'p', query: 'compact-schema', response_mode: 'compact' } });
       const compactText = (compactResponse.content as Array<{ text: string }>)[0].text;
       const compactEnvelope = JSON.parse(compactText) as { budget: { serialized_bytes: number }; response_mode: string };

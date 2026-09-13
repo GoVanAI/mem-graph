@@ -802,7 +802,7 @@ describe('projectCompactBootstrap - Semantics, Applicability, Contradiction (B6)
       profile: 'agent',
       trustedRoleContext: {
         affected_contradiction_sources: [
-          { kind: 'memory', id: 101, project_id: 'test-project' },
+          { kind: 'memory', id: 101, record_id: 104, project_id: 'test-project' },
         ],
       },
     });
@@ -810,6 +810,31 @@ describe('projectCompactBootstrap - Semantics, Applicability, Contradiction (B6)
     expect(envelope.warnings).toContain('explicit_contradiction_present');
     expect(envelope.task.objective.statement?.review_state).toBe('contradiction_review_required');
     expect(envelope.guidance.governing_candidates[0].review_state).toBe('contradiction_review_required');
+    expect(envelope.expansions).toContainEqual(expect.objectContaining({
+      reason: 'contradiction_requires_review',
+      source: expect.objectContaining({ kind: 'epistemic_record', record_id: '104', project_id: 'test-project' }),
+      route_available: true,
+      access_tracking: 'none',
+      route: expect.objectContaining({
+        tool: 'epistemic_inspect',
+        operation: 'get',
+        arguments: expect.objectContaining({ operation: 'get', record_id: 104, project_id: 'test-project' }),
+      }),
+    }));
+  });
+
+  it('emits an explicit warning when server-owned contradiction evidence identifies an affected source', () => {
+    const composed = createMockBootstrapResult();
+    const envelope = projectCompactBootstrap(composed, {
+      profile: 'agent',
+      trustedRoleContext: {
+        affected_contradiction_sources: [
+          { kind: 'memory', id: 101, record_id: 104, project_id: 'test-project' },
+        ],
+      },
+    });
+
+    expect(envelope.warnings).toContain('explicit_contradiction_present');
   });
 
   it('treats empty but valid scoped bootstrap as partial orientation (honest unknown), not unavailable', () => {
@@ -829,6 +854,21 @@ describe('projectCompactBootstrap - Semantics, Applicability, Contradiction (B6)
     expect(envelope.orientation.status).toBe('partial');
     expect(envelope.orientation.task_state).toBe('not_requested');
     expect(envelope.orientation.requires_expansion).toBe(true);
+  });
+
+  it('keeps the compact authority notice bounded without dropping authority or access-effect warnings', () => {
+    const envelope = projectCompactBootstrap(createMockBootstrapResult(), { profile: 'agent' });
+    const notice = envelope.verification.authority_notice;
+
+    expect(Buffer.byteLength(notice, 'utf8')).toBeLessThanOrEqual(120);
+    expect(notice).toMatch(/rank\/inclusion/i);
+    expect(notice).toMatch(/no authority/i);
+    expect(notice).toMatch(/role/i);
+    expect(notice).toMatch(/adoption/i);
+    expect(notice).toMatch(/scope/i);
+    expect(notice).toMatch(/applicability/i);
+    expect(notice).toMatch(/evidence/i);
+    expect(notice).toMatch(/track access/i);
   });
 
   it('maintains consistency: requires_expansion=false only when complete and expansions is empty', () => {
@@ -1552,8 +1592,11 @@ describe('Omission and Expansion Integrity (Codex B3, B5 / Gate B)', () => {
       task_state: taskState,
     };
 
-    // Set budget low enough to force Stage 2 omission
-    const envelope = projectCompactBootstrap(composed, { profile: 'agent', budget: 3500 });
+    // Derive the forcing budget from the current wire size so harmless framing
+    // optimizations cannot silently turn this into a no-reduction test.
+    const natural = projectCompactBootstrap(composed, { profile: 'agent' });
+    const forcingBudget = natural.budget.serialized_bytes - 500;
+    const envelope = projectCompactBootstrap(composed, { profile: 'agent', budget: forcingBudget });
 
     expect(envelope.omissions.items_omitted).toBeGreaterThan(0);
     expect(envelope.guidance.contextual_candidates).toEqual([]);

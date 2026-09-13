@@ -143,7 +143,7 @@ must include the expected code.
 | 3 | Compact request silently widens `include_global` | `required_call_arg_mismatch` |
 | 4 | Expansion calls a route marked `route_available=false` | `expansion_route_unavailable_called` |
 | 5 | Expansion names a tool absent from the active profile | `tool_not_in_profile` |
-| 6 | Governing guidance used without required verification | `required_call_missing` |
+| 6 | Governing guidance used without required verification | `required_call_response_mismatch` |
 | 7 | Unsupported `response_mode` retried more than once | `retry_count_exceeded` |
 | 8 | Access-tracking expansion described as zero-touch | `access_tracking_lie` |
 | 9 | pd-06 fabricates `version_mismatch` without trusted input | `pd06_version_mismatch_fabrication` |
@@ -194,3 +194,23 @@ A Phase 4A pass requires:
 Phase 4A freezes the contract. No agent is run. No transcript is executed.
 No provider tokens are claimed. No live database is touched. The contract
 remains `contract-only-not-executed` until Phase 4C execution lands.
+
+## Adopted Phase 4C corrections
+
+Following real MCP execution, the operator authorized two bounded contract
+corrections and a production payload optimization:
+
+- pd-01 and pd-05 now expect `orientation.status = "partial"` and
+  `requires_expansion = true` when task state is not requested. Their authority,
+  scope-isolation, and counterexample protections remain unchanged.
+- The frozen byte thresholds remain unchanged. Compact authority guidance was
+  shortened without removing its authority-verification or access-effect rules.
+- pd-02 now supplies both arms the same schema-valid, deterministically signed
+  task manifest through an ephemeral fixture trust runtime. Compact bootstrap
+  verifies adoption and task sources without a redundant follow-up read.
+- pd-03 now derives contradiction context from current, scoped epistemic
+  evidence backed by a valid cognitive-event chain. The compact response names
+  the warning, labels only the affected governing source, and routes review to
+  `epistemic_inspect`; callers cannot inject the trusted context.
+- Current deterministic evidence is 8/8 control passes and 8/8 candidate
+  passes. All frozen thresholds pass and Gate 4C passes fail-closed validation.

@@ -18,7 +18,7 @@
 import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, basename } from 'node:path';
-import { createHash } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, sign } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import type Database from 'better-sqlite3';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -28,6 +28,8 @@ import { initDatabase, getDatabase, closeAllDatabases } from '../../../../src/db
 import { registerToolsForProfile, parseMcpProfile } from '../../../../src/tool-profiles.js';
 import type { McpProfile } from '../../../../src/tool-profiles.js';
 import { canonicalJson } from '../../../../src/cognitive/bootstrap-disclosure.js';
+import { canonicalizeJcs, canonicalJsonSha256 } from '../../../../src/cognitive/operator-adoption.js';
+import { createOperatorTrustRuntime, type OperatorTrustRuntime } from '../../../../src/cognitive/operator-trust-loader.js';
 import { slugify } from '../../../../src/wikilink.js';
 import {
   FULL_PROFILE_TOOL_NAMES,
@@ -395,8 +397,9 @@ function seedMemoryWithId(
   db.prepare(`
     INSERT INTO memories (
       id, title, slug, summary, content, category, project_id,
-      layer, status, confidence, boost, importance_score, access_count
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0, 0, 1.0, 0)
+      layer, status, confidence, boost, importance_score, access_count,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0, 0, 1.0, 0, ?, ?)
   `).run(
     memory.id,
     memory.title,
@@ -407,6 +410,8 @@ function seedMemoryWithId(
     memory.project_id,
     memory.layer ?? 'episodic',
     memory.status ?? 'active',
+    '2026-09-08T00:00:00.000Z',
+    '2026-09-08T00:00:00.000Z',
   );
 }
 
@@ -437,7 +442,7 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
       id: 103,
       title: 'Governing parser source',
       summary: 'Governing parser implementation requirements.',
-      content: 'Governing parser implementation requirements.',
+      content: 'Governing parser implementation requirements. Inspect the complete source before applying implementation details.',
       category: 'decision',
       project_id: 'fixture-alpha',
       layer: 'semantic',
@@ -446,9 +451,9 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
   } else if (caseId === 'pd-03-fresh-contradiction') {
     seedMemoryWithId(db, {
       id: 104,
-      title: 'Deployment target',
-      summary: 'Use target A.',
-      content: 'Use target A.',
+      title: 'Resume deployment target',
+      summary: 'Resume deployment using target A.',
+      content: 'Resume deployment using target A.',
       category: 'decision',
       project_id: 'fixture-alpha',
       layer: 'semantic',
@@ -467,8 +472,51 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
     // the current schema. A partial or invalid seed must stop the case instead
     // of degrading into a fabricated out-of-scope response.
     const eventId = 'fixture-pd03-event-1';
+    const receiptEventId = 'fixture-pd03-event-2';
+    const receiptId = 'fixture-pd03-contradiction-1';
     const revisionId = 'fixture-pd03-revision-1';
     const timestamp = '2026-09-08T00:00:00.000Z';
+    const baseEvent = {
+      sequence: 1,
+      event_id: eventId,
+      event_type: 'EvidenceObserved',
+      task_id: 'fixture-pd03',
+      project_id: 'fixture-alpha',
+      session_id: 'fixture-runner',
+      correlation_id: null,
+      causation_id: null,
+      idempotency_key: null,
+      payload: {},
+      schema_version: 1,
+      observed_at: timestamp,
+      created_at: timestamp,
+      previous_hash: null,
+      idempotency_hash: null,
+    };
+    const baseEventHash = sha256Hex(canonicalJson(baseEvent));
+    const contradictionEventPayload = {
+      record_id: '104',
+      receipt_type: 'ContradictionSignal',
+      statement: 'Target A has contradictory retirement evidence.',
+    };
+    const contradictionEvent = {
+      sequence: 2,
+      event_id: receiptEventId,
+      event_type: 'BeliefRevised',
+      task_id: 'fixture-pd03',
+      project_id: 'fixture-alpha',
+      session_id: 'fixture-runner',
+      correlation_id: null,
+      causation_id: eventId,
+      idempotency_key: null,
+      payload: contradictionEventPayload,
+      schema_version: 1,
+      observed_at: timestamp,
+      created_at: timestamp,
+      previous_hash: baseEventHash,
+      idempotency_hash: null,
+    };
+    const contradictionEventHash = sha256Hex(canonicalJson(contradictionEvent));
     const recordPayload = canonicalJson({
       project_id: 'fixture-alpha',
       scope: 'exact-project',
@@ -489,8 +537,15 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
          correlation_id, causation_id, idempotency_key, payload, schema_version,
          observed_at, created_at, previous_hash, event_hash, idempotency_hash)
         VALUES (1, ?, 'EvidenceObserved', 'fixture-pd03', 'fixture-alpha', 'fixture-runner',
-                NULL, NULL, 'fixture-pd03-seed', '{}', 1, ?, ?, NULL, ?, ?)`)
-        .run(eventId, timestamp, timestamp, 'a'.repeat(64), 'b'.repeat(64));
+                NULL, NULL, NULL, '{}', 1, ?, ?, NULL, ?, NULL)`)
+        .run(eventId, timestamp, timestamp, baseEventHash);
+      db.prepare(`INSERT INTO cognitive_events
+        (sequence, event_id, event_type, task_id, project_id, session_id,
+         correlation_id, causation_id, idempotency_key, payload, schema_version,
+         observed_at, created_at, previous_hash, event_hash, idempotency_hash)
+        VALUES (2, ?, 'BeliefRevised', 'fixture-pd03', 'fixture-alpha', 'fixture-runner',
+                NULL, ?, NULL, ?, 1, ?, ?, ?, ?, NULL)`)
+        .run(receiptEventId, eventId, canonicalJson(contradictionEventPayload), timestamp, timestamp, baseEventHash, contradictionEventHash);
       db.prepare(`INSERT INTO epistemic_revisions
         (revision_id, record_id, revision_number, previous_revision_id, record_payload,
          valid_from, valid_until, supersedes_record_id, superseded_by_record_id,
@@ -509,9 +564,26 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
          observed_at, recorded_by, observed_by_role, authority_input)
         VALUES (104, ?, 104, ?, NULL, ?, 'fixture-runner', 'fixture', 'fixture')`)
         .run(revisionId, eventId, timestamp);
+      db.prepare(`INSERT INTO epistemic_receipts
+        (receipt_id, record_id, revision_id, source_event_id, receipt_type,
+         receipt_payload, independence_key, observed_at, recorded_at)
+        VALUES (?, 104, ?, ?, 'ContradictionSignal', ?, 'fixture-independent-source', ?, ?)`)
+        .run(
+          receiptId,
+          revisionId,
+          receiptEventId,
+          canonicalJson({ challenger_memory_id: 105, explicit: true }),
+          timestamp,
+          timestamp,
+        );
     })();
-    const seeded = db.prepare('SELECT record_id, current_revision_id FROM epistemic_records WHERE record_id = 104').get() as { record_id?: number; current_revision_id?: string } | undefined;
-    if (seeded?.record_id !== 104 || seeded.current_revision_id !== revisionId) {
+    const seeded = db.prepare(`
+      SELECT record.record_id, record.current_revision_id, receipt.receipt_id
+        FROM epistemic_records record
+        JOIN epistemic_receipts receipt ON receipt.record_id = record.record_id
+       WHERE record.record_id = 104 AND receipt.receipt_type = 'ContradictionSignal'
+    `).get() as { record_id?: number; current_revision_id?: string; receipt_id?: string } | undefined;
+    if (seeded?.record_id !== 104 || seeded.current_revision_id !== revisionId || seeded.receipt_id !== receiptId) {
       throw new Error('pd-03 epistemic seed verification failed');
     }
   } else if (caseId === 'pd-04-long-governing-record') {
@@ -610,6 +682,118 @@ export function seedCaseDatabase(caseId: string, db: Database.Database): void {
       status: 'active',
     });
   }
+}
+
+function createPd02TrustFixture(directory: string): {
+  taskState: Record<string, unknown>;
+  runtime: OperatorTrustRuntime;
+} {
+  const privateKey = (seedByte: number) => createPrivateKey({
+    key: Buffer.concat([
+      Buffer.from('302e020100300506032b657004220420', 'hex'),
+      Buffer.alloc(32, seedByte),
+    ]),
+    format: 'der',
+    type: 'pkcs8',
+  });
+  const rawPublicKey = (key: ReturnType<typeof privateKey>) =>
+    createPublicKey(key).export({ format: 'der', type: 'spki' }).subarray(-32);
+  const b64u = (value: Uint8Array) => Buffer.from(value).toString('base64url');
+  const rootKey = privateKey(2);
+  const signerKey = privateKey(3);
+  const receiptId = 'b1b2b3b4-c5c6-4d47-8e89-a1b2c3d4e5f6';
+  const source = { kind: 'memory', id: 102, project_id: 'fixture-alpha' };
+  const receiptRef = {
+    kind: 'operator_receipt', receipt_id: receiptId,
+    project_id: 'fixture-alpha', task_id: 'fixture-task-2',
+  };
+  const manifest = {
+    schema_version: '1.1.0', manifest_id: 'fixture-parser-manifest', revision: 1,
+    project_id: 'fixture-alpha', task_id: 'fixture-task-2', include_global: false,
+    adoption: { status: 'operator_adopted', source: receiptRef },
+    task: {
+      objective: { statement: 'Finish parser', required: true, sources: [source] },
+      definition_of_done: { statement: 'All parser fixtures pass', required: true, sources: [source] },
+      constraints: [{ statement: 'No schema migration', required: true, sources: [source] }],
+      expected_next_action: { statement: 'Inspect failing fixture', required: true, sources: [source] },
+    },
+    lane_requirements: {
+      governing: 'optional', current_state: 'optional', open_state: 'optional',
+      evidence: 'optional', context_only: 'optional', warnings: 'optional',
+    },
+    event_scope: {
+      project_id: 'fixture-alpha', task_id: 'fixture-task-2', allow_legacy_v1_context: false,
+    },
+    limits: { max_items_per_lane: 10, max_preview_characters: 200 },
+  };
+  const policy = {
+    allowed_capabilities: ['task_state_governing'],
+    maximum_authority_ceiling: 'task_orientation_only',
+    max_receipt_ttl_seconds: 3_000_000_000,
+  };
+  const registry = {
+    schema_version: '1.0.0', registry_id: 'fixture-registry',
+    deployment_audience: 'phase-4c-pd02', trust_mode: 'fixture', current_epoch: 1,
+    accepted_epochs: [{
+      epoch: 1,
+      keys: [{
+        key_id: 'fixture-operator', algorithm: 'Ed25519',
+        public_key_b64u: b64u(rawPublicKey(signerKey)), status: 'active',
+        valid_from: '2020-01-01T00:00:00.000Z',
+      }],
+    }],
+    revoked_receipt_ids: [], policy,
+  };
+  const receipt = {
+    schema_version: '1.0.0', receipt_id: receiptId, action: 'adopt_task_state_manifest',
+    issuer: {
+      key_id: 'fixture-operator', algorithm: 'Ed25519', registry_id: 'fixture-registry',
+      deployment_audience: 'phase-4c-pd02', trust_epoch: 1,
+      trust_policy_sha256: canonicalJsonSha256(policy),
+    },
+    subject: {
+      manifest_id: manifest.manifest_id, manifest_revision: manifest.revision,
+      manifest_sha256: canonicalJsonSha256(manifest), project_id: 'fixture-alpha',
+      task_id: 'fixture-task-2',
+    },
+    grant: {
+      capabilities: ['task_state_governing'], authority_ceiling: 'task_orientation_only',
+      include_global: false,
+    },
+    issued_at: '2020-01-01T00:00:00.000Z', not_before: '2020-01-01T00:00:00.000Z',
+    expires_at: '2099-01-01T00:00:00.000Z', nonce: b64u(Buffer.alloc(16, 2)),
+  };
+  const registryPayload = Buffer.from(canonicalizeJcs(registry));
+  const receiptPayload = Buffer.from(canonicalizeJcs(receipt));
+  const registryTransport = {
+    payload_b64u: b64u(registryPayload),
+    root_signature_b64u: b64u(sign(null, Buffer.concat([
+      Buffer.from('mem-graph/operator-trust-registry/v1\n'), registryPayload,
+    ]), rootKey)),
+  };
+  const registryPath = join(directory, 'pd02-operator-trust-registry.json');
+  writeFileSync(registryPath, canonicalizeJcs(registryTransport));
+  const rootRaw = rawPublicKey(rootKey);
+  const runtime = createOperatorTrustRuntime({
+    registry_bundle_path: registryPath, registry_id: 'fixture-registry',
+    deployment_audience: 'phase-4c-pd02',
+    registry_root_public_key_b64u: b64u(rootRaw),
+    registry_root_key_sha256: createHash('sha256').update(rootRaw).digest('hex'),
+    trust_mode: 'fixture',
+  });
+  if (!runtime) throw new Error('pd-02 deterministic trust runtime initialization failed');
+  return {
+    runtime,
+    taskState: {
+      task_id: 'fixture-task-2', manifest,
+      adoption_receipt: {
+        payload_b64u: b64u(receiptPayload),
+        signature_b64u: b64u(sign(null, Buffer.concat([
+          Buffer.from('mem-graph/operator-adoption/v1\n'), receiptPayload,
+        ]), signerKey)),
+      },
+    },
+  };
 }
 
 // ------------------------------------------------------------------
@@ -781,8 +965,11 @@ export async function executeCaseWorkflow(
     seedCaseDatabase(caseDoc.id, db);
 
     // 3. Set up real MCP Client/Server linked via InMemoryTransport
+    const pd02Fixture = caseDoc.id === 'pd-02-valid-manifest'
+      ? createPd02TrustFixture(caseDbDir)
+      : undefined;
     server = new McpServer({ name: `server-${caseDoc.id}-${arm}`, version: '0.3.0' });
-    registerToolsForProfile(server, profile);
+    registerToolsForProfile(server, profile, { operatorTrustRuntime: pd02Fixture?.runtime });
 
     client = new Client({ name: `client-${caseDoc.id}-${arm}`, version: '1.0.0' }, { capabilities: {} });
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -829,6 +1016,9 @@ export async function executeCaseWorkflow(
       let callArgs: Record<string, unknown> = {};
       if (toolName === 'cognitive_agent_bootstrap') {
         callArgs = { ...armDoc.synthetic_request };
+        if (pd02Fixture && canonicalJson(callArgs.task_state) !== canonicalJson(pd02Fixture.taskState)) {
+          throw new Error(`pd-02 ${arm} contract task_state differs from deterministic signed fixture`);
+        }
         if (caseDoc.id === 'pd-08-degraded-input') {
           callArgs.task_state = { task_id: 'fixture-task-8', manifest: 'malformed-fixture' };
         }
@@ -1725,22 +1915,19 @@ export function buildComparisonReport(receipt: Phase4CReceipt): string {
     ...agg.small_case_deltas.map(row => `| \`${row.case_id}\` | ${row.control_initial_bytes} | ${row.candidate_initial_bytes} | ${row.absolute_delta_bytes >= 0 ? '+' : ''}${row.absolute_delta_bytes} | ${row.growth_pct.toFixed(2)}% |`),
     `| **Aggregate across all 8 cases** | ${agg.controlInitialBytes.reduce((sum, value) => sum + value, 0)} | ${agg.candidateInitialBytes.reduce((sum, value) => sum + value, 0)} | ${agg.candidateInitialBytes.reduce((sum, value) => sum + value, 0) - agg.controlInitialBytes.reduce((sum, value) => sum + value, 0) >= 0 ? '+' : ''}${agg.candidateInitialBytes.reduce((sum, value) => sum + value, 0) - agg.controlInitialBytes.reduce((sum, value) => sum + value, 0)} | n/a |`,
     '',
-    '## 4. Analysis of Executed Gaps',
+    '## 4. Executed-Gap Analysis',
     '',
-    'The following are observations against the frozen Phase 4A contract; they are not contract amendments:',
+    gate.gap_count === 0
+      ? 'No executed gaps remain in the current deterministic matrix.'
+      : `The current matrix contains ${gate.gap_count} executed gap(s); see the per-case evidence above.`,
     '',
-    '1. **`pd-01-ordinary-restart` (candidate)**: observed `orientation.status = "partial"` and `requires_expansion = true`. The current receipt contains no emitted expansion, so it does not support requiring or claiming `verify_authority` for record 101.',
-    '2. **`pd-02-valid-manifest` (candidate)**: the supplied synthetic manifest did not reach governing task state. A valid-case amendment must use a schema-valid signed `TaskStateManifestV1` plus a deterministic ephemeral `OperatorTrustRuntime` through the supported registration option; it must not redefine this case as an unverified fallback.',
-    '3. **`pd-03-fresh-contradiction` (candidate)**: the public composition surface does not currently provide the trusted contradiction-source context needed for the required review state/expansion. Seeding a database event alone is not demonstrated to make that path reachable.',
-    '4. **`pd-05-wrong-project` (candidate)**: observed `partial` orientation while strict foreign/global isolation and source-unavailable stubs held. The orientation expectation and scope assertions are separable.',
+    '## 5. Adopted Corrections and Remaining Work',
     '',
-    '## 5. Amendment Proposal Status (No Amendments Applied)',
-    '',
-    '- **pd-01:** `partial` + `requires_expansion=true` is a candidate amendment. Do not add a `verify_authority` expansion predicate unless a justified fixture/query/canonical-id path makes record 101 reachable and a fresh public-runtime execution observes it.',
-    '- **pd-02:** recommend only the strong valid-manifest path: schema-valid signed `TaskStateManifestV1` and deterministic ephemeral test keys through the supported `OperatorTrustRuntime` registration option. No real secrets.',
-    '- **pd-03:** classify as a public-composition seam/product gap requiring separately reviewed design, or narrow the contract without claiming current reachability. Do not claim that contradiction events are ingested from a public event stream.',
-    '- **pd-05:** `partial` + `requires_expansion=true` is a candidate amendment; retain strict foreign/global isolation and source-unavailable stub assertions.',
-    '- **Thresholds:** no amendment is recommended. Structural framing bytes remain real context. A replacement requires a pre-registered framing-cost study and operator decision; do not select a post-observation percentage or substitute aggregate totals for per-case protection.',
+    '- **pd-01:** amended to the observed public invariant `partial` + `requires_expansion=true`; no unobserved `verify_authority` expansion was invented. The case now passes.',
+    '- **pd-02:** now uses the same schema-valid, deterministically signed `TaskStateManifestV1` in both arms through an ephemeral fixture-only `OperatorTrustRuntime`. Compact bootstrap verifies adoption and all task sources in one call; the prior unrelated record-103 expansion was removed. The case now passes.',
+    '- **pd-03:** compact bootstrap now derives contradiction context from a current `ContradictionSignal` receipt linked to a valid same-project cognitive-event chain and an active governing memory. It emits the warning, marks only the affected source for review, and routes the agent to the supporting epistemic record. The caller cannot inject this trusted context. The case now passes.',
+    '- **pd-05:** amended to `partial` + `requires_expansion=true` while retaining strict foreign/global isolation and source-unavailable stubs. The case now passes.',
+    '- **Thresholds:** unchanged. The production compact authority notice was reduced without dropping authority or access-effect warnings; both byte thresholds now pass.',
     '',
     '## 6. Scope, Authority, and Access Observations',
     '',

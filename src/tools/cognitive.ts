@@ -50,11 +50,12 @@ export function registerCognitiveTools(server: McpServer, options: CognitiveTool
     },
     async (input) => {
       try {
+        const db = getDatabase('memory');
         const { task_state, response_mode, ...baseInput } = input;
         const composed = task_state === undefined
-          ? agentBootstrap.bootstrapCognitiveAgent(getDatabase('memory'), baseInput)
+          ? agentBootstrap.bootstrapCognitiveAgent(db, baseInput)
           : agentBootstrap.bootstrapCognitiveAgentWithTaskState(
-            getDatabase('memory'),
+            db,
             baseInput,
             typeof task_state === 'object' && task_state !== null && !Array.isArray(task_state)
               ? { project_id: input.project_id, include_global: input.include_global, task_id: (task_state as Record<string, unknown>).task_id, manifest: (task_state as Record<string, unknown>).manifest, adoption_receipt: (task_state as Record<string, unknown>).adoption_receipt } as import('../cognitive/types.js').TaskStateBootstrapRequest
@@ -62,9 +63,17 @@ export function registerCognitiveTools(server: McpServer, options: CognitiveTool
             options.operatorTrustRuntime,
           );
         if (response_mode === 'compact') {
+          const affectedContradictionSources = agentBootstrap.resolveBootstrapContradictionSources(
+            db,
+            baseInput,
+            composed,
+          );
           const compact = bootstrapDisclosure.projectCompactBootstrap(composed, {
             profile,
-            trustedRoleContext: { bootstrap_query: baseInput.query },
+            trustedRoleContext: {
+              bootstrap_query: baseInput.query,
+              affected_contradiction_sources: affectedContradictionSources,
+            },
           });
           // Compact is already the canonical wire representation; legacy's pretty
           // printer would change its measured byte count and digest contract.

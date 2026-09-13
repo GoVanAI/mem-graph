@@ -116,8 +116,8 @@ function compactBootstrapEnvelope(projectId, includeGlobal = false, overrides = 
       global_inclusion: includeGlobal ? 'explicit' : 'disabled',
     },
     orientation: {
-      status: 'complete',
-      requires_expansion: false,
+      status: 'partial',
+      requires_expansion: true,
       task_state: 'not_requested',
       applicability: 'unknown',
     },
@@ -174,11 +174,10 @@ function compactBootstrapEnvelope(projectId, includeGlobal = false, overrides = 
   };
 }
 
-const PD02_TASK_STATE = {
-  task_id: 'fixture-task-2',
-  manifest: { schema_version: '1.1.0', fixture_status: 'operator-adopted' },
-  adoption_receipt: { receipt_id: 'fixture-receipt-2' },
-};
+const PD02_TASK_STATE = structuredClone(
+  CASES_DOC.cases.find((entry) => entry.id === 'pd-02-valid-manifest')
+    .arms.candidate.synthetic_request.task_state,
+);
 
 // --- Representative transcripts ------------------------------------------------
 
@@ -279,26 +278,7 @@ const PD02_CANDIDATE = [
           },
         },
       },
-      state: {
-        current: [
-          {
-            semantic_role: 'current_state',
-            preview: 'Parser decision',
-            lane: 'current_state',
-            authority: 'evidence_only',
-            review_state: 'none',
-            sources: [{ kind: 'memory', id: 103, project_id: 'fixture-alpha', version: 1 }],
-            truncated: false,
-          },
-        ],
-        open: [], evidence: [], context_only: [],
-      },
     }),
-  },
-  {
-    tool: 'memory_read',
-    args: { project_id: 'fixture-alpha',  operation: 'get', id: 103 },
-    response_envelope: { ok: true, operation: 'get', touched: true, memory: {  id: 103, project_id: 'fixture-alpha'  } },
   },
 ];
 
@@ -344,10 +324,10 @@ const PD03_CANDIDATE = [
       expansions: [
         {
           reason: 'contradiction_requires_review',
-          source: { kind: 'memory', id: 104, project_id: 'fixture-alpha' },
+          source: { kind: 'epistemic_record', record_id: '104', project_id: 'fixture-alpha' },
           expected_version: null,
           route_available: true,
-          access_tracking: 'touches_access_counters',
+          access_tracking: 'none',
           route: { tool: 'epistemic_inspect', operation: 'get', arguments: { operation: 'get', record_id: 104, project_id: 'fixture-alpha', include_global: false } },
         },
       ],
@@ -459,7 +439,7 @@ const PD05_CANDIDATE = [
     tool: 'cognitive_agent_bootstrap',
     args: { project_id: 'fixture-alpha', include_global: false, response_mode: 'compact', canonical_ids: [107, 108, 109], query: 'current implementation' },
     response_envelope: compactBootstrapEnvelope('fixture-alpha', false, {
-      orientation: { status: 'complete', requires_expansion: false, task_state: 'not_requested', applicability: 'reviewed' },
+      orientation: { status: 'partial', requires_expansion: true, task_state: 'not_requested', applicability: 'reviewed' },
       guidance: {
         canonical: [
           { id: 107, project_id: 'fixture-alpha', layer: 'semantic', category: 'implementation', title: 'Allowed source', status: 'active', lifecycle: 'permanent', preview: 'Allowed source.', truncated: false, review_state: 'none', eligibility: 'governing_eligible' },
@@ -798,7 +778,7 @@ export const counterexampleFixtures = [
     family: 6,
     case_id: 'pd-02-valid-manifest',
     arm: 'candidate',
-    expected_failure_code: 'required_call_missing',
+    expected_failure_code: 'required_call_response_mismatch',
     detection_reason: 'governing_guidance_used_without_required_verification',
     transcript: [
       {

@@ -508,10 +508,14 @@ export function projectCompactBootstrap(
 
   // 1. Recover warnings and unresolved from composed sources
   const rawWarnings = composed.task_state?.packet?.warnings ?? [];
-  const contradictionPresent = rawWarnings.includes('explicit_contradiction_present');
+  const contradictionPresent = rawWarnings.includes('explicit_contradiction_present')
+    || (options.trustedRoleContext?.affected_contradiction_sources?.length ?? 0) > 0;
 
   for (const w of rawWarnings) {
     if (!warnings.includes(w)) warnings.push(w);
+  }
+  if (contradictionPresent && !warnings.includes('explicit_contradiction_present')) {
+    warnings.push('explicit_contradiction_present');
   }
 
   if (composed.task_state?.packet?.unresolved) {
@@ -525,18 +529,30 @@ export function projectCompactBootstrap(
 
   // Determine affected contradiction sources
   const affectedContradictionKeys = new Set<string>();
+  const contradictionEvidenceByAffectedKey = new Map<string, CompactSourceReference>();
   if (options.trustedRoleContext?.affected_contradiction_sources) {
     for (const src of options.trustedRoleContext.affected_contradiction_sources) {
-      affectedContradictionKeys.add(
-        sourceStableKey({
-          kind: src.kind as any,
-          project_id: src.project_id ?? projectScope.project_id,
-          id: src.id,
-          record_id: src.record_id ? String(src.record_id) : undefined,
-          task_id: src.task_id,
-          event_id: src.event_id,
-        }),
-      );
+      const projectId = src.project_id ?? projectScope.project_id;
+      const affectedSource = cleanSourceReference({
+        kind: src.kind as CompactSourceReference['kind'],
+        project_id: projectId,
+        id: src.id,
+        record_id: src.record_id === undefined ? undefined : String(src.record_id),
+        task_id: src.task_id,
+        event_id: src.event_id,
+      });
+      const affectedKey = sourceStableKey(affectedSource);
+      affectedContradictionKeys.add(affectedKey);
+      if (src.kind === 'memory' && src.id !== undefined && src.record_id !== undefined) {
+        contradictionEvidenceByAffectedKey.set(
+          affectedKey,
+          cleanSourceReference({
+            kind: 'epistemic_record',
+            record_id: String(src.record_id),
+            project_id: projectId,
+          }),
+        );
+      }
     }
   }
 
@@ -928,16 +944,17 @@ export function projectCompactBootstrap(
         project_id: cand.project_id,
         title: cand.title,
       });
-      const routeInfo = buildExpansionRoute(srcRef, 'read', profile, projectScope);
       const candKey = sourceStableKey(srcRef);
-      const reason =
-        contradictionPresent && affectedContradictionKeys.size > 0 && affectedContradictionKeys.has(candKey)
-          ? 'contradiction_requires_review'
-          : 'verify_authority';
+      const isAffectedContradiction = contradictionPresent && affectedContradictionKeys.has(candKey);
+      const expansionSource = isAffectedContradiction
+        ? contradictionEvidenceByAffectedKey.get(candKey) ?? srcRef
+        : srcRef;
+      const routeInfo = buildExpansionRoute(expansionSource, 'read', profile, projectScope);
+      const reason = isAffectedContradiction ? 'contradiction_requires_review' : 'verify_authority';
 
       addExpansion({
         reason,
-        source: srcRef,
+        source: expansionSource,
         expected_version: null,
         route_available: routeInfo.route_available,
         access_tracking: routeInfo.access_tracking,
@@ -1006,7 +1023,7 @@ export function projectCompactBootstrap(
     verification: {
       required: true,
       authority_notice:
-        'Compact orientation is source-backed projection only. Manifest status, retrieval rank, repetition, and compact inclusion do not independently grant authority. Verify canonical role, adoption, scope, applicability, and current evidence before relying on claims. Expansion routes invoke external read tools that may record access tracking.',
+        'Rank/inclusion grant no authority. Verify role, adoption, scope, applicability, evidence. Reads may track access.',
       adoption_status: deriveAdoptionStatus(composed.task_state),
     },
     mutation: {

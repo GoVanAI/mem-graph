@@ -493,21 +493,21 @@ test('criterion 9: threshold branching correctly evaluates all frozen thresholds
   assert.ok(th.large_legacy.observed_reduction_pct >= 30);
   assert.equal(th.large_legacy.pass, true);
 
-  // small_legacy: <= 10% max growth (FAILED: 19.32% > 10%)
+  // small_legacy: <= 10% max growth
   assert.equal(th.small_legacy.applicable, true);
   assert.equal(th.small_legacy.max_growth_pct_allowed, 10);
-  assert.ok(th.small_legacy.observed_max_growth_pct > 10, 'Small-legacy growth exceeded 10% on small fixtures');
-  assert.equal(th.small_legacy.pass, false, 'Small-legacy threshold must be honestly evaluated as FAIL');
+  assert.ok(th.small_legacy.observed_max_growth_pct <= 10, 'Small-legacy growth must stay within 10%');
+  assert.equal(th.small_legacy.pass, true, 'Small-legacy threshold must be honestly evaluated as PASS');
 
   // median_call_increase: <= 1 (PASSED: delta = 0)
   assert.equal(th.median_call_increase.max_allowed, 1);
   assert.equal(th.median_call_increase.observed, 0);
   assert.equal(th.median_call_increase.pass, true);
 
-  // median_context_bytes: must not increase (FAILED: delta = +36.5 B > 0 B)
+  // median_context_bytes: must not increase
   assert.equal(th.median_context_bytes.must_not_increase, true);
-  assert.ok(th.median_context_bytes.observed_delta > 0, 'Median context bytes increased over control');
-  assert.equal(th.median_context_bytes.pass, false, 'Median context bytes threshold must be honestly evaluated as FAIL');
+  assert.ok(th.median_context_bytes.observed_delta <= 0, 'Median context bytes must not increase over control');
+  assert.equal(th.median_context_bytes.pass, true, 'Median context threshold must be honestly evaluated as PASS');
 
   // Retry bound is per workflow; totals remain descriptive only.
   assert.equal(th.unsupported_argument_retries.max_allowed, 1);
@@ -652,6 +652,58 @@ test('criterion 14c: pd-03 public epistemic reads return seeded records rather t
   }
 });
 
+test('criterion 14d: pd-02 uses one deterministic signed manifest in both arms and verifies governing task state', () => {
+  for (const run of [receipt.per_case_run_a, receipt.per_case_run_b]) {
+    const control = run.find(row => row.case_id === 'pd-02-valid-manifest' && row.arm === 'control');
+    const candidate = run.find(row => row.case_id === 'pd-02-valid-manifest' && row.arm === 'candidate');
+    assert.ok(control && candidate);
+    assert.deepEqual(control.transcript[0].args.task_state, candidate.transcript[0].args.task_state);
+    assert.equal(candidate.calls, 1, 'compact signed-manifest orientation must not require an unrelated follow-up read');
+    assert.equal(candidate.outcome, 'executed-pass');
+    const response = candidate.transcript[0].raw_envelope;
+    assert.equal(response?.verification?.adoption_status, 'verified');
+    assert.equal(response?.orientation?.task_state, 'assembled');
+    assert.equal(response?.task?.objective?.status, 'governing');
+    assert.equal(response?.task?.definition_of_done?.status, 'governing');
+    assert.equal(response?.task?.constraints?.status, 'resolved');
+    assert.equal(response?.task?.next_action?.status, 'governing');
+    assert.equal(candidate.mutation_audit.verdict_pass, true);
+  }
+});
+
+test('criterion 14e: pd-03 derives scoped contradiction evidence and routes review through epistemic inspection', () => {
+  for (const run of [receipt.per_case_run_a, receipt.per_case_run_b]) {
+    const candidate = run.find(row => row.case_id === 'pd-03-fresh-contradiction' && row.arm === 'candidate');
+    assert.ok(candidate);
+    assert.equal(candidate.outcome, 'executed-pass');
+    assert.equal(candidate.expansion_violations, 0);
+    assert.equal(candidate.mutation_audit.verdict_pass, true);
+
+    const bootstrap = candidate.transcript[0].raw_envelope;
+    assert.deepEqual(bootstrap.warnings, ['explicit_contradiction_present']);
+    assert.equal(bootstrap.guidance.governing_candidates[0].id, 104);
+    assert.equal(bootstrap.guidance.governing_candidates[0].review_state, 'contradiction_review_required');
+    assert.deepEqual(bootstrap.expansions[0], {
+      access_tracking: 'none',
+      expected_version: null,
+      reason: 'contradiction_requires_review',
+      route: {
+        arguments: { include_global: false, operation: 'get', project_id: 'fixture-alpha', record_id: 104 },
+        operation: 'get',
+        tool: 'epistemic_inspect',
+      },
+      route_available: true,
+      source: { kind: 'epistemic_record', project_id: 'fixture-alpha', record_id: '104' },
+    });
+
+    const inspection = candidate.transcript[1];
+    assert.equal(inspection.tool, 'epistemic_inspect');
+    assert.deepEqual(inspection.args, { operation: 'get', record_id: 104, project_id: 'fixture-alpha' });
+    assert.equal(inspection.raw_envelope.ok, true);
+    assert.equal(inspection.raw_envelope.record.source_memory_id, 104);
+  }
+});
+
 // ------------------------------------------------------------------
 // 15. pd-06 Honest Execution Behavior
 // ------------------------------------------------------------------
@@ -719,7 +771,7 @@ test('criterion 17: cross-run determinism verifies 100% hash and outcome match b
 // ------------------------------------------------------------------
 // 18. Fail-Closed Gate 4C Acceptance Verification
 // ------------------------------------------------------------------
-test('criterion 18: Gate 4C fails closed when candidate gaps or threshold failures exist', () => {
+test('criterion 18: Gate 4C verdict is derived fail-closed from gaps, failures, and thresholds', () => {
   const gate = receipt.gate_4c;
   const independentlyDerived = recomputeReceiptIndependent(receipt).gate;
   assert.deepEqual(gate, independentlyDerived);
