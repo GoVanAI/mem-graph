@@ -4,7 +4,7 @@ import { getDatabase } from '../db.js';
 import { textResult, errorResult, rowsResult } from '../util.js';
 import { runActivate } from '../activate.js';
 import { runDecayCycle, getSpreadStats, getStaleMemories } from '../decay.js';
-import { runSynapseTraverse } from '../access.js';
+import { readMemoryLinks } from '../memory-read.js';
 
 export function registerMemoryGraphTools(server: McpServer): void {
   server.tool(
@@ -61,14 +61,14 @@ export function registerMemoryGraphTools(server: McpServer): void {
     async ({ id, direction, connection_type, min_weight, limit }) => {
       const db = getDatabase('memory');
       try {
-        const rows = runSynapseTraverse(db, {
+        const result = readMemoryLinks(db, {
           id,
           direction,
           connection_type,
           min_weight,
           limit,
         });
-        return rowsResult(rows);
+        return rowsResult(result.rows);
       } catch (e) {
         return errorResult(`Synapse traverse error: ${(e as Error).message}`);
       }

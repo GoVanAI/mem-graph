@@ -1,0 +1,369 @@
+{
+  "$schema": "./tool-mapping.schema.json",
+  "schema_version": "1.0.0",
+  "source_of_truth": "src/tools/*.ts server.tool registrations",
+  "proposed_everyday_routes": [
+    "cognitive_agent_bootstrap",
+    "memory_prime",
+    "memory_find",
+    "memory_read",
+    "memory_write",
+    "epistemic_inspect",
+    "epistemic_admit",
+    "epistemic_append_receipt",
+    "cognitive_event_append",
+    "cognitive_event_read"
+  ],
+  "workflow_routes": {
+    "orient": ["cognitive_agent_bootstrap", "memory_prime"],
+    "find-and-inspect": ["memory_find", "memory_read", "epistemic_inspect", "cognitive_event_read"],
+    "record-and-revise": ["memory_write", "epistemic_admit", "cognitive_event_append"],
+    "review-and-learn": ["epistemic_inspect", "epistemic_append_receipt", "cognitive_event_append", "cognitive_event_read"]
+  },
+  "tools": [
+    {
+      "name": "cognitive_agent_bootstrap", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["query", "project_id"], "optional": ["limit", "include_global", "category", "layer", "canonical_ids", "include_canonical_content", "include_excluded_details", "task_state"] },
+      "scope": "Pattern 1: exact project; optional requested project plus _global; task-state sources remain separately bounded",
+      "return_type": "json", "side_effects": [], "classification": "everyday", "destination": "cognitive_agent_bootstrap",
+      "fallback": "cognitive_current_guidance_diagnose, then a direct bounded source read", "practice_callers": ["session orientation", "current-guidance retrieval", "task-state recovery"]
+    },
+    {
+      "name": "memory_prime", "source": "src/tools/memory-orient.ts",
+      "input_schema": { "required": [], "optional": ["project", "max_tokens", "include_archived"] },
+      "scope": "omitted project returns _global; supplied project auto-includes _global",
+      "return_type": "text-json", "side_effects": [], "classification": "everyday", "destination": "memory_prime",
+      "fallback": "agent profile uses cognitive_agent_bootstrap when memory_prime is unavailable", "practice_callers": ["session start in agent profile"]
+    },
+    {
+      "name": "memory_search", "source": "src/tools/memory-search.ts",
+      "input_schema": { "required": ["query"], "optional": ["project_id", "category", "layer", "status", "limit"] },
+      "scope": "Pattern 3: database-wide when omitted; supplied project auto-includes _global",
+      "return_type": "rows", "side_effects": [], "classification": "everyday", "destination": "memory_find:search", "fallback": "full profile memory_search",
+      "practice_callers": ["specific lookup", "search-before-create", "bootstrap unavailable fallback"]
+    },
+    {
+      "name": "memory_recent", "source": "src/tools/memory-search.ts",
+      "input_schema": { "required": [], "optional": ["project_id", "category", "layer", "lifecycle", "limit"] },
+      "scope": "Pattern 3: database-wide when omitted; supplied project auto-includes _global",
+      "return_type": "rows", "side_effects": [], "classification": "everyday", "destination": "memory_find:recent", "fallback": "memory_find:search with a freshness constraint when supported",
+      "practice_callers": ["recent-state lookup"]
+    },
+    {
+      "name": "memory_changes", "source": "src/tools/memory-search.ts",
+      "input_schema": { "required": ["since"], "optional": ["project_id", "limit"] },
+      "scope": "Pattern 3: database-wide when omitted; supplied project auto-includes _global",
+      "return_type": "rows", "side_effects": [], "classification": "everyday", "destination": "memory_find:changes", "fallback": "memory_find:recent",
+      "practice_callers": ["incremental session update"]
+    },
+    {
+      "name": "memory_activate", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": ["query"], "optional": ["max_hop_depth", "min_synapse_weight", "limit_cap", "land_on_layers", "pass_through_layers", "project_id"] },
+      "scope": "Pattern 3 anchors; graph expansion can cross project boundaries",
+      "return_type": "rows",
+      "side_effects": ["increments access counters and timestamps for returned memories", "increments neighborhood synapse access counters"],
+      "classification": "everyday", "destination": "memory_find:related",
+      "fallback": "memory_find:search", "practice_callers": ["broad related context after governing pass"]
+    },
+    {
+      "name": "memory_get", "source": "src/tools/memory-search.ts",
+      "input_schema": { "required": ["id"], "optional": ["include_synapses"] },
+      "scope": "unscoped direct ID; optional neighbors are also unscoped",
+      "return_type": "text-json",
+      "side_effects": ["increments memory and connected-synapse access counters"],
+      "classification": "everyday", "destination": "memory_read:get",
+      "fallback": "full profile memory_get after explicit scope verification",
+      "practice_callers": ["direct source verification", "canonical readback"]
+    },
+    {
+      "name": "memory_synapse_traverse", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": ["id"], "optional": ["direction", "connection_type", "min_weight", "limit"] },
+      "scope": "unscoped one-hop traversal; foreign-project neighbors can be hydrated",
+      "return_type": "rows", "side_effects": [], "classification": "everyday", "destination": "memory_read:links",
+      "fallback": "full profile traversal with explicit scope inspection; agent profile returns foreign wikilinks as reference stubs until deliberate hydration",
+      "practice_callers": ["bounded related-source inspection"]
+    },
+    {
+      "name": "memory_add", "source": "src/tools/memory-write.ts",
+      "input_schema": { "required": ["category", "title", "content"], "optional": ["layer", "project_id", "summary", "tags", "lifecycle", "confidence", "importance_score", "session_id", "source"] },
+      "scope": "project_id defaults to _global in legacy route; agent profile requires explicit project_id",
+      "return_type": "text-json",
+      "side_effects": ["inserts memory and tags", "creates wikilink and BM25 synapses", "may prune auto-links"],
+      "classification": "everyday", "destination": "memory_write:add",
+      "fallback": "full profile memory_add with deliberate project_id",
+      "practice_callers": ["memory admission after search-before-create"]
+    },
+    {
+      "name": "memory_update", "source": "src/tools/memory-write.ts",
+      "input_schema": { "required": ["id"], "optional": ["title", "content", "summary", "tags", "category", "project_id", "layer", "lifecycle", "confidence", "importance_score"] },
+      "scope": "unscoped direct ID; agent profile requires explicit project_id and precondition",
+      "return_type": "text-json",
+      "side_effects": ["updates memory", "replaces tags when supplied", "rebuilds wikilinks and auto-links for title/content changes"],
+      "classification": "everyday", "destination": "memory_write:update",
+      "fallback": "full profile memory_update after direct verification",
+      "practice_callers": ["canonical-node update", "tracker update"]
+    },
+    {
+      "name": "memory_mark", "source": "src/tools/memory-write.ts",
+      "input_schema": { "required": ["id", "status"], "optional": ["reason"] },
+      "scope": "unscoped direct ID; agent profile requires explicit project_id",
+      "return_type": "text-json",
+      "side_effects": ["changes memory status"], "classification": "everyday", "destination": "memory_write:mark",
+      "fallback": "full profile memory_mark after direct verification",
+      "practice_callers": ["archive or invalidate state"]
+    },
+    {
+      "name": "memory_supersede", "source": "src/tools/memory-write.ts",
+      "input_schema": { "required": ["old_id", "new_id"], "optional": ["reason"] },
+      "scope": "agent profile requires explicit project_id and endpoint checks",
+      "return_type": "text-json",
+      "side_effects": ["atomically marks old record superseded", "creates supersedes synapse"],
+      "classification": "everyday", "destination": "memory_write:supersede",
+      "fallback": "full profile memory_supersede after verifying both endpoints",
+      "practice_callers": ["decision reversal", "record replacement"]
+    },
+    {
+      "name": "memory_tag_add", "source": "src/tools/memory-tags.ts",
+      "input_schema": { "required": ["id", "tag"], "optional": [] },
+      "scope": "agent profile requires explicit project_id",
+      "return_type": "text-json", "side_effects": ["adds tag idempotently"],
+      "classification": "everyday", "destination": "memory_write:tag_add",
+      "fallback": "full profile memory_tag_add after direct verification",
+      "practice_callers": ["tag curation"]
+    },
+    {
+      "name": "memory_tag_remove", "source": "src/tools/memory-tags.ts",
+      "input_schema": { "required": ["id", "tag"], "optional": [] },
+      "scope": "agent profile requires explicit project_id",
+      "return_type": "text-json", "side_effects": ["removes tag idempotently"],
+      "classification": "everyday", "destination": "memory_write:tag_remove",
+      "fallback": "full profile memory_tag_remove after direct verification",
+      "practice_callers": ["tag curation"]
+    },
+    {
+      "name": "epistemic_get", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": ["record_id", "project_id"], "optional": ["include_global", "as_of"] },
+      "scope": "Pattern 1 after scope-isolation correction: exact project; optional global-scope records",
+      "return_type": "json", "side_effects": [], "classification": "everyday", "destination": "epistemic_inspect:get",
+      "fallback": "full profile epistemic_get", "practice_callers": ["epistemic source verification", "as-of inspection"]
+    },
+    {
+      "name": "epistemic_query", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": ["project_id"], "optional": ["include_global", "scope", "epistemic_status", "limit"] },
+      "scope": "Pattern 1: exact project; optional global-scope records",
+      "return_type": "json", "side_effects": [], "classification": "everyday", "destination": "epistemic_inspect:query",
+      "fallback": "full profile epistemic_query", "practice_callers": ["bounded epistemic discovery"]
+    },
+    {
+      "name": "epistemic_concept_diff", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": ["record_id", "project_id", "from_as_of", "to_as_of"], "optional": ["include_global", "include_unchanged", "include_retracted"] },
+      "scope": "Pattern 1 after scope-isolation correction: every endpoint must match project or global scope",
+      "return_type": "json", "side_effects": [], "classification": "everyday", "destination": "epistemic_inspect:diff",
+      "fallback": "two bounded as-of reads when available", "practice_callers": ["epistemic revision comparison"]
+    },
+    {
+      "name": "epistemic_admit", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": ["idempotency_key", "project_id", "scope", "statement", "epistemic_status", "verification_level", "source_quality", "confidence", "valid_from", "task_id"], "optional": ["record_id", "expected_revision", "previous_revision_id", "valid_until", "source_memory_id", "supersedes_record_id", "superseded_by_record_id", "provenance", "session_id", "observed_at"] },
+      "scope": "explicit project_id and epistemic scope",
+      "return_type": "json",
+      "side_effects": ["atomically appends belief event, revision, provenance, and projection"],
+      "classification": "everyday", "destination": "epistemic_admit",
+      "fallback": "do not substitute ordinary memory_update", "practice_callers": ["epistemic admission", "epistemic revision"]
+    },
+    {
+      "name": "epistemic_append_receipt", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": ["idempotency_key", "record_id", "revision_id", "receipt_type", "receipt_payload", "observed_at", "task_id", "project_id"], "optional": ["independence_key", "session_id"] },
+      "scope": "explicit project_id; referenced record/revision validated by persistence layer",
+      "return_type": "json", "side_effects": ["appends immutable evidence receipt"],
+      "classification": "everyday", "destination": "epistemic_append_receipt",
+      "fallback": "report receipt persistence unavailable",
+      "practice_callers": ["challenge receipt", "belief use", "decision outcome", "contradiction signal", "review deadline"]
+    },
+    {
+      "name": "cognitive_event_append", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["event_type", "task_id", "project_id", "payload"], "optional": ["session_id", "correlation_id", "causation_id", "idempotency_key", "observed_at"] },
+      "scope": "explicit project_id on immutable event",
+      "return_type": "json", "side_effects": ["appends hash-linked event"],
+      "classification": "everyday", "destination": "cognitive_event_append",
+      "fallback": "report persistence unavailable; do not synthesize an event",
+      "practice_callers": ["qualifying decision or evidence", "tracker evidence-first update"]
+    },
+    {
+      "name": "cognitive_event_trace", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": [], "optional": ["event_type", "task_id", "project_id", "session_id", "correlation_id", "causation_id", "after_sequence", "before_sequence", "limit"] },
+      "scope": "agent profile requires project_id and bounded filters",
+      "return_type": "json", "side_effects": [], "classification": "everyday", "destination": "cognitive_event_read",
+      "fallback": "full profile cognitive_event_trace; agent profile name event provenance unavailable if absent",
+      "practice_callers": ["bounded provenance inspection", "tracker verification"]
+    },
+    {
+      "name": "cognitive_policy_create", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["project_id", "title", "statement", "trigger_type", "trigger_value", "action", "exclusions", "verifier", "task_id"], "optional": ["session_id", "idempotency_key"] },
+      "scope": "explicit project candidate policy",
+      "return_type": "json", "side_effects": ["creates candidate policy", "appends source event"],
+      "classification": "specialist", "destination": "maintenance: cognitive_policy_create",
+      "fallback": "retain recommendation as unadopted context",
+      "practice_callers": ["explicit policy-authoring task"]
+    },
+    {
+      "name": "cognitive_policy_lookup", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["project_id", "trigger_type", "trigger_value"], "optional": ["limit"] },
+      "scope": "requested project plus _global candidates; candidate authority only",
+      "return_type": "json", "side_effects": [], "classification": "specialist", "destination": "maintenance: cognitive_policy_lookup",
+      "fallback": "report no matching candidate", "practice_callers": ["bootstrap internal lookup", "legacy current-guidance fallback"]
+    },
+    {
+      "name": "cognitive_policy_evaluate", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["policy_id", "task_id", "project_id", "outcome", "metrics", "guardrail_regression"], "optional": ["session_id", "correlation_id", "causation_id", "idempotency_key"] },
+      "scope": "explicit project outcome evidence",
+      "return_type": "json", "side_effects": ["records policy evaluation event and metrics"],
+      "classification": "specialist", "destination": "maintenance: cognitive_policy_evaluate",
+      "fallback": "leave policy outcome unevaluated",
+      "practice_callers": ["explicit policy evaluation"]
+    },
+    {
+      "name": "cognitive_current_guidance_search", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["query", "project_id"], "optional": ["limit", "include_global", "category", "layer"] },
+      "scope": "Pattern 1 exact project; optional requested project plus _global",
+      "return_type": "json", "side_effects": [], "classification": "legacy-only", "destination": "full profile fallback behind cognitive_agent_bootstrap",
+      "fallback": "cognitive_agent_bootstrap",
+      "practice_callers": ["legacy current-guidance fallback"]
+    },
+    {
+      "name": "cognitive_current_guidance_diagnose", "source": "src/tools/cognitive.ts",
+      "input_schema": { "required": ["query", "project_id"], "optional": ["limit", "include_global", "category", "layer"] },
+      "scope": "Pattern 1 exact project; optional requested project plus _global",
+      "return_type": "json", "side_effects": [], "classification": "legacy-only", "destination": "full profile diagnostic fallback behind cognitive_agent_bootstrap",
+      "fallback": "cognitive_agent_bootstrap",
+      "practice_callers": ["legacy current-guidance diagnosis"]
+    },
+    {
+      "name": "epistemic_integrity_check", "source": "src/tools/epistemic.ts",
+      "input_schema": { "required": [], "optional": [] }, "scope": "whole-database integrity audit",
+      "return_type": "json", "side_effects": [], "classification": "specialist", "destination": "maintenance: epistemic_integrity_check",
+      "fallback": "mark integrity status unverified",
+      "practice_callers": ["operator-requested integrity audit"]
+    },
+    {
+      "name": "memory_overview", "source": "src/tools/memory-orient.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "whole-database aggregate and recent sample",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_overview",
+      "fallback": "none; diagnostic unavailable", "practice_callers": ["operator database overview"]
+    },
+    {
+      "name": "memory_projects", "source": "src/tools/memory-orient.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "whole-database active project aggregate",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_projects",
+      "fallback": "none; project inventory unavailable",
+      "practice_callers": ["operator project inventory"]
+    },
+    {
+      "name": "memory_categories", "source": "src/tools/memory-orient.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "whole-database active category aggregate",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_categories",
+      "fallback": "none; category inventory unavailable",
+      "practice_callers": ["operator category inventory"]
+    },
+    {
+      "name": "memory_stats", "source": "src/tools/memory-search.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "whole-database health aggregate",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_stats",
+      "fallback": "none; health metrics unavailable",
+      "practice_callers": ["operator health check"]
+    },
+    {
+      "name": "memory_spread_stats", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "whole-database graph aggregate",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_spread_stats",
+      "fallback": "none; graph metrics unavailable",
+      "practice_callers": ["operator graph diagnosis"]
+    },
+    {
+      "name": "memory_stale", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": [], "optional": ["days", "project_id", "lifecycle", "layer", "limit"] },
+      "scope": "Pattern 3: database-wide when omitted; supplied project auto-includes _global",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: memory_stale",
+      "fallback": "leave freshness audit unavailable",
+      "practice_callers": ["stale-memory review"]
+    },
+    {
+      "name": "memory_decay", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": [], "optional": ["decay_days", "prune_floor"] },
+      "scope": "whole-database graph maintenance",
+      "return_type": "text-json",
+      "side_effects": ["decays synapse weights", "prunes fully decayed edges"],
+      "classification": "specialist", "destination": "maintenance: memory_decay",
+      "fallback": "skip maintenance and report it was not run",
+      "practice_callers": ["operator or scheduled maintenance"]
+    },
+    {
+      "name": "memory_boost", "source": "src/tools/memory-write.ts",
+      "input_schema": { "required": ["id", "delta"], "optional": ["reason"] },
+      "scope": "unscoped direct ID",
+      "return_type": "text-json", "side_effects": ["changes retrieval boost"],
+      "classification": "specialist", "destination": "maintenance: memory_boost",
+      "fallback": "leave ranking unchanged",
+      "practice_callers": ["operator-directed rank maintenance"]
+    },
+    {
+      "name": "memory_synapse_create", "source": "src/tools/memory-graph.ts",
+      "input_schema": { "required": ["source_id", "target_id", "connection_type"], "optional": ["weight"] },
+      "scope": "unscoped endpoints; intentional cross-project edges possible",
+      "return_type": "text-json",
+      "side_effects": ["creates or reinforces synapse", "may prune low-weight auto-links"],
+      "classification": "specialist", "destination": "maintenance: memory_synapse_create",
+      "fallback": "use explicit wikilink in an authorized memory edit when semantically appropriate",
+      "practice_callers": ["operator graph curation"]
+    },
+    {
+      "name": "memory_import_from_mem_sol", "source": "src/tools/memory-import.ts",
+      "input_schema": { "required": ["source_db_path"], "optional": ["dry_run", "default_layer", "default_importance"] },
+      "scope": "filesystem source and whole target database migration",
+      "return_type": "text-json",
+      "side_effects": ["imports memories, tags, and links unless dry_run=true"],
+      "classification": "specialist", "destination": "maintenance: memory_import_from_mem_sol",
+      "fallback": "none; migration remains explicitly unavailable",
+      "practice_callers": ["explicit legacy migration only"]
+    },
+    {
+      "name": "sql_query", "source": "src/tools/sql.ts",
+      "input_schema": { "required": ["database", "query"], "optional": ["params"] },
+      "scope": "caller-selected database; query text determines scope",
+      "return_type": "rows",
+      "side_effects": ["nominally read path; SQL text is caller-controlled"],
+      "classification": "specialist", "destination": "maintenance: sql_query",
+      "fallback": "use a typed read operation",
+      "practice_callers": ["explicit operator-authorized raw SQL inspection"]
+    },
+    {
+      "name": "sql_execute", "source": "src/tools/sql.ts",
+      "input_schema": { "required": ["database", "statement"], "optional": ["params"] },
+      "scope": "caller-selected database; statement determines scope",
+      "return_type": "text-json", "side_effects": ["arbitrary SQL mutation or DDL"],
+      "classification": "specialist", "destination": "maintenance: sql_execute",
+      "fallback": "use a typed mutation operation",
+      "practice_callers": ["explicit operator-authorized raw SQL mutation"]
+    },
+    {
+      "name": "sql_introspect", "source": "src/tools/sql.ts",
+      "input_schema": { "required": ["database"], "optional": [] },
+      "scope": "caller-selected database schema",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: sql_introspect",
+      "fallback": "none; schema inspection unavailable",
+      "practice_callers": ["explicit operator-authorized SQL inspection"]
+    },
+    {
+      "name": "list_databases", "source": "src/tools/sql.ts",
+      "input_schema": { "required": [], "optional": [] },
+      "scope": "all databases loaded by server",
+      "return_type": "rows", "side_effects": [], "classification": "specialist", "destination": "maintenance: list_databases",
+      "fallback": "use configured memory database without enumeration",
+      "practice_callers": ["explicit operator-authorized database inspection"]
+    }
+  ]
+}

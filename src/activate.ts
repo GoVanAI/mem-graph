@@ -9,6 +9,9 @@ export interface ActivateParams {
   land_on_layers?: string[];
   pass_through_layers?: string[];
   project_id?: string | null;
+  /** Agent-family callers use this to prevent cross-project graph hydration. */
+  include_global?: boolean;
+  strict_scope?: boolean;
 }
 
 const DEFAULT_MAX_HOP_DEPTH = 2;
@@ -42,6 +45,8 @@ export function runActivate(
     land_on_layers = DEFAULT_LAND_ON_LAYERS,
     pass_through_layers = DEFAULT_PASS_THROUGH_LAYERS,
     project_id = null,
+    include_global = true,
+    strict_scope = false,
   } = params;
 
   // Sanitize FTS5 query: handle operators that would break MATCH
@@ -67,7 +72,12 @@ export function runActivate(
   `;
 
   const projectClause = project_id
-    ? `AND (m.project_id = :project_id OR m.project_id = '_global')`
+    ? include_global ? `AND (m.project_id = :project_id OR m.project_id = '_global')` : 'AND m.project_id = :project_id'
+    : '';
+  // Legacy activation intentionally preserves its historical graph-wide
+  // neighbor traversal. The scoped agent family opts in to this predicate.
+  const recursiveProjectClause = strict_scope && project_id
+    ? include_global ? `AND (m.project_id = :project_id OR m.project_id = '_global')` : 'AND m.project_id = :project_id'
     : '';
 
   // Cycle prevention: the depth bound (max_hop_depth) prevents infinite recursion,
@@ -103,6 +113,7 @@ export function runActivate(
           ON m.id = CASE WHEN s.source_id = sa.id THEN s.target_id ELSE s.source_id END
         WHERE sa.current_depth < :max_hop_depth
           AND s.weight >= :min_synapse_weight
+          ${recursiveProjectClause}
           AND (
               m.layer IN ${landOnList}
               ${passThroughExists}

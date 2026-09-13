@@ -10,12 +10,68 @@ import type {
 } from './types.js';
 import { projectCurrentState } from '../epistemic/projections.js';
 import { projectMaintenance } from '../epistemic/maintenance-runtime.js';
+import { composeTaskStateBootstrap } from './task-state-server.js';
+import { verifyCognitiveEventChain } from './events.js';
+import type { OperatorTrustRuntime } from './operator-trust-loader.js';
+import type { TaskStateBootstrapEnvelope, TaskStateBootstrapRequest } from './types.js';
 
 export const AGENT_PRACTICE_ID = 'mem-graph-agent-practice' as const;
 export const AGENT_PRACTICE_VERSION = '1.1.0' as const;
 
 interface CanonicalMemoryRow extends AgentBootstrapCanonicalRecord {
   content: string;
+}
+
+export interface BootstrapContradictionSource {
+  kind: 'memory';
+  id: number;
+  record_id: string;
+  project_id: string;
+}
+
+/**
+ * Resolve contradiction context from server-owned, append-only evidence.
+ * A signal is eligible only when it targets the record's current revision,
+ * its event and source memory share the permitted scope, the source memory is
+ * active and present in this bootstrap's governing lane, and the complete
+ * cognitive-event chain verifies. MCP callers cannot supply this result.
+ */
+export function resolveBootstrapContradictionSources(
+  db: Database.Database,
+  input: AgentBootstrapInput,
+  composed: AgentBootstrapResult,
+): BootstrapContradictionSource[] {
+  if (!verifyCognitiveEventChain(db).valid) return [];
+  const governingIds = new Set(composed.guidance.governing.map((record) => record.id));
+  if (governingIds.size === 0) return [];
+  const rows = db.prepare(`
+    SELECT DISTINCT er.source_memory_id AS id, er.record_id, er.project_id
+      FROM epistemic_receipts receipt
+      JOIN epistemic_records er
+        ON er.record_id = receipt.record_id
+       AND er.current_revision_id = receipt.revision_id
+      JOIN cognitive_events event
+        ON event.event_id = receipt.source_event_id
+       AND event.project_id = er.project_id
+      JOIN memories memory
+        ON memory.id = er.source_memory_id
+       AND memory.project_id = er.project_id
+     WHERE receipt.receipt_type = 'ContradictionSignal'
+       AND memory.status = 'active'
+       AND (
+         (er.scope = 'exact-project' AND er.project_id = ?)
+         ${input.include_global === true ? "OR er.scope = '_global'" : ''}
+       )
+     ORDER BY er.project_id ASC, er.source_memory_id ASC
+  `).all(input.project_id) as Array<{ id: number; record_id: number; project_id: string }>;
+  return rows
+    .filter((row) => governingIds.has(row.id))
+    .map((row) => ({
+      kind: 'memory',
+      id: row.id,
+      record_id: String(row.record_id),
+      project_id: row.project_id,
+    }));
 }
 
 function normalizeCanonicalIds(input: AgentBootstrapInput): number[] {
@@ -75,6 +131,22 @@ export function bootstrapCognitiveAgent(
     ? scopedCandidates
     : scopedCandidates.filter((candidate) => candidate.project_id === input.project_id);
   const guidance = diagnoseCurrentGuidance(db, input);
+  const includeExcludedDetails = input.include_excluded_details === true;
+  // When include_excluded_details is
+  // false (default), strip excluded records to summary {id, title,
+  // exclusion_reasons} to avoid ~6KB of bloat from full snippets + BM25 ranks.
+  // The trimmed shape is intentional; cast through unknown to satisfy the
+  // strict CurrentGuidanceDiagnostic type without losing the runtime shape.
+  const trimmedGuidance = includeExcludedDetails
+    ? guidance
+    : ({
+        ...guidance,
+        excluded: guidance.excluded.map((record) => ({
+          id: record.id,
+          title: record.title,
+          exclusion_reasons: record.exclusion_reasons,
+        })),
+      } as unknown as typeof guidance);
   const digestInput = {
     practice: `${AGENT_PRACTICE_ID}@${AGENT_PRACTICE_VERSION}`,
     project_id: input.project_id,
@@ -116,7 +188,7 @@ export function bootstrapCognitiveAgent(
       authority: 'candidate_only',
       candidates,
     },
-    guidance,
+    guidance: trimmedGuidance,
     verification: {
       required: true,
       instruction:
@@ -130,6 +202,22 @@ export function bootstrapCognitiveAgent(
     },
     bootstrap_digest: createHash('sha256').update(JSON.stringify(digestInput)).digest('hex'),
   };
+}
+
+/** Additive Option 1 wrapper. The legacy bootstrap and its digest stay intact. */
+export function bootstrapCognitiveAgentWithTaskState(
+  db: Database.Database,
+  input: AgentBootstrapInput,
+  taskState: TaskStateBootstrapRequest | undefined,
+  trustRuntime?: OperatorTrustRuntime,
+): AgentBootstrapResult & { task_state: TaskStateBootstrapEnvelope } {
+  const base = bootstrapCognitiveAgent(db, input);
+  const scopedRequest = taskState === undefined ? undefined : {
+    ...taskState,
+    project_id: input.project_id,
+    include_global: input.include_global,
+  };
+  return { ...base, task_state: composeTaskStateBootstrap(db, scopedRequest, trustRuntime) };
 }
 
 /**

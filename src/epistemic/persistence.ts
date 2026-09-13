@@ -1,7 +1,7 @@
 /**
  * Epistemic Memory Phase B — atomic admission and projection persistence.
  *
- * Per EPB-001 D6/D7/D17/D19 and [[283]] Step 5 acceptance, this module:
+ * Per EPB-001 D6/D7/D17/D19 and the Step 3 acceptance contract Step 5 acceptance, this module:
  *   - validates and normalizes a record + provenance envelope;
  *   - resolves idempotency (D7) by SHA-256 of the canonical JSON envelope;
  *   - enforces expected_revision concurrency (D6) with stable STALE_REVISION;
@@ -22,6 +22,7 @@ import { appendCognitiveEvent } from '../cognitive/events.js';
 /** Stable error codes from EPB-001 D17. */
 export const EPISTEMIC_ERROR_CODES = {
   STALE_REVISION: 'STALE_REVISION',
+  RECORD_REVISION_MISMATCH: 'RECORD_REVISION_MISMATCH',
   IDEMPOTENCY_KEY_CONFLICT: 'IDEMPOTENCY_KEY_CONFLICT',
   IDEMPOTENCY_PAYLOAD_MISMATCH: 'IDEMPOTENCY_PAYLOAD_MISMATCH',
   FUTURE_EVIDENCE: 'FUTURE_EVIDENCE',
@@ -529,6 +530,7 @@ export function admitEpistemicRecord(
         source_event_id, source_memory_id, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(record_id) DO UPDATE SET
+         project_id = excluded.project_id,
          scope = excluded.scope,
          statement = excluded.statement,
          epistemic_status = excluded.epistemic_status,
@@ -621,12 +623,33 @@ export function appendEpistemicReceipt(
   return db.transaction(() => {
     // Verify the referenced revision exists.
     const rev = db
-      .prepare('SELECT revision_id FROM epistemic_revisions WHERE revision_id = ?')
-      .get(input.revision_id);
+      .prepare(
+        `SELECT revision_id, record_id,
+                json_extract(record_payload, '$.project_id') AS project_id
+           FROM epistemic_revisions
+          WHERE revision_id = ?`,
+      )
+      .get(input.revision_id) as
+      | { revision_id: string; record_id: number; project_id: string | null }
+      | undefined;
     if (!rev) {
       throw new EpistemicAdmissionError(
         EPISTEMIC_ERROR_CODES.STALE_REVISION,
         `revision_id ${input.revision_id} does not exist`,
+      );
+    }
+    if (rev.record_id !== input.record_id || rev.project_id !== input.project_id) {
+      throw new EpistemicAdmissionError(
+        EPISTEMIC_ERROR_CODES.RECORD_REVISION_MISMATCH,
+        `revision_id ${input.revision_id} does not belong to record_id ${input.record_id} in project ${input.project_id}`,
+        {
+          details: {
+            revision_record_id: rev.record_id,
+            revision_project_id: rev.project_id,
+            supplied_record_id: input.record_id,
+            supplied_project_id: input.project_id,
+          },
+        },
       );
     }
 

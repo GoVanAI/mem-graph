@@ -12,6 +12,7 @@ import { gradeAgentPractice } from '../src/cognitive/agent-practice-eval.js';
 import { createPolicyCandidate } from '../src/cognitive/policy.js';
 import type { AgentPracticeTranscript } from '../src/cognitive/types.js';
 import { createInMemoryDb, seedMemory } from './helpers.js';
+import { AGENT_TOOL_NAMES, MAINTENANCE_TOOL_NAMES } from '../src/tool-profiles.js';
 
 const root = resolve(import.meta.dirname, '..');
 const syntheticTrackerId = 9001;
@@ -237,18 +238,16 @@ describe('agent practice compliance evaluation', () => {
     );
   });
 
-  it('keeps the machine contract, runtime constants, and generated adapters aligned', () => {
+  it('keeps the machine contract and generated adapters aligned', () => {
     const contract = JSON.parse(
       readFileSync(
         resolve(root, 'cognitive-os', 'agent-practice', 'practice.v1.json'),
         'utf8',
       ),
     ) as { practice_id: string; version: string; enforcement: { hard_enforcement: boolean } };
-    expect(contract).toMatchObject({
-      practice_id: AGENT_PRACTICE_ID,
-      version: AGENT_PRACTICE_VERSION,
-      enforcement: { hard_enforcement: false },
-    });
+    expect(contract.practice_id).toBe(AGENT_PRACTICE_ID);
+    expect(contract.version).toBe('1.2.0');
+    expect(contract.enforcement.hard_enforcement).toBe(false);
     expect(() =>
       execFileSync(
         process.execPath,
@@ -256,5 +255,225 @@ describe('agent practice compliance evaluation', () => {
         { cwd: root, stdio: 'pipe' },
       ),
     ).not.toThrow();
+  });
+});
+
+describe('profile-aware agent practice guidance (Step 4 Phase 4B)', () => {
+  function loadContract(): any {
+    return JSON.parse(
+      readFileSync(
+        resolve(root, 'cognitive-os', 'agent-practice', 'practice.v1.json'),
+        'utf8',
+      ),
+    );
+  }
+
+  it('contains profile-aware configuration in canonical practice', () => {
+    const contract = loadContract();
+    expect(contract.profiles).toBeDefined();
+    expect(contract.profiles.preferred_everyday_profile).toBe('agent');
+    expect(contract.profiles.compatibility_profile).toBe('full');
+    expect(contract.profiles.maintenance_profile).toBe('maintenance');
+    expect(contract.profiles.discovery_rule).toContain('active profile');
+    expect(contract.profiles.discovery_rule).toContain('Never request a tool absent from the active profile');
+  });
+
+  it('selects compact mode and the ten workflow tools for agent profile', () => {
+    const contract = loadContract();
+    const agentProfile = contract.profiles.agent;
+    expect(agentProfile.preferred_bootstrap_response_mode).toBe('compact');
+    expect(agentProfile.tool_names).toHaveLength(10);
+    expect(agentProfile.tool_names).toEqual(Array.from(AGENT_TOOL_NAMES));
+    expect(agentProfile.typed_routing).toEqual({
+      memory_find: ['search', 'recent', 'changes', 'related'],
+      memory_read: ['get', 'links'],
+      memory_write: ['add', 'update', 'mark', 'supersede', 'tag_add', 'tag_remove'],
+      epistemic_inspect: ['get', 'query', 'diff'],
+    });
+    const prohibited = agentProfile.prohibited_tool_names_or_families;
+    // Exactly 36 current full-profile tools not exposed in the agent profile
+    expect(prohibited).toHaveLength(36);
+    // All MAINTENANCE_TOOL_NAMES must be prohibited
+    for (const tool of MAINTENANCE_TOOL_NAMES) {
+      expect(prohibited).toContain(tool);
+    }
+    // Prohibited list must be completely disjoint from AGENT_TOOL_NAMES
+    const prohibitedSet = new Set(prohibited);
+    for (const tool of AGENT_TOOL_NAMES) {
+      expect(prohibitedSet.has(tool)).toBe(false);
+    }
+  });
+
+  it('retains legacy compatibility in full profile', () => {
+    const contract = loadContract();
+    expect(contract.profiles.full.default_bootstrap_response_mode).toBe('legacy');
+    expect(contract.profiles.full.tool_count).toBe(41);
+    expect(contract.bootstrap.response_modes.server_default).toBe('legacy');
+  });
+
+  it('ensures global scope remains strictly opt-in', () => {
+    const contract = loadContract();
+    expect(contract.scope.include_global_default).toBe(false);
+    expect(contract.scope.exact_project_default).toBe(true);
+    expect(contract.scope.global_inclusion_modes).toEqual(['disabled', 'explicit']);
+    expect(contract.scope.rule).toContain('Global scope must be explicitly required and reported');
+    expect(contract.scope.rule).toContain('Never hydrate foreign projects');
+  });
+
+  it('permits exactly one retry for unsupported compact mode, forbidding repeated retries', () => {
+    const contract = loadContract();
+    expect(contract.bootstrap.recovery_unsupported_compact.max_retries).toBe(1);
+    expect(contract.bootstrap.recovery_unsupported_compact.rule).toContain('retry exactly once');
+    expect(contract.bootstrap.recovery_unsupported_compact.rule).toContain('Never repeatedly retry compact mode');
+  });
+
+  it('constrains fallback selection to the active tool surface', () => {
+    const contract = loadContract();
+    expect(contract.bootstrap.fallback_constraints).toContain('select fallback tools strictly from the active profile');
+    expect(contract.bootstrap.fallback_constraints).toContain('Never call hidden legacy tools');
+
+    // Agent profile fallback must only use tools in the agent profile
+    const agentFallbackText = contract.bootstrap.profile_fallbacks.agent.join(' ');
+    expect(contract.bootstrap.profile_fallbacks.agent).toBeDefined();
+    expect(agentFallbackText).toContain('memory_find');
+    expect(agentFallbackText).toContain('memory_read');
+    expect(agentFallbackText).not.toContain('memory_get');
+    expect(agentFallbackText).not.toContain('cognitive_policy_lookup');
+    expect(agentFallbackText).not.toContain('cognitive_current_guidance_search');
+  });
+
+  it('requires available route, valid typed arguments, and preserved scope for expansion', () => {
+    const contract = loadContract();
+    expect(contract.retrieval_and_expansion.route_availability_required).toBe(true);
+    expect(contract.retrieval_and_expansion.active_profile_tool_required).toBe(true);
+    expect(contract.retrieval_and_expansion.typed_arguments_validation_required).toBe(true);
+    expect(contract.retrieval_and_expansion.preserve_originating_scope).toBe(true);
+  });
+
+  it('reports unavailable expansion honestly without silent substitution', () => {
+    const contract = loadContract();
+    expect(contract.retrieval_and_expansion.no_silent_substitution).toContain('Do not silently substitute another tool');
+    expect(contract.retrieval_and_expansion.no_foreign_hydration).toContain('Foreign wikilinks remain bounded reference stubs');
+  });
+
+  it('honestly declares access-tracking effects for expansion operations', () => {
+    const contract = loadContract();
+    expect(contract.retrieval_and_expansion.access_tracking_honesty).toContain('memory_read:get');
+    expect(contract.retrieval_and_expansion.access_tracking_honesty).toContain('memory_find:related');
+    expect(contract.retrieval_and_expansion.access_tracking_honesty).toContain('Do not portray expansion as zero-touch');
+    expect(contract.bootstrap.effects.writes_database).toBe(false);
+    expect(contract.bootstrap.effects.touches_access_tracking).toBe(false);
+  });
+
+  it('preserves search-before-create and mutation boundaries', () => {
+    const contract = loadContract();
+    expect(contract.mutation.search_before_create).toBe(true);
+    expect(contract.mutation.global_mutation_confirmation_required).toBe(true);
+    expect(contract.mutation.epistemic_boundaries).toContain('epistemic_admit');
+    expect(contract.mutation.epistemic_boundaries).toContain('epistemic_append_receipt');
+    expect(contract.mutation.event_boundaries).toContain('cognitive_event_append');
+    expect(contract.mutation.event_boundaries).toContain('cognitive_event_read');
+  });
+
+  it('forbids fabricated refresh/version conclusions unconditionally for pd-06 known gap', () => {
+    const contract = loadContract();
+    const gap = contract.known_gaps.pd_06_cross_call_version_comparison;
+    expect(gap.status).toBe('unavailable_honest');
+    const rulesText = gap.rules.join(' ');
+    expect(rulesText).toContain('Unconditionally do not fabricate version_mismatch');
+    expect(rulesText).toContain('Unconditionally do not fabricate refresh_required');
+    expect(rulesText).toContain('Report cross-call version comparison as unavailable');
+    expect(rulesText).not.toContain('without trusted input');
+  });
+
+  it('verifies all generated adapters contain the essential compact/profile/fallback rules', () => {
+    const adaptersDir = resolve(root, 'cognitive-os', 'agent-practice', 'adapters');
+    const fragmentNames = [
+      'AGENTS.fragment.md',
+      'CLAUDE.fragment.md',
+      'GEMINI.fragment.md',
+      'generic-system-prompt.md',
+    ];
+
+    for (const name of fragmentNames) {
+      const content = readFileSync(resolve(adaptersDir, name), 'utf8');
+      expect(content).toContain('agent profile is the preferred everyday surface');
+      expect(content).toContain('10 workflow tools');
+      expect(content).toContain('response_mode="compact"');
+      expect(content).toContain('1 retry max; no repeated retries');
+      expect(content).toContain('include_global=false');
+      expect(content).toContain('route_available=true');
+      expect(content).toContain('Never request a tool absent from the active profile');
+      expect(content).toContain('pd-06 cross-call version comparison is unavailable');
+      expect(content).toContain('before non-trivial mem-graph or Cognitive OS work');
+      expect(content).toContain('FTS5 searches use AND semantics by default');
+    }
+
+    const mainDoc = readFileSync(
+      resolve(root, 'cognitive-os', 'agent-practice', 'MEM_GRAPH_AGENT_PRACTICE.md'),
+      'utf8',
+    );
+    expect(mainDoc).toContain('## Profile discovery and tool routing');
+    expect(mainDoc).toContain('Agent profile (10 workflow tools)');
+    expect(mainDoc).toContain('Full compatibility profile (41 legacy tools)');
+    expect(mainDoc).toContain('Maintenance profile (18 specialist tools)');
+    expect(mainDoc).toContain('pd-06 product gap');
+    expect(mainDoc).toContain('before non-trivial mem-graph or Cognitive OS work');
+    expect(mainDoc).toContain('FTS5 searches use AND semantics by default');
+  });
+
+  it('asserts generated guidance does not call memory_find results governing merely because search returned them', () => {
+    const mainDoc = readFileSync(
+      resolve(root, 'cognitive-os', 'agent-practice', 'MEM_GRAPH_AGENT_PRACTICE.md'),
+      'utf8',
+    );
+    expect(mainDoc).not.toMatch(/memory_find[^\n.]*to discover governing candidates/i);
+    expect(mainDoc).toContain('memory_find:search discovers scoped contextual candidates; it does not create a governing lane or establish authority');
+
+    const adaptersDir = resolve(root, 'cognitive-os', 'agent-practice', 'adapters');
+    for (const name of ['AGENTS.fragment.md', 'CLAUDE.fragment.md', 'GEMINI.fragment.md', 'generic-system-prompt.md']) {
+      const content = readFileSync(resolve(adaptersDir, name), 'utf8');
+      expect(content).not.toMatch(/memory_find[^\n.]*to discover governing candidates/i);
+      expect(content).toContain('memory_find:search discovers contextual candidates only and does not establish authority or create a governing lane');
+    }
+  });
+
+  it('asserts all generated notices use mem-graph-agent-practice@1.2.0', () => {
+    const expectedNotice = '<!-- Generated from practice.v1.json (mem-graph-agent-practice@1.2.0). Do not edit by hand. -->';
+    const mainDoc = readFileSync(
+      resolve(root, 'cognitive-os', 'agent-practice', 'MEM_GRAPH_AGENT_PRACTICE.md'),
+      'utf8',
+    );
+    expect(mainDoc.startsWith(expectedNotice)).toBe(true);
+
+    const adaptersDir = resolve(root, 'cognitive-os', 'agent-practice', 'adapters');
+    for (const name of ['AGENTS.fragment.md', 'CLAUDE.fragment.md', 'GEMINI.fragment.md', 'generic-system-prompt.md']) {
+      const content = readFileSync(resolve(adaptersDir, name), 'utf8');
+      expect(content.startsWith(expectedNotice)).toBe(true);
+    }
+  });
+
+  it('asserts the test suite does not mutate generated adapters and verifies freshness independently', () => {
+    const targetFiles = [
+      resolve(root, 'cognitive-os', 'agent-practice', 'MEM_GRAPH_AGENT_PRACTICE.md'),
+      resolve(root, 'cognitive-os', 'agent-practice', 'adapters', 'AGENTS.fragment.md'),
+      resolve(root, 'cognitive-os', 'agent-practice', 'adapters', 'CLAUDE.fragment.md'),
+      resolve(root, 'cognitive-os', 'agent-practice', 'adapters', 'GEMINI.fragment.md'),
+      resolve(root, 'cognitive-os', 'agent-practice', 'adapters', 'generic-system-prompt.md'),
+    ];
+
+    const beforeSnapshots = targetFiles.map((p) => readFileSync(p, 'utf8'));
+
+    // Independent non-mutating freshness check (--check only, never mutating write)
+    expect(() =>
+      execFileSync(
+        process.execPath,
+        [resolve(root, 'cognitive-os', 'agent-practice', 'generate-adapters.mjs'), '--check'],
+        { cwd: root, stdio: 'pipe' },
+      ),
+    ).not.toThrow();
+
+    const afterSnapshots = targetFiles.map((p) => readFileSync(p, 'utf8'));
+    expect(afterSnapshots).toEqual(beforeSnapshots);
   });
 });

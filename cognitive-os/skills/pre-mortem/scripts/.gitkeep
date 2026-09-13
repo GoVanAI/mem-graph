@@ -1,0 +1,4 @@
+# Deterministic validators (executable, may run without loading into context)
+#
+# check-failure-mode-coverage.py: Python script that reads pre-mortem record
+# JSON and emits coverage verdict. To be populated per item 6.

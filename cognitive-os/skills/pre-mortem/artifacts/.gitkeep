@@ -1,0 +1,15 @@
+# Runtime artifacts
+#
+# Pre-mortem artifacts (per reasoning-gates.v1.json: artifact_storage.type)
+# are transient structured JSON files written here at runtime, then
+# referenced from the Task Ledger. They are NOT cognitive events by
+# default, and NOT epistemic records by default.
+#
+# Naming convention: <task_id>_<timestamp>.json
+# Example: 2026-08-11-premortem_20260811T120000Z.json
+#
+# Schema version: 1.0.0 (per reasoning-gates.v1.json contract)
+#
+# Cleanup: these files are transient. Operators may prune old artifacts
+# to keep the directory manageable; durable outcomes flow through the
+# memory-admission gate as cognitive events / epistemic records.

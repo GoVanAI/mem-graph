@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "measurementTool": "tools-measure.mts",
+  "measurementToolVersion": "1.1.0",
+  "measurementMode": "runtime-tools-list",
+  "label": "agent-profile-surface",
+  "sourceState": "working-tree-with-uncommitted-source-changes",
+  "headCommitAtMeasurement": "bb0d4513d0058962b860655941d439a163a905d8",
+  "sourceFingerprintSha256": "1f478ec50b0c6330693debff75fa3fb1730a063bacf3edc71dd05230777eec25",
+  "registeredToolCount": 10,
+  "totalCombinedBytes": 10524,
+  "totalSchemaBytes": 8824,
+  "totalDescriptionBytes": 1700,
+  "legacyComparison": {
+    "registeredToolCount": 41,
+    "totalCombinedBytes": 31553,
+    "toolCountReductionPercent": 75.61,
+    "combinedByteReductionPercent": 66.65
+  },
+  "tools": [
+    "cognitive_agent_bootstrap",
+    "memory_prime",
+    "memory_find",
+    "memory_read",
+    "memory_write",
+    "epistemic_inspect",
+    "epistemic_admit",
+    "epistemic_append_receipt",
+    "cognitive_event_append",
+    "cognitive_event_read"
+  ],
+  "caveat": "This measures the real MCP tools/list descriptions and input schemas. It does not measure provider tokens, latency, task accuracy, or agent effectiveness."
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "name": "mem-graph-task-state-phase-b-protected-slice",
+  "defaults": {
+    "timeout_ms": 300000,
+    "grader_timeout_ms": 30000,
+    "kill_grace_ms": 3000,
+    "runs": 1,
+    "max_capture_bytes": 5242880
+  },
+  "variants": [
+    {
+      "id": "luna-medium-worker-only",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
+      "sandbox": "workspace-write",
+      "json": true,
+      "skip_git_repo_check": true,
+      "args": [
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--ephemeral",
+        "-c",
+        "windows.sandbox=\"unelevated\"",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "model_reasoning_effort=\"medium\""
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "restart-recovery-from-b1-bootstrap",
+      "fixture": "fixtures/recovery",
+      "runs": 3,
+      "prompt": "You are a clean-start benchmark worker. Read only the files already present in this copied workspace. Do not inspect parent directories, environment variables, Git metadata, hidden evaluation material, or any path outside this workspace. Use bootstrap-output.json as evidence and WORKER_CONTRACT.md as the output contract. Produce recovery.json. Treat governing, contextual, unresolved/out-of-scope, and authority-notice fields distinctly. Do not claim verification or completion beyond the supplied evidence. Do not modify any input file.",
+      "minimum_score": 100,
+      "graders": [
+        {
+          "id": "worker-exited-cleanly",
+          "type": "process_exit",
+          "expected": 0,
+          "hard_gate": true,
+          "weight": 1
+        },
+        {
+          "id": "recovery-artifact-exists",
+          "type": "file_exists",
+          "path": "recovery.json",
+          "hard_gate": true,
+          "weight": 1
+        },
+        {
+          "id": "deterministic-recovery-grade",
+          "type": "command",
+          "command": "node",
+          "args": ["{suite}/graders/check-recovery.mjs", "{workspace}/recovery.json", "{suite}/protected/recovery-oracle.json", "{workspace}/bootstrap-output.json"],
+          "expected_exit": 0,
+          "hard_gate": true,
+          "weight": 1
+        },
+        {
+          "id": "no-oracle-leak-artifact",
+          "type": "file_not_exists",
+          "path": "oracle.json",
+          "hard_gate": true,
+          "weight": 1
+        },
+        {
+          "id": "no-protected-path-command",
+          "type": "trace_command_forbidden",
+          "pattern": "(protected|oracle|grader|docs[/\\\\]M3_work|\\.git|memory\\.db|sql_query|sql_execute|PHASE_B_PROTECTED_CANARY)",
+          "flags": "i",
+          "hard_gate": true,
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,142 @@ import {
 } from '../wikilink.js';
 import { autoLinkOnInsert } from '../auto-link.js';
 
+export interface MemoryAddInput {
+  category: string;
+  title: string;
+  content: string;
+  layer?: string;
+  project_id?: string;
+  summary?: string;
+  tags?: string[];
+  lifecycle?: string;
+  confidence?: number;
+  importance_score?: number;
+  session_id?: string;
+  source?: string;
+}
+
+export interface MemoryUpdateInput {
+  id: number;
+  title?: string;
+  content?: string;
+  summary?: string;
+  tags?: string[];
+  category?: string;
+  project_id?: string;
+  layer?: string;
+  lifecycle?: string;
+  confidence?: number;
+  importance_score?: number;
+}
+
+export class MemoryWriteError extends Error {
+  constructor(public readonly code: 'NOT_FOUND' | 'NO_CHANGES', message: string) {
+    super(message);
+  }
+}
+
+/** Shared add pipeline: persistence, tags, wikilinks, and auto-linking are one transaction. */
+export function runMemoryAdd(db: Database.Database, input: MemoryAddInput): Record<string, unknown> {
+  const layer = input.layer ?? 'episodic';
+  const project_id = input.project_id ?? '_global';
+  const lifecycle = input.lifecycle ?? 'milestone';
+  const confidence = input.confidence ?? 1;
+  const importance_score = input.importance_score ?? 1;
+  const source = input.source ?? 'session';
+  return db.transaction(() => {
+    const insertResult = db.prepare(
+      `INSERT INTO memories (
+        layer, title, slug, content, project_id, category, lifecycle, status,
+        confidence, boost, summary, session_id, source, importance_score
+      ) VALUES (
+        @layer, @title, @slug, @content, @project_id, @category, @lifecycle, 'active',
+        @confidence, 0.0, @summary, @session_id, @source, @importance_score
+      )`,
+    ).run({
+      layer, title: input.title, slug: slugify(input.title), content: input.content, project_id,
+      category: input.category, lifecycle, confidence, summary: input.summary ?? null,
+      session_id: input.session_id ?? null, source, importance_score,
+    });
+    const id = Number(insertResult.lastInsertRowid);
+    for (const tag of input.tags ?? []) {
+      db.prepare('INSERT OR IGNORE INTO memory_tag (memory_id, tag) VALUES (?, ?)').run(id, tag);
+    }
+    const resolved: Array<{ ref: string; target_id: number; matched_by: string }> = [];
+    const broken: string[] = [];
+    for (const ref of extractWikilinks(input.content)) {
+      const target = resolveWikilink(db, ref, project_id);
+      if (target) {
+        upsertWikilinkSynapse(db, id, target.id);
+        resolved.push({ ref, target_id: target.id, matched_by: target.matched_by });
+      } else {
+        broken.push(ref);
+      }
+    }
+    return {
+      id, layer, project_id, title: input.title, summary: input.summary ?? null,
+      tags: input.tags ?? [], lifecycle, confidence, importance_score,
+      session_id: input.session_id ?? null, source, created_at: new Date().toISOString(),
+      wikilinks_resolved: resolved, broken_wikilinks: broken,
+      auto_links: autoLinkOnInsert(db, id, input.content, project_id),
+    };
+  })();
+}
+
+/** Shared update pipeline. `allowTagsOnly` retains the scoped family contract. */
+export function runMemoryUpdate(
+  db: Database.Database,
+  input: MemoryUpdateInput,
+  options: { allowTagsOnly?: boolean } = {},
+): { id: number; changes: number; wikilinks_updated: { resolved: Array<{ ref: string; target_id: number; matched_by: string }>; removed: number } | null; auto_links: { created: number; updated: number } | null } {
+  const existing = db.prepare('SELECT id, project_id FROM memories WHERE id = ?').get(input.id) as { id: number; project_id: string } | undefined;
+  if (!existing) throw new MemoryWriteError('NOT_FOUND', `No memory found with id ${input.id}.`);
+
+  const fields = ['title', 'content', 'summary', 'category', 'project_id', 'layer', 'lifecycle', 'confidence', 'importance_score'] as const;
+  const sets: string[] = [];
+  const params: Array<string | number | null> = [];
+  for (const field of fields) {
+    if (input[field] !== undefined) {
+      sets.push(`${field} = ?`);
+      params.push(input[field] as string | number);
+    }
+  }
+  if (input.title !== undefined) {
+    sets.push('slug = ?');
+    params.push(slugify(input.title));
+  }
+  if (sets.length === 0 && (input.tags === undefined || !options.allowTagsOnly)) {
+    throw new MemoryWriteError('NO_CHANGES', 'No fields provided to update.');
+  }
+
+  return db.transaction(() => {
+    if (sets.length > 0) {
+      sets.push("updated_at = datetime('now')");
+      db.prepare(`UPDATE memories SET ${sets.join(', ')} WHERE id = ?`).run(...params, input.id);
+    }
+    if (input.tags !== undefined) {
+      db.prepare('DELETE FROM memory_tag WHERE memory_id = ?').run(input.id);
+      for (const tag of input.tags) {
+        db.prepare('INSERT OR IGNORE INTO memory_tag (memory_id, tag) VALUES (?, ?)').run(input.id, tag);
+      }
+    }
+    let wikilinks_updated: { resolved: Array<{ ref: string; target_id: number; matched_by: string }>; removed: number } | null = null;
+    let auto_links: { created: number; updated: number } | null = null;
+    if (input.content !== undefined) {
+      const projectId = input.project_id ?? existing.project_id;
+      const refs = extractWikilinks(input.content);
+      const pruned = pruneStaleWikilinks(db, input.id, refs, projectId);
+      for (const ref of refs) {
+        const target = resolveWikilink(db, ref, projectId);
+        if (target && target.id !== input.id) upsertWikilinkSynapse(db, input.id, target.id);
+      }
+      wikilinks_updated = pruned;
+      auto_links = autoLinkOnInsert(db, input.id, input.content, projectId);
+    }
+    return { id: input.id, changes: sets.length > 0 ? 1 : 0, wikilinks_updated, auto_links };
+  })();
+}
+
 /**
  * Atomic supersession: mark an old entry as superseded (status) and create
  * a wikilink synapse from old to new. Pure function so tests can call it
@@ -45,6 +181,16 @@ export function runSupersede(
   });
   tx();
   return { old_id, new_id, status: 'superseded', reason: reason ?? null };
+}
+
+/** Shared status mutation used by the legacy and scoped family adapters. */
+export function runMemoryMark(
+  db: Database.Database,
+  id: number,
+  status: 'active' | 'superseded' | 'archived' | 'invalid',
+): boolean {
+  return db.prepare("UPDATE memories SET status = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(status, id).changes > 0;
 }
 
 export function registerMemoryWriteTools(server: McpServer): void {
@@ -85,81 +231,7 @@ export function registerMemoryWriteTools(server: McpServer): void {
     }) => {
       const db = getDatabase('memory');
       try {
-        // 1. Insert into memories (FTS5 triggers fire automatically)
-        const insertResult = db
-          .prepare(
-            `INSERT INTO memories (
-              layer, title, slug, content, project_id, category, lifecycle, status,
-              confidence, boost, summary, session_id, source, importance_score
-            ) VALUES (
-              @layer, @title, @slug, @content, @project_id, @category, @lifecycle, 'active',
-              @confidence, 0.0, @summary, @session_id, @source, @importance_score
-            )`,
-          )
-          .run({
-            layer,
-            title,
-            slug: slugify(title),
-            content,
-            project_id,
-            category,
-            lifecycle,
-            confidence,
-            summary: summary ?? null,
-            session_id: session_id ?? null,
-            source,
-            importance_score,
-          });
-        const id = Number(insertResult.lastInsertRowid);
-
-        // 2. Insert tags
-        if (tags && tags.length > 0) {
-          const insertTag = db.prepare(
-            'INSERT OR IGNORE INTO memory_tag (memory_id, tag) VALUES (?, ?)',
-          );
-          for (const tag of tags) insertTag.run(id, tag);
-        }
-
-        // 3. Extract wikilinks and upsert
-        const refs = extractWikilinks(content);
-        const resolved: Array<{ ref: string; target_id: number; matched_by: string }> = [];
-        const broken: string[] = [];
-        for (const ref of refs) {
-          const r = resolveWikilink(db, ref, project_id);
-          if (r) {
-            upsertWikilinkSynapse(db, id, r.id);
-            resolved.push({ ref, target_id: r.id, matched_by: r.matched_by });
-          } else {
-            broken.push(ref);
-          }
-        }
-
-        // 4. BM25 auto-link with project floor
-        const autoResult = autoLinkOnInsert(db, id, content, project_id);
-
-        return textResult(
-          JSON.stringify(
-            {
-              id,
-              layer,
-              project_id,
-              title,
-              summary: summary ?? null,
-              tags: tags ?? [],
-              lifecycle,
-              confidence,
-              importance_score,
-              session_id: session_id ?? null,
-              source,
-              created_at: new Date().toISOString(),
-              wikilinks_resolved: resolved,
-              broken_wikilinks: broken,
-              auto_links: autoResult,
-            },
-            null,
-            2,
-          ),
-        );
+        return textResult(JSON.stringify(runMemoryAdd(db, { category, title, content, layer, project_id, summary, tags, lifecycle, confidence, importance_score, session_id, source }), null, 2));
       } catch (e) {
         return errorResult(`Insert error: ${(e as Error).message}`);
       }
@@ -200,105 +272,10 @@ export function registerMemoryWriteTools(server: McpServer): void {
     }) => {
       const db = getDatabase('memory');
       try {
-        const existing = db
-          .prepare('SELECT id, title, content, project_id, summary FROM memories WHERE id = ?')
-          .get(id) as
-          | { id: number; title: string; content: string; project_id: string; summary: string | null }
-          | undefined;
-        if (!existing) {
-          return errorResult(`No memory found with id ${id}.`);
-        }
-
-        const sets: string[] = [];
-        const params: (string | number | null)[] = [];
-        if (title !== undefined) {
-          sets.push('title = ?');
-          params.push(title);
-          sets.push('slug = ?');
-          params.push(slugify(title));
-        }
-        if (content !== undefined) {
-          sets.push('content = ?');
-          params.push(content);
-        }
-        if (summary !== undefined) {
-          sets.push('summary = ?');
-          params.push(summary);
-        }
-        if (category !== undefined) {
-          sets.push('category = ?');
-          params.push(category);
-        }
-        if (project_id !== undefined) {
-          sets.push('project_id = ?');
-          params.push(project_id);
-        }
-        if (layer !== undefined) {
-          sets.push('layer = ?');
-          params.push(layer);
-        }
-        if (lifecycle !== undefined) {
-          sets.push('lifecycle = ?');
-          params.push(lifecycle);
-        }
-        if (confidence !== undefined) {
-          sets.push('confidence = ?');
-          params.push(confidence);
-        }
-        if (importance_score !== undefined) {
-          sets.push('importance_score = ?');
-          params.push(importance_score);
-        }
-        if (sets.length === 0) {
-          return errorResult('No fields provided to update.');
-        }
-        sets.push("updated_at = datetime('now')");
-        params.push(id);
-        db.prepare(`UPDATE memories SET ${sets.join(', ')} WHERE id = ?`).run(...params);
-
-        // Handle tags replacement
-        if (tags !== undefined) {
-          db.prepare('DELETE FROM memory_tag WHERE memory_id = ?').run(id);
-          const insertTag = db.prepare(
-            'INSERT OR IGNORE INTO memory_tag (memory_id, tag) VALUES (?, ?)',
-          );
-          for (const tag of tags) insertTag.run(id, tag);
-        }
-
-        // Re-extract wikilinks and re-run auto-link if content changed
-        let wikilinksUpdated: {
-          resolved: Array<{ ref: string; target_id: number; matched_by: string }>;
-          removed: number;
-        } | null = null;
-        let autoLinksUpdated: { created: number; updated: number } | null = null;
-        if (content !== undefined) {
-          const newRefs = extractWikilinks(content);
-          const finalProject = project_id ?? existing.project_id;
-          const { removed, resolved } = pruneStaleWikilinks(db, id, newRefs, finalProject);
-          // Upsert the new ones
-          for (const ref of newRefs) {
-            const r = resolveWikilink(db, ref, finalProject);
-            if (r && r.id !== id) {
-              upsertWikilinkSynapse(db, id, r.id);
-            }
-          }
-          wikilinksUpdated = { resolved, removed };
-          autoLinksUpdated = autoLinkOnInsert(db, id, content, finalProject);
-        }
-
-        return textResult(
-          JSON.stringify(
-            {
-              id,
-              changes: 1,
-              wikilinks_updated: wikilinksUpdated,
-              auto_links: autoLinksUpdated,
-            },
-            null,
-            2,
-          ),
-        );
+        const result = runMemoryUpdate(db, { id, title, content, summary, tags, category, project_id, layer, lifecycle, confidence, importance_score });
+        return textResult(JSON.stringify(result, null, 2));
       } catch (e) {
+        if (e instanceof MemoryWriteError) return errorResult(e.message);
         return errorResult(`Update error: ${(e as Error).message}`);
       }
     },
@@ -333,10 +310,7 @@ export function registerMemoryWriteTools(server: McpServer): void {
     async ({ id, status, reason }) => {
       const db = getDatabase('memory');
       try {
-        const result = db
-          .prepare("UPDATE memories SET status = ?, updated_at = datetime('now') WHERE id = ?")
-          .run(status, id);
-        if (result.changes === 0) {
+        if (!runMemoryMark(db, id, status)) {
           return errorResult(`No memory found with id ${id}.`);
         }
         return textResult(JSON.stringify({ id, status, reason: reason ?? null }, null, 2));

@@ -7,33 +7,82 @@ description: Apply the adopted mem-graph agent workflow for scoped memory retrie
 
 Use the repository's vendor-neutral contract at
 `../../../cognitive-os/agent-practice/MEM_GRAPH_AGENT_PRACTICE.md`. Announce
-that this skill is active and state the resolved project scope.
+that this skill is active and state the resolved project scope and active profile.
 
-## Bootstrap
+## Profile Discovery and Tool Routing
+
+1. Determine the active profile/tool surface before issuing tool calls:
+   - **Agent profile (preferred everyday surface, 10 workflow tools)**:
+     `cognitive_agent_bootstrap`, `memory_prime`, `memory_find`, `memory_read`,
+     `memory_write`, `epistemic_inspect`, `epistemic_admit`,
+     `epistemic_append_receipt`, `cognitive_event_append`, `cognitive_event_read`.
+     - `memory_find`: search, recent, changes, related
+     - `memory_read`: get, links
+     - `memory_write`: add, update, mark, supersede, tag_add, tag_remove
+     - `epistemic_inspect`: get, query, diff
+   - **Full profile (41 legacy tools)**: Retains legacy tool names for backward
+     compatibility.
+   - **Maintenance profile (18 specialist tools)**: Specialist database
+     administration, raw SQL, and maintenance diagnostics belong outside everyday
+     workflows.
+2. Tool availability does not establish applicability or authority. Never
+   request a tool absent from the active profile (no hidden legacy, SQL, or
+   maintenance tools in agent profile).
+
+## Bootstrap and Recovery
 
 1. Inspect `git status` before editing and preserve unrelated work.
 2. Resolve the exact `project_id`. Use `cognitive-os` for Cognitive OS
    governance, experiments, policies, events, roadmap, and program state. Do
-   not infer applicability from cross-project availability.
-3. Prefer one `cognitive_agent_bootstrap` call with a narrow task query,
-   `include_global=false`, and the exact project. For non-trivial Cognitive OS
-   work, supply `canonical_ids` only when the operator or project has configured
-   them; otherwise omit the field and discover governing candidates. Request
-   `include_canonical_content=true` when configured IDs are used.
-4. Directly verify candidate tracker, scope-boundary, or role records before
-   use. Never copy memory IDs from bundled examples.
-5. If the bootstrap tool is unavailable, resolve deployment-local canonical
-   IDs from operator/project configuration or exact-project governing guidance,
-   fetch each resolved record, read roadmap and active artifacts referenced by
-   a verified tracker, run `cognitive_policy_lookup` for
-   `request_type/current_canonical_guidance`, then run exact-project
-   `cognitive_current_guidance_search` or
-   `cognitive_current_guidance_diagnose`.
-6. Fetch every selected governing record directly when the bootstrap snapshot
-   did not include its full content or its authority still needs verification.
+   not infer applicability from cross-project availability. Keep
+   `include_global=false` by default; global scope requires explicit
+   operator/task opt-in.
+3. Before non-trivial mem-graph or Cognitive OS work, run `cognitive_agent_bootstrap`.
+   In the agent profile, request `response_mode="compact"`. In the full profile, legacy
+   mode is supported; do not assume compact mode is the server default. Supply
+   `canonical_ids` only when configured by operator or project configuration. If none
+   are configured, omit `canonical_ids` and use narrow routing terms in an exact-project
+   query to discover governing candidates. Never copy memory IDs from bundled examples.
+   FTS5 searches use AND semantics by default, so a broad compound query can miss
+   stored direction.
+4. Bootstrap is strictly zero-write, appends no events, and does not touch
+   access tracking.
+5. If `response_mode="compact"` is rejected specifically as unsupported, retry
+   exactly once without `response_mode="compact"` (1 retry max; no repeated
+   retries).
+6. If bootstrap itself is unavailable, select fallback tools strictly from the
+   active profile:
+   - In agent profile: directly fetch configured canonical IDs with `memory_read:get`,
+     or discover scoped contextual candidates using `memory_find:search` in exact
+     project scope (`memory_find:search` discovers scoped contextual candidates only;
+     it does not create a governing lane or establish authority). Directly fetch
+     applicable candidates with `memory_read:get` and verify authority from an
+     operator-adopted artifact, canonical role, or explicit delegation. If authority
+     cannot be established, report current guidance unresolved. Read referenced
+     roadmaps and active contracts before changing implementation.
+   - In full profile: use legacy fallback (`memory_get`, `cognitive_policy_lookup`,
+     `cognitive_current_guidance_search`).
+   - Never call hidden legacy tools from the agent profile.
+7. Directly verify candidate tracker, scope-boundary, or role records before
+   use. When a canonical tracker is resolved, read the roadmap and active
+   contracts it references before changing implementation.
 
-Use narrow search terms. FTS5 uses AND semantics, so broad compound queries can
-miss the intended record.
+## Expansion and Retrieval Discipline
+
+1. Follow only expansion routes with `route_available=true` in the active
+   profile with valid typed arguments.
+2. Preserve originating `project_id` and global scope decisions; never hydrate
+   foreign-project sources through scoped expansion. Foreign wikilinks remain
+   bounded reference stubs.
+3. Do not silently substitute another tool when a route is unavailable; report
+   the unresolved source or unavailable route honestly.
+4. Expansion effects: `memory_read:get` updates access counters;
+   `memory_find:related` touches returned memories and synapses. Do not
+   describe expansion as zero-touch.
+5. pd-06 known product gap: Public MCP `cognitive_agent_bootstrap` provides no trusted
+   cross-call comparison input. Cross-call version comparison is unavailable in public
+   compact bootstrap. Unconditionally prohibit fabricating `version_mismatch` or
+   `refresh_required`; report comparison as unavailable when relevant.
 
 ## Decide and Act
 
@@ -43,18 +92,24 @@ miss the intended record.
 - Verify canonical role, adoption, scope, applicability, and current evidence.
   Eligibility and rank do not grant authority; candidate policies stay
   advisory. System and operator instructions outrank stored guidance.
+- Contradictions remain explicit warnings requiring review without automatic
+  rejection or silent adoption.
 - Act only within the task's existing authority. Preserve unrelated work and
   do not commit, publish, release, or perform an unrequested destructive
   operation.
-- Keep global inclusion off unless the task explicitly needs it; report when
-  it is enabled.
 
-## Preserve Evidence
+## Preserve Evidence and Mutation Boundaries
 
-Record durable evidence only for a verified observation or operator-adopted
-decision. Use stable project/task scope, correlation or causation when known,
-and an idempotency key for retryable event appends. Never promote a candidate
-policy merely because an agent produced, retrieved, or repeated it.
+- Search before creating a new memory (`memory_write:add`).
+- Deliberate `_global` mutation requires `confirm_global=true` and must not
+  result from fallback behavior.
+- Epistemic admission (`epistemic_admit`) and receipts (`epistemic_append_receipt`)
+  remain separate authority/effect boundaries.
+- Cognitive event append (`cognitive_event_append`) and read (`cognitive_event_read`)
+  remain separate routes.
+- Record durable evidence only for a verified observation or operator-adopted
+  decision. Use stable project/task scope, correlation or causation when known,
+  and an idempotency key for retryable event appends.
 
 For changes to a resolved canonical tracker:
 

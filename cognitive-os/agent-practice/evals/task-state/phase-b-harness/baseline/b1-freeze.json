@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "baseline_id": "B1-d108fb2-phase-b",
+  "commit_sha": "d108fb2b1b81145e45d6804ca8e46a6913bb4c9c",
+  "package_lock_sha256": "9dd247362011c534feb6546ff4dab332422432086c7af2c1f1741e47f58946c2",
+  "runtime_tree_sha256": "1b92c6b222dfa2d5584273ae942aa47d0324a76fee62a6963d752dfbc7a76c54",
+  "node": "v25.6.1",
+  "os": {
+    "platform": "win32",
+    "release": "10.0.22631",
+    "arch": "x64"
+  },
+  "configuration": {
+    "project_id": "synthetic-phoenix",
+    "include_global": false,
+    "query": "phoenix restart",
+    "max_items": 20
+  },
+  "fixture": {
+    "memory_count": 6,
+    "bootstrap_output_sha256": "02a89b826e79db57698ea492e0eca08c669e81ba797c5d486e0ba7265baa65da"
+  },
+  "isolation": {
+    "mem_graph_dir_absolute": true,
+    "outside_live_default": true,
+    "fresh_directory": true
+  },
+  "logical_zero_write": {
+    "before_digest": "e6d19f063f2fa183f80842d89acf3d4af160f9995aa36b28acb037da5c98f9da",
+    "after_digest": "e6d19f063f2fa183f80842d89acf3d4af160f9995aa36b28acb037da5c98f9da",
+    "passed": true
+  },
+  "tool_profile": [
+    "cognitive_agent_bootstrap"
+  ],
+  "model_worker": "gpt-5.6-luna",
+  "reasoning_effort": "medium",
+  "repetitions": 3
+}

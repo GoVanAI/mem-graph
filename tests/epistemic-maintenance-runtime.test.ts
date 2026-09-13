@@ -1,7 +1,7 @@
 /**
  * Step 8 tests — persistence-driven retrieval + computed maintenance lanes.
  *
- * Oracle requirements (verbatim from [[283]] Step 8 acceptance):
+ * Oracle requirements (verbatim from the Step 3 acceptance contract Step 8 acceptance):
  *   - exact-project is default; include_global=false remains default;
  *   - unverified claims never enter governing guidance;
  *   - maintenance reproduces Phase A review-deadline, deliberate-challenge,
@@ -90,12 +90,28 @@ describe('projectMaintenance — v0.4 invariants preserved', () => {
   it('applicability_freshness decays over time since last challenge', () => {
     const db = getDatabase('memory');
     admitEpistemicRecord(db, baseInput({ record_id: 1, idempotency_key: 'k-1' }));
-    const fresh = projectMaintenance(db, { record_id: 1, now: '2026-08-09T01:00:00.000Z' });
+    const stored = db
+      .prepare('SELECT updated_at FROM epistemic_records WHERE record_id = 1')
+      .get() as { updated_at: string };
+    const updatedAtMs = Date.parse(
+      stored.updated_at.endsWith('Z')
+        ? stored.updated_at
+        : `${stored.updated_at.replace(' ', 'T')}Z`,
+    );
+    expect(Number.isFinite(updatedAtMs)).toBe(true);
+
+    const fresh = projectMaintenance(db, {
+      record_id: 1,
+      now: new Date(updatedAtMs + 60 * 60 * 1000).toISOString(),
+    });
     expect(fresh.applicability_freshness.days_since_challenge).toBe(0);
     expect(fresh.applicability_freshness.fresh).toBe(true);
     expect(fresh.ordinary_priming_factor).toBeGreaterThan(0.9);
 
-    const stale = projectMaintenance(db, { record_id: 1, now: '2026-11-17T01:00:00.000Z' });
+    const stale = projectMaintenance(db, {
+      record_id: 1,
+      now: new Date(updatedAtMs + 100 * 24 * 60 * 60 * 1000).toISOString(),
+    });
     expect(stale.applicability_freshness.days_since_challenge).toBeGreaterThanOrEqual(95);
     expect(stale.ordinary_priming_factor).toBeLessThanOrEqual(0.2); // floor
   });

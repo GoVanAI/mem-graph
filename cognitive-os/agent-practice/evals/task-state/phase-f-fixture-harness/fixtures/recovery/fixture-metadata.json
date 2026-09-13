@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "trust_mode": "fixture",
+  "production_claim": false,
+  "baseline_bootstrap_sha256": "02a89b826e79db57698ea492e0eca08c669e81ba797c5d486e0ba7265baa65da",
+  "generated_task_state_sha256": "192e8ff4036310058f9548e919664b59f0d9cbf8e490f3157ebf88c26dbb76af",
+  "private_key_material": "not persisted in the worker fixture",
+  "source_evidence": {
+    "b1_records": [
+      {
+        "id": 1,
+        "role": "objective_definition_constraints_governing_decisions",
+        "content_sha256": "973c45bf5d7dfb2ca5c3e1306cdf5fc9118e920c5ccc364f05f1245cde104e0b"
+      },
+      {
+        "id": 2,
+        "role": "completed_work",
+        "content_sha256": "3987464cfa782f655a8495e53d7f3373164ba82518aee0e2ec1af74c4c60490b"
+      },
+      {
+        "id": 3,
+        "role": "open_risk_next_action",
+        "content_sha256": "607b241e2b4be35f8864bf5a1fbe712bdf24b266ea4a5f311483f6cdfb9873d0"
+      }
+    ],
+    "exact_statements": {
+      "objective": "Recover the Phoenix restart task accurately from bounded mem-graph evidence.",
+      "done": "Report objective, constraints, adopted decisions, completed work, open risks, and next action without authority contamination.",
+      "constraints": [
+        "Use exact project scope and exclude _global unless explicitly authorized.",
+        "Do not begin Phase D until Gate B is validly closed."
+      ],
+      "decisions": [
+        "The protected benchmark must fail closed when evidence is missing.",
+        "Contextual retrieval cannot promote itself into governing state."
+      ],
+      "completed": "Gate A2 closed with deterministic authority-specific development cases.",
+      "risk": "The protected runner still needs a valid isolation and receipt boundary.",
+      "next": "Run the protected Phase B slice and independently verify every hard gate."
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mem-graph://evals/progressive-disclosure/tool-mapping.schema.json",
+  "title": "Step 2A registered-tool destination mapping",
+  "type": "object",
+  "required": ["schema_version", "source_of_truth", "proposed_everyday_routes", "workflow_routes", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "const": "./tool-mapping.schema.json" },
+    "schema_version": { "const": "1.0.0" },
+    "source_of_truth": { "const": "src/tools/*.ts server.tool registrations" },
+    "proposed_everyday_routes": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "workflow_routes": {
+      "type": "object",
+      "required": ["orient", "find-and-inspect", "record-and-revise", "review-and-learn"],
+      "additionalProperties": false,
+      "properties": {
+        "orient": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "find-and-inspect": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "record-and-revise": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "review-and-learn": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "source",
+          "input_schema",
+          "scope",
+          "return_type",
+          "side_effects",
+          "classification",
+          "destination",
+          "fallback",
+          "practice_callers"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "source": { "type": "string", "pattern": "^src/tools/.+\\.ts$" },
+          "input_schema": {
+            "type": "object",
+            "required": ["required", "optional"],
+            "properties": {
+              "required": { "type": "array", "items": { "type": "string" } },
+              "optional": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "scope": { "type": "string" },
+          "return_type": { "enum": ["json", "text-json", "rows"] },
+          "side_effects": { "type": "array", "items": { "type": "string" } },
+          "classification": { "enum": ["everyday", "specialist", "legacy-only"] },
+          "destination": { "type": "string" },
+          "fallback": { "type": "string" },
+          "practice_callers": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1818 @@
+{
+  "$schema": "./cases.schema.json",
+  "schema_version": "1.0.0",
+  "fixture_policy": "synthetic-only",
+  "frozen_thresholds": {
+    "large_legacy_min_bytes": 8192,
+    "large_legacy_candidate_reduction_pct": 30,
+    "small_legacy_max_growth_pct": 10,
+    "median_call_increase_max": 1,
+    "median_context_bytes_must_not_increase": true,
+    "unsupported_argument_retry_max": 1,
+    "deterministic_field_exclusion_token": "volatiles_excluded_for_determinism"
+  },
+  "agent_profile_tool_names": [
+    "cognitive_agent_bootstrap",
+    "memory_prime",
+    "memory_find",
+    "memory_read",
+    "memory_write",
+    "epistemic_inspect",
+    "epistemic_admit",
+    "epistemic_append_receipt",
+    "cognitive_event_append",
+    "cognitive_event_read"
+  ],
+  "maintenance_profile_tool_names": [
+    "cognitive_policy_create",
+    "cognitive_policy_evaluate",
+    "cognitive_policy_lookup",
+    "epistemic_integrity_check",
+    "list_databases",
+    "memory_boost",
+    "memory_categories",
+    "memory_decay",
+    "memory_import_from_mem_sol",
+    "memory_overview",
+    "memory_projects",
+    "memory_spread_stats",
+    "memory_stale",
+    "memory_stats",
+    "memory_synapse_create",
+    "sql_execute",
+    "sql_introspect",
+    "sql_query"
+  ],
+  "rejected_tool_families": [
+    "memory_admin",
+    "cognitive_policy",
+    "cognitive_bootstrap",
+    "sql_substrate",
+    "mem_graph"
+  ],
+  "volatile_field_exclusions": [
+    "compact_digest",
+    "bootstrap_digest",
+    "task_state_envelope_digest",
+    "task_state_packet_digest",
+    "evaluated_at",
+    "updated_at",
+    "scanned_at",
+    "created_at",
+    "observed_at",
+    "latency_ms",
+    "wall_clock_ms",
+    "elapsed_ms"
+  ],
+  "deterministic_field_exclusions": [
+    "/transcript/*/latency_ms",
+    "/transcript/*/started_at",
+    "/transcript/*/finished_at",
+    "/transcript/*/response_envelope/evaluated_at",
+    "/transcript/*/response_envelope/bootstrap_digest",
+    "/transcript/*/response_envelope/compact_digest"
+  ],
+  "expansion_reasons": [
+    "verify_authority",
+    "content_omitted",
+    "history_requested",
+    "contradiction_requires_review",
+    "version_mismatch",
+    "source_unavailable",
+    "route_unavailable"
+  ],
+  "compact_orientation_statuses": ["complete", "partial", "unavailable"],
+  "compact_task_slot_statuses": ["governing", "context_only", "unresolved"],
+  "compact_task_state_values": ["not_requested", "assembled", "unavailable"],
+  "cases": [
+    {
+      "id": "pd-01-ordinary-restart",
+      "source_case_id": "pd-01-ordinary-restart",
+      "workflow": ["orient"],
+      "description": "Ordinary restart, no manifest. Both arms complete in a single bootstrap call; no expansion is required.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "where were we",
+            "include_global": false
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 1,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false }
+                ],
+                "response_predicates": [
+                  { "pointer": "/practice/id", "operator": "equals", "value": "mem-graph-agent-practice" },
+                  { "pointer": "/practice/status", "operator": "equals", "value": "adopted_advisory" },
+                  { "pointer": "/practice/hard_enforcement", "operator": "equals", "value": false },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/scope/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+                  { "pointer": "/canonical_snapshot/requested_ids/0", "operator": "not_exists" },
+                  { "pointer": "/canonical_snapshot/content_included", "operator": "equals", "value": false },
+                  { "pointer": "/policy_lookup/trigger_type", "operator": "equals", "value": "request_type" },
+                  { "pointer": "/policy_lookup/authority", "operator": "equals", "value": "candidate_only" },
+                  { "pointer": "/verification/required", "operator": "equals", "value": true },
+                  { "pointer": "/mutation/database_writes", "operator": "equals", "value": 0 },
+                  { "pointer": "/mutation/events_appended", "operator": "equals", "value": 0 },
+                  { "pointer": "/mutation/access_tracking", "operator": "equals", "value": "not_touched" },
+                  { "pointer": "/mutation/receipt_persistence", "operator": "equals", "value": "none" }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 1, "max": 1 },
+          "required_ordering_relationships": [
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/args/include_global", "operator": "equals", "value": false }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/practice/id", "operator": "equals", "value": "mem-graph-agent-practice" },
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/response_envelope/scope/include_global", "operator": "equals", "value": false },
+            { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+            { "pointer": "/transcript/0/response_envelope/mutation/database_writes", "operator": "equals", "value": 0 },
+            { "pointer": "/transcript/0/response_envelope/mutation/access_tracking", "operator": "equals", "value": "not_touched" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "where were we",
+            "include_global": false,
+            "response_mode": "compact"
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 1,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/disclosure_version", "operator": "equals", "value": "1.0.0" },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/profile", "operator": "equals", "value": "agent" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/scope/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/orientation/task_state", "operator": "equals", "value": "not_requested" },
+                  { "pointer": "/task/objective/status", "operator": "equals", "value": "unresolved" },
+                  { "pointer": "/task/objective/statement", "operator": "not_exists" },
+                  { "pointer": "/task/definition_of_done/status", "operator": "equals", "value": "unresolved" },
+                  { "pointer": "/task/constraints/status", "operator": "equals", "value": "unresolved" },
+                  { "pointer": "/task/next_action/status", "operator": "equals", "value": "unresolved" },
+                  { "pointer": "/mutation/database_writes", "operator": "equals", "value": 0 },
+                  { "pointer": "/mutation/access_tracking", "operator": "equals", "value": "not_touched" },
+                  { "pointer": "/mutation/receipt_persistence", "operator": "equals", "value": "none" },
+                  { "pointer": "/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 1, "max": 1 },
+          "required_ordering_relationships": [
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/args/include_global", "operator": "equals", "value": false },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "partial" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true },
+            { "pointer": "/transcript/0/response_envelope/task/objective/status", "operator": "equals", "value": "unresolved" },
+            { "pointer": "/transcript/0/response_envelope/task/objective/statement", "operator": "not_exists" },
+            { "pointer": "/transcript/0/response_envelope/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-02-valid-manifest",
+      "source_case_id": "pd-02-valid-manifest",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "Valid manifest with adopted task orientation. The agent must recover all manifest lanes from the source-backed projection and may use a single verification expansion to confirm the governing source.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume parser task",
+            "include_global": false,
+            "task_state": {
+              "task_id": "fixture-task-2",
+              "manifest": {
+                "schema_version": "1.1.0",
+                "manifest_id": "fixture-parser-manifest",
+                "revision": 1,
+                "project_id": "fixture-alpha",
+                "task_id": "fixture-task-2",
+                "include_global": false,
+                "adoption": {
+                  "status": "operator_adopted",
+                  "source": {
+                    "kind": "operator_receipt",
+                    "receipt_id": "b1b2b3b4-c5c6-4d47-8e89-a1b2c3d4e5f6",
+                    "project_id": "fixture-alpha",
+                    "task_id": "fixture-task-2"
+                  }
+                },
+                "task": {
+                  "objective": { "statement": "Finish parser", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "definition_of_done": { "statement": "All parser fixtures pass", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "constraints": [{ "statement": "No schema migration", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }],
+                  "expected_next_action": { "statement": "Inspect failing fixture", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }
+                },
+                "lane_requirements": {
+                  "governing": "optional",
+                  "current_state": "optional",
+                  "open_state": "optional",
+                  "evidence": "optional",
+                  "context_only": "optional",
+                  "warnings": "optional"
+                },
+                "event_scope": { "project_id": "fixture-alpha", "task_id": "fixture-task-2", "allow_legacy_v1_context": false },
+                "limits": { "max_items_per_lane": 10, "max_preview_characters": 200 }
+              },
+              "adoption_receipt": {
+                "payload_b64u": "eyJhY3Rpb24iOiJhZG9wdF90YXNrX3N0YXRlX21hbmlmZXN0IiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImdyYW50Ijp7ImF1dGhvcml0eV9jZWlsaW5nIjoidGFza19vcmllbnRhdGlvbl9vbmx5IiwiY2FwYWJpbGl0aWVzIjpbInRhc2tfc3RhdGVfZ292ZXJuaW5nIl0sImluY2x1ZGVfZ2xvYmFsIjpmYWxzZX0sImlzc3VlZF9hdCI6IjIwMjAtMDEtMDFUMDA6MDA6MDAuMDAwWiIsImlzc3VlciI6eyJhbGdvcml0aG0iOiJFZDI1NTE5IiwiZGVwbG95bWVudF9hdWRpZW5jZSI6InBoYXNlLTRjLXBkMDIiLCJrZXlfaWQiOiJmaXh0dXJlLW9wZXJhdG9yIiwicmVnaXN0cnlfaWQiOiJmaXh0dXJlLXJlZ2lzdHJ5IiwidHJ1c3RfZXBvY2giOjEsInRydXN0X3BvbGljeV9zaGEyNTYiOiIwMDdjOWE5OGM3MDE4ZTcyMzQ3ZWU1ZGIwMGNhNGNjZjRjOGEwMGZhZTU1NTRkMjA3NWE2NzQzZmM1M2YzMjYzIn0sIm5vbmNlIjoiQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZyIsIm5vdF9iZWZvcmUiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJyZWNlaXB0X2lkIjoiYjFiMmIzYjQtYzVjNi00ZDQ3LThlODktYTFiMmMzZDRlNWY2Iiwic2NoZW1hX3ZlcnNpb24iOiIxLjAuMCIsInN1YmplY3QiOnsibWFuaWZlc3RfaWQiOiJmaXh0dXJlLXBhcnNlci1tYW5pZmVzdCIsIm1hbmlmZXN0X3JldmlzaW9uIjoxLCJtYW5pZmVzdF9zaGEyNTYiOiJmMTQ0N2ZlNzM3MDI3YTBlYWRkYWIyNGU3NTdhMGU0YTAxZmQ3ZDhhNzBkNjkxZDY4ZDM5YWExMjU4ZGU5OWY2IiwicHJvamVjdF9pZCI6ImZpeHR1cmUtYWxwaGEiLCJ0YXNrX2lkIjoiZml4dHVyZS10YXNrLTIifX0",
+                "signature_b64u": "KGRwd7wSL1_PLEtGGqgKPoDOd2OqODR8UwC9aIiJ3lIr7jz2ZYao54UXUZqKsQ8Fx0Ogy9zwkHS-yax4-SkTDA"
+              }
+            }
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/task_state/task_id", "operator": "equals", "value": "fixture-task-2" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/policy_lookup/trigger_value", "operator": "equals", "value": "current_canonical_guidance" },
+                  { "pointer": "/mutation/database_writes", "operator": "equals", "value": 0 }
+                ]
+              },
+              {
+                "tool": "memory_get",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/id", "operator": "equals", "value": 103 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_get" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_get" },
+            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 103 }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume parser task",
+            "include_global": false,
+            "response_mode": "compact",
+            "task_state": {
+              "task_id": "fixture-task-2",
+              "manifest": {
+                "schema_version": "1.1.0",
+                "manifest_id": "fixture-parser-manifest",
+                "revision": 1,
+                "project_id": "fixture-alpha",
+                "task_id": "fixture-task-2",
+                "include_global": false,
+                "adoption": {
+                  "status": "operator_adopted",
+                  "source": { "kind": "operator_receipt", "receipt_id": "b1b2b3b4-c5c6-4d47-8e89-a1b2c3d4e5f6", "project_id": "fixture-alpha", "task_id": "fixture-task-2" }
+                },
+                "task": {
+                  "objective": { "statement": "Finish parser", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "definition_of_done": { "statement": "All parser fixtures pass", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] },
+                  "constraints": [{ "statement": "No schema migration", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }],
+                  "expected_next_action": { "statement": "Inspect failing fixture", "required": true, "sources": [{ "kind": "memory", "id": 102, "project_id": "fixture-alpha" }] }
+                },
+                "lane_requirements": { "governing": "optional", "current_state": "optional", "open_state": "optional", "evidence": "optional", "context_only": "optional", "warnings": "optional" },
+                "event_scope": { "project_id": "fixture-alpha", "task_id": "fixture-task-2", "allow_legacy_v1_context": false },
+                "limits": { "max_items_per_lane": 10, "max_preview_characters": 200 }
+              },
+              "adoption_receipt": {
+                "payload_b64u": "eyJhY3Rpb24iOiJhZG9wdF90YXNrX3N0YXRlX21hbmlmZXN0IiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImdyYW50Ijp7ImF1dGhvcml0eV9jZWlsaW5nIjoidGFza19vcmllbnRhdGlvbl9vbmx5IiwiY2FwYWJpbGl0aWVzIjpbInRhc2tfc3RhdGVfZ292ZXJuaW5nIl0sImluY2x1ZGVfZ2xvYmFsIjpmYWxzZX0sImlzc3VlZF9hdCI6IjIwMjAtMDEtMDFUMDA6MDA6MDAuMDAwWiIsImlzc3VlciI6eyJhbGdvcml0aG0iOiJFZDI1NTE5IiwiZGVwbG95bWVudF9hdWRpZW5jZSI6InBoYXNlLTRjLXBkMDIiLCJrZXlfaWQiOiJmaXh0dXJlLW9wZXJhdG9yIiwicmVnaXN0cnlfaWQiOiJmaXh0dXJlLXJlZ2lzdHJ5IiwidHJ1c3RfZXBvY2giOjEsInRydXN0X3BvbGljeV9zaGEyNTYiOiIwMDdjOWE5OGM3MDE4ZTcyMzQ3ZWU1ZGIwMGNhNGNjZjRjOGEwMGZhZTU1NTRkMjA3NWE2NzQzZmM1M2YzMjYzIn0sIm5vbmNlIjoiQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZyIsIm5vdF9iZWZvcmUiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJyZWNlaXB0X2lkIjoiYjFiMmIzYjQtYzVjNi00ZDQ3LThlODktYTFiMmMzZDRlNWY2Iiwic2NoZW1hX3ZlcnNpb24iOiIxLjAuMCIsInN1YmplY3QiOnsibWFuaWZlc3RfaWQiOiJmaXh0dXJlLXBhcnNlci1tYW5pZmVzdCIsIm1hbmlmZXN0X3JldmlzaW9uIjoxLCJtYW5pZmVzdF9zaGEyNTYiOiJmMTQ0N2ZlNzM3MDI3YTBlYWRkYWIyNGU3NTdhMGU0YTAxZmQ3ZDhhNzBkNjkxZDY4ZDM5YWExMjU4ZGU5OWY2IiwicHJvamVjdF9pZCI6ImZpeHR1cmUtYWxwaGEiLCJ0YXNrX2lkIjoiZml4dHVyZS10YXNrLTIifX0",
+                "signature_b64u": "KGRwd7wSL1_PLEtGGqgKPoDOd2OqODR8UwC9aIiJ3lIr7jz2ZYao54UXUZqKsQ8Fx0Ogy9zwkHS-yax4-SkTDA"
+              }
+            }
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 1,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/task_state/task_id", "operator": "equals", "value": "fixture-task-2" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/task_state", "operator": "equals", "value": "assembled" },
+                  { "pointer": "/task/objective/status", "operator": "equals", "value": "governing" },
+                  { "pointer": "/task/objective/statement/authority", "operator": "equals", "value": "adopted_task_orientation_only" },
+                  { "pointer": "/task/objective/statement/sources/0/id", "operator": "equals", "value": 102 },
+                  { "pointer": "/task/definition_of_done/status", "operator": "equals", "value": "governing" },
+                  { "pointer": "/task/next_action/status", "operator": "equals", "value": "governing" },
+                  { "pointer": "/task/constraints/status", "operator": "equals", "value": "resolved" },
+                  { "pointer": "/task/constraints/items/0/sources/0/id", "operator": "equals", "value": 102 },
+                  { "pointer": "/mutation/database_writes", "operator": "equals", "value": 0 }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 1, "max": 1 },
+          "required_ordering_relationships": [
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/orientation/task_state", "operator": "equals", "value": "assembled" },
+            { "pointer": "/transcript/0/response_envelope/task/objective/status", "operator": "equals", "value": "governing" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": false,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-03-fresh-contradiction",
+      "source_case_id": "pd-03-fresh-contradiction",
+      "workflow": ["orient", "find-and-inspect", "review-and-learn"],
+      "description": "Fresh contradiction affects the governing candidate. The bootstrap must surface the warning and require evidence inspection before the affected claim is relied upon. The expansion call must use a tool whose access-tracking effect is honestly disclosed.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume deployment",
+            "include_global": false
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/policy_lookup/authority", "operator": "equals", "value": "candidate_only" }
+                ]
+              },
+              {
+                "tool": "epistemic_get",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/record_id", "operator": "equals", "value": 104 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 3 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "epistemic_get" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "epistemic_get" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": true
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume deployment",
+            "include_global": false,
+            "response_mode": "compact"
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/warnings/0", "operator": "equals", "value": "explicit_contradiction_present" },
+                  { "pointer": "/guidance/governing_candidates/0/id", "operator": "equals", "value": 104 },
+                  { "pointer": "/guidance/governing_candidates/0/review_state", "operator": "equals", "value": "contradiction_review_required" },
+                  { "pointer": "/expansions/0/reason", "operator": "equals", "value": "contradiction_requires_review" },
+                  { "pointer": "/expansions/0/source/record_id", "operator": "equals", "value": "104" },
+                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "none" },
+                  { "pointer": "/expansions/0/route_available", "operator": "equals", "value": true }
+                ]
+              },
+              {
+                "tool": "epistemic_inspect",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "get" },
+                  { "pointer": "/record_id", "operator": "equals", "value": 104 }
+                ],
+                "response_predicates": [
+                ],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 3 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "epistemic_inspect" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "epistemic_inspect" },
+            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "get" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/warnings/0", "operator": "equals", "value": "explicit_contradiction_present" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": true
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-04-long-governing-record",
+      "source_case_id": "pd-04-long-governing-record",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "Long canonical source whose content exceeds the compact budget. The bootstrap must return a safe preview, an explicit expansion requirement, and an honest omitted-byte count. The candidate arm's expansion must use the consolidated memory_read path.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "load operating constraints",
+            "include_global": false,
+            "canonical_ids": [106],
+            "include_canonical_content": true
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/canonical_ids/0", "operator": "equals", "value": 106 }
+                ],
+                "response_predicates": [
+                  { "pointer": "/canonical_snapshot/records/0/id", "operator": "equals", "value": 106 },
+                  { "pointer": "/canonical_snapshot/content_included", "operator": "equals", "value": true }
+                ]
+              },
+              {
+                "tool": "memory_get",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/id", "operator": "equals", "value": 106 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_get" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_get" },
+            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 106 }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/canonical_snapshot/records/0/id", "operator": "equals", "value": 106 }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "large"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "load operating constraints",
+            "include_global": false,
+            "response_mode": "compact",
+            "canonical_ids": [106],
+            "include_canonical_content": true
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/canonical_ids/0", "operator": "equals", "value": 106 }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/guidance/canonical/0/id", "operator": "equals", "value": 106 },
+                  { "pointer": "/guidance/canonical/0/preview", "operator": "equals", "value": "A bounded preview." },
+                  { "pointer": "/omissions/content_bytes_omitted", "operator": "equals", "value": 11982 },
+                  { "pointer": "/omissions/required_content_omitted", "operator": "equals", "value": false },
+                  { "pointer": "/expansions/0/reason", "operator": "equals", "value": "content_omitted" },
+                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 106 },
+                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "touches_access_counters" },
+                  { "pointer": "/expansions/0/route_available", "operator": "equals", "value": true }
+                ]
+              },
+              {
+                "tool": "memory_read",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "get" },
+                  { "pointer": "/id", "operator": "equals", "value": 106 }
+                ],
+                "response_predicates": [
+                ],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_read" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_read" },
+            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "get" },
+            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 106 }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/guidance/canonical/0/id", "operator": "equals", "value": 106 },
+            { "pointer": "/transcript/0/response_envelope/omissions/content_bytes_omitted", "operator": "equals", "value": 11982 }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "large"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-05-wrong-project",
+      "source_case_id": "pd-05-wrong-project",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "Wrong-project and _global source references. The bootstrap must hydrate only the in-scope source and never suggest expansion to the foreign project or the unsolicited _global source. The case also carries an explicit-global subfixture under candidate that exercises global_inclusion: 'explicit'.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "current implementation",
+            "include_global": false,
+            "canonical_ids": [107, 108, 109]
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 1,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+                  { "pointer": "/canonical_snapshot/requested_ids/0", "operator": "equals", "value": 107 },
+                  { "pointer": "/canonical_snapshot/requested_ids/1", "operator": "equals", "value": 108 },
+                  { "pointer": "/canonical_snapshot/requested_ids/2", "operator": "equals", "value": 109 },
+                  { "pointer": "/canonical_snapshot/unresolved_or_out_of_scope_ids/0", "operator": "equals", "value": 108 },
+                  { "pointer": "/canonical_snapshot/unresolved_or_out_of_scope_ids/1", "operator": "equals", "value": 109 }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 1, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/args/include_global", "operator": "equals", "value": false }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "current implementation",
+            "include_global": false,
+            "response_mode": "compact",
+            "canonical_ids": [107, 108, 109]
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 1,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/guidance/canonical/0/id", "operator": "equals", "value": 107 },
+                  { "pointer": "/guidance/canonical/0/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/guidance/canonical/1", "operator": "not_exists" },
+                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 108 },
+                  { "pointer": "/expansions/0/route_available", "operator": "equals", "value": false },
+                  { "pointer": "/expansions/1/source/id", "operator": "equals", "value": 109 },
+                  { "pointer": "/expansions/1/route_available", "operator": "equals", "value": false },
+                  { "pointer": "/expansions/2", "operator": "not_exists" }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 1, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/args/include_global", "operator": "equals", "value": false },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/0/response_envelope/scope/global_inclusion", "operator": "equals", "value": "disabled" },
+            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "partial" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true },
+            { "pointer": "/transcript/0/response_envelope/guidance/canonical/0/id", "operator": "equals", "value": 107 },
+            { "pointer": "/transcript/0/response_envelope/expansions/0/route_available", "operator": "equals", "value": false },
+            { "pointer": "/transcript/0/response_envelope/expansions/1/route_available", "operator": "equals", "value": false }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "explicit_global_subfixture": {
+          "case_id": "pd-05-wrong-project",
+          "intent": "explicit_global",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "current implementation",
+            "include_global": true,
+            "response_mode": "compact"
+          },
+          "required_response_envelope_predicates": [
+            { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/scope/include_global", "operator": "equals", "value": true },
+            { "pointer": "/scope/global_inclusion", "operator": "equals", "value": "explicit" }
+          ],
+          "expected_outcome": "orient"
+        }
+      }
+    },
+    {
+      "id": "pd-06-source-revised",
+      "source_case_id": "pd-06-source-revised",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "Source revised between orientation and expansion. The candidate arm preserves the Step 3 product gap: the public compact MCP cannot compare versions across calls. It may verify the source through the declared route, but neither bootstrap may fabricate refresh_required or version_mismatch. The expected outcome remains honestly unavailable until a public comparison seam is separately authorized.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "inspect source 110",
+            "include_global": false
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 3,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ]
+              },
+              {
+                "tool": "memory_get",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/id", "operator": "equals", "value": 110 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              },
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "occurrence": 1,
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 3, "max": 3 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_get" },
+            { "type": "must_follow", "predecessor": "memory_get", "successor": "cognitive_agent_bootstrap" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_get" },
+            { "pointer": "/transcript/2/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 110 }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+            { "pointer": "/transcript/2/response_envelope/scope/project_id", "operator": "equals", "value": "fixture-alpha" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "refresh-required",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "inspect source 110",
+            "include_global": false,
+            "response_mode": "compact"
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 3,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/expansions/0/reason", "operator": "equals", "value": "verify_authority" },
+                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 110 },
+                  { "pointer": "/expansions/0/route_available", "operator": "equals", "value": true },
+                  { "pointer": "/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } },
+                  { "pointer": "/unresolved", "operator": "excludes", "value": "refresh_required" }
+                ]
+              },
+              {
+                "tool": "memory_read",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "get" },
+                  { "pointer": "/id", "operator": "equals", "value": 110 }
+                ],
+                "response_predicates": [
+                ],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              },
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "occurrence": 1,
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } },
+                  { "pointer": "/unresolved", "operator": "excludes", "value": "refresh_required" }
+                ]
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 3, "max": 3 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_read" },
+            { "type": "must_follow", "predecessor": "memory_read", "successor": "cognitive_agent_bootstrap" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_read" },
+            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "get" },
+            { "pointer": "/transcript/1/args/id", "operator": "equals", "value": 110 },
+            { "pointer": "/transcript/2/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/expansions/0/reason", "operator": "equals", "value": "verify_authority" },
+            { "pointer": "/transcript/0/response_envelope/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } },
+            { "pointer": "/transcript/0/response_envelope/unresolved", "operator": "excludes", "value": "refresh_required" },
+            { "pointer": "/transcript/2/response_envelope/expansions", "operator": "excludes", "value": { "reason": "version_mismatch" } },
+            { "pointer": "/transcript/2/response_envelope/unresolved", "operator": "excludes", "value": "refresh_required" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "unavailable-honest",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-07-history-heavy",
+      "source_case_id": "pd-07-history-heavy",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "History-heavy query. The bootstrap must return the active source as governing and surface superseded/archived history sources through explicit expansion only; current orientation must remain readable without flooding the first response.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "current decision and its history",
+            "include_global": false,
+            "canonical_ids": [111, 112, 113]
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/canonical_snapshot/records/0/id", "operator": "equals", "value": 111 },
+                  { "pointer": "/canonical_snapshot/records/0/status", "operator": "equals", "value": "active" },
+                  { "pointer": "/canonical_snapshot/records/1/id", "operator": "equals", "value": 112 },
+                  { "pointer": "/canonical_snapshot/records/1/status", "operator": "equals", "value": "superseded" },
+                  { "pointer": "/canonical_snapshot/records/2/id", "operator": "equals", "value": 113 },
+                  { "pointer": "/canonical_snapshot/records/2/status", "operator": "equals", "value": "archived" },
+                  { "pointer": "/canonical_snapshot/records/3", "operator": "not_exists" }
+                ]
+              },
+              {
+                "tool": "memory_search",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/query", "operator": "equals", "value": "history" }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_search" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_search" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/canonical_snapshot/records/0/id", "operator": "equals", "value": 111 }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "current decision and its history",
+            "include_global": false,
+            "response_mode": "compact",
+            "canonical_ids": [111, 112, 113]
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 3,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/guidance/canonical/0/id", "operator": "equals", "value": 111 },
+                  { "pointer": "/guidance/canonical/0/status", "operator": "equals", "value": "active" },
+                  { "pointer": "/guidance/canonical/1/id", "operator": "equals", "value": 112 },
+                  { "pointer": "/guidance/canonical/1/status", "operator": "equals", "value": "superseded" },
+                  { "pointer": "/guidance/canonical/2/id", "operator": "equals", "value": 113 },
+                  { "pointer": "/guidance/canonical/2/status", "operator": "equals", "value": "archived" },
+                  { "pointer": "/guidance/canonical/3", "operator": "not_exists" },
+                  { "pointer": "/expansions/0/reason", "operator": "equals", "value": "history_requested" },
+                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 112 },
+                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "touches_access_counters" }
+                ]
+              },
+              {
+                "tool": "memory_read",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "get" },
+                  { "pointer": "/id", "operator": "equals", "value": 112 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              },
+              {
+                "tool": "memory_read",
+                "occurrence": 1,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "get" },
+                  { "pointer": "/id", "operator": "equals", "value": 113 }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 3, "max": 3 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_read" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_read" },
+            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "get" },
+            { "pointer": "/transcript/2/tool", "operator": "equals", "value": "memory_read" },
+            { "pointer": "/transcript/2/args/operation", "operator": "equals", "value": "get" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/guidance/canonical/0/id", "operator": "equals", "value": 111 },
+            { "pointer": "/transcript/0/response_envelope/guidance/canonical/0/status", "operator": "equals", "value": "active" },
+            { "pointer": "/transcript/0/response_envelope/guidance/canonical/3", "operator": "not_exists" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "orient-and-verify",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    },
+    {
+      "id": "pd-08-degraded-input",
+      "source_case_id": "pd-08-degraded-input",
+      "workflow": ["orient", "find-and-inspect"],
+      "description": "Degraded input with a malformed manifest and one unavailable canonical source. The bootstrap must preserve the base orientation, name the unavailable source, and give an honest scoped fallback. The candidate arm must never invent missing content or call hidden legacy tools.",
+      "arms": {
+        "control": {
+          "profile": "full",
+          "bootstrap_response_mode": "legacy",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume task",
+            "include_global": false,
+            "canonical_ids": [114, 115]
+          },
+          "allowed_tool_names": ["__FROM_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/canonical_snapshot/records/0/id", "operator": "equals", "value": 114 },
+                  { "pointer": "/canonical_snapshot/unresolved_or_out_of_scope_ids/0", "operator": "equals", "value": 115 }
+                ]
+              },
+              {
+                "tool": "memory_search",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/query", "operator": "equals", "value": "fallback" }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_search" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_search" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/canonical_snapshot/records/0/id", "operator": "equals", "value": 114 }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "unavailable-honest",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        },
+        "candidate": {
+          "profile": "agent",
+          "bootstrap_response_mode": "compact",
+          "synthetic_request": {
+            "project_id": "fixture-alpha",
+            "query": "resume task",
+            "include_global": false,
+            "response_mode": "compact",
+            "canonical_ids": [114, 115]
+          },
+          "allowed_tool_names": ["__FROM_AGENT_MIRROR__"],
+          "prohibited_tool_names_or_families": [],
+          "required_tool_calls": {
+            "min_count": 2,
+            "calls": [
+              {
+                "tool": "cognitive_agent_bootstrap",
+                "args_predicates": [
+                  { "pointer": "/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/include_global", "operator": "equals", "value": false },
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" }
+                ],
+                "response_predicates": [
+                  { "pointer": "/response_mode", "operator": "equals", "value": "compact" },
+                  { "pointer": "/scope/project_id", "operator": "equals", "value": "fixture-alpha" },
+                  { "pointer": "/orientation/status", "operator": "equals", "value": "partial" },
+                  { "pointer": "/orientation/requires_expansion", "operator": "equals", "value": true },
+                  { "pointer": "/orientation/task_state", "operator": "equals", "value": "unavailable" },
+                  { "pointer": "/guidance/canonical/0/id", "operator": "equals", "value": 114 },
+                  { "pointer": "/unresolved/0", "operator": "equals", "value": "canonical_source_unavailable:115" },
+                  { "pointer": "/unresolved/1", "operator": "equals", "value": "manifest_invalid" },
+                  { "pointer": "/expansions/0/reason", "operator": "equals", "value": "source_unavailable" },
+                  { "pointer": "/expansions/0/source/id", "operator": "equals", "value": 115 },
+                  { "pointer": "/expansions/0/route_available", "operator": "equals", "value": false },
+                  { "pointer": "/expansions/0/access_tracking", "operator": "equals", "value": "none" }
+                ]
+              },
+              {
+                "tool": "memory_find",
+                "occurrence": 0,
+                "args_predicates": [
+                  { "pointer": "/operation", "operator": "equals", "value": "search" },
+                  { "pointer": "/query", "operator": "equals", "value": "fallback" }
+                ],
+                "response_predicates": [],
+                "expansion_route": {
+                  "route_available": true,
+                  "tool_in_active_profile": true,
+                  "args_validate_structurally": true,
+                  "preserve_scope": true
+                }
+              }
+            ],
+            "excluded_tools": []
+          },
+          "allowed_call_cardinality": { "min": 2, "max": 2 },
+          "required_ordering_relationships": [
+            { "type": "must_precede", "predecessor": "cognitive_agent_bootstrap", "successor": "memory_find" },
+            { "type": "bootstrap_before_mutation", "predecessor": "cognitive_agent_bootstrap", "successor": "*" }
+          ],
+          "required_argument_predicates": [
+            { "pointer": "/transcript/0/tool", "operator": "equals", "value": "cognitive_agent_bootstrap" },
+            { "pointer": "/transcript/0/args/response_mode", "operator": "equals", "value": "compact" },
+            { "pointer": "/transcript/1/tool", "operator": "equals", "value": "memory_find" },
+            { "pointer": "/transcript/1/args/operation", "operator": "equals", "value": "search" }
+          ],
+          "response_predicates": [
+            { "pointer": "/transcript/0/response_envelope/orientation/status", "operator": "equals", "value": "partial" },
+            { "pointer": "/transcript/0/response_envelope/orientation/requires_expansion", "operator": "equals", "value": true },
+            { "pointer": "/transcript/0/response_envelope/orientation/task_state", "operator": "equals", "value": "unavailable" },
+            { "pointer": "/transcript/0/response_envelope/unresolved/0", "operator": "equals", "value": "canonical_source_unavailable:115" },
+            { "pointer": "/transcript/0/response_envelope/unresolved/1", "operator": "equals", "value": "manifest_invalid" }
+          ],
+          "expected_scope": {
+            "project_id": "fixture-alpha",
+            "include_global": false,
+            "global_inclusion": "disabled",
+            "preserve_originating_scope": true
+          },
+          "expected_bootstrap_mutation_or_access_behavior": {
+            "writes_database": false,
+            "touches_access_tracking": false
+          },
+          "expected_expansion_behavior": {
+            "must_call_required_expansions": true,
+            "may_call_optional_expansions": false
+          },
+          "expected_outcome": "unavailable-honest",
+          "measurement_status": "contract-only-not-executed",
+          "metric_policy": {
+            "record_correctness": true,
+            "record_initial_bytes": true,
+            "record_total_context_bytes": true,
+            "record_calls": true,
+            "record_latency": true,
+            "record_unsupported_arguments": true,
+            "record_wrong_tool_attempts": true,
+            "record_scope": true,
+            "record_mutation_results": true,
+            "exclude_latency_from_determinism": true,
+            "claim_provider_token_savings": false,
+            "applies_large_or_small_threshold": "small"
+          }
+        }
+      }
+    }
+  ],
+  "counterexamples": [
+    {
+      "family": 1,
+      "case_id": "pd-02-valid-manifest",
+      "arm": "candidate",
+      "expected_failure_code": "tool_not_in_profile",
+      "detection_reason": "agent_profile_calls_memory_get_instead_of_memory_read"
+    },
+    {
+      "family": 2,
+      "case_id": "pd-01-ordinary-restart",
+      "arm": "candidate",
+      "expected_failure_code": "tool_not_in_profile",
+      "detection_reason": "agent_profile_calls_sql_or_maintenance_tool"
+    },
+    {
+      "family": 3,
+      "case_id": "pd-05-wrong-project",
+      "arm": "candidate",
+      "expected_failure_code": "required_call_arg_mismatch",
+      "detection_reason": "compact_request_silently_widens_include_global"
+    },
+    {
+      "family": 4,
+      "case_id": "pd-05-wrong-project",
+      "arm": "candidate",
+      "expected_failure_code": "expansion_route_unavailable_called",
+      "detection_reason": "expansion_calls_route_marked_route_available_false"
+    },
+    {
+      "family": 5,
+      "case_id": "pd-02-valid-manifest",
+      "arm": "candidate",
+      "expected_failure_code": "tool_not_in_profile",
+      "detection_reason": "expansion_names_tool_absent_from_active_profile"
+    },
+    {
+      "family": 6,
+      "case_id": "pd-02-valid-manifest",
+      "arm": "candidate",
+      "expected_failure_code": "required_call_response_mismatch",
+      "detection_reason": "governing_guidance_used_without_required_verification"
+    },
+    {
+      "family": 7,
+      "case_id": "pd-01-ordinary-restart",
+      "arm": "candidate",
+      "expected_failure_code": "retry_count_exceeded",
+      "detection_reason": "unsupported_response_mode_retried_more_than_once"
+    },
+    {
+      "family": 8,
+      "case_id": "pd-04-long-governing-record",
+      "arm": "candidate",
+      "expected_failure_code": "access_tracking_lie",
+      "detection_reason": "access_tracking_expansion_described_as_zero_touch"
+    },
+    {
+      "family": 9,
+      "case_id": "pd-06-source-revised",
+      "arm": "candidate",
+      "expected_failure_code": "pd06_version_mismatch_fabrication",
+      "detection_reason": "pd06_fabricates_version_mismatch_without_evidence"
+    },
+    {
+      "family": 10,
+      "case_id": "pd-04-long-governing-record",
+      "arm": "candidate",
+      "expected_failure_code": "required_call_missing",
+      "detection_reason": "final_answer_correct_but_required_expansion_never_called"
+    }
+  ]
+}

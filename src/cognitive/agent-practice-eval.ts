@@ -19,6 +19,8 @@ const MUTATING_TOOLS = new Set([
   'cognitive_event_append',
   'cognitive_policy_create',
   'cognitive_policy_evaluate',
+  'epistemic_admit',
+  'epistemic_append_receipt',
 ]);
 
 function normalizeToolName(name: string): string {

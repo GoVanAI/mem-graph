@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDatabase } from '../db.js';
-import { errorResult, jsonResult } from '../util.js';
+import { errorResult, jsonResult, textResult } from '../util.js';
 import {
   appendCognitiveEvent,
   listCognitiveEvents,
@@ -13,16 +13,26 @@ import {
   findPolicyCandidates,
 } from '../cognitive/policy.js';
 import { diagnoseCurrentGuidance, searchGoverningGuidance } from '../cognitive/retrieval.js';
-import { bootstrapCognitiveAgent } from '../cognitive/agent-bootstrap.js';
+import * as agentBootstrap from '../cognitive/agent-bootstrap.js';
+import * as bootstrapDisclosure from '../cognitive/bootstrap-disclosure.js';
+import type { OperatorTrustRuntime } from '../cognitive/operator-trust-loader.js';
 import { COGNITIVE_EVENT_TYPES } from '../cognitive/types.js';
 
 const jsonObject = z.record(z.string(), z.unknown());
 const metricValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
-export function registerCognitiveTools(server: McpServer): void {
+/** Registration-only configuration. MCP callers never control the active profile. */
+export interface CognitiveToolRegistrationOptions {
+  operatorTrustRuntime?: OperatorTrustRuntime;
+  profile?: 'full' | 'agent';
+}
+
+export function registerCognitiveTools(server: McpServer, options: CognitiveToolRegistrationOptions = {}): void {
+  // Direct legacy registration predates profiles and remains full by default.
+  const profile = options.profile ?? 'full';
   server.tool(
     'cognitive_agent_bootstrap',
-    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots only explicitly requested deployment-local canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. It assumes no built-in memory IDs, appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
+    'Run the adopted mem-graph agent-practice bootstrap as one strictly read-only operation. Resolves exact project scope, snapshots only explicitly requested deployment-local canonical records without touching access counters, looks up candidate policy guidance, and separates governing from contextual lexical candidates. An optional opaque task_state object with task_id and a Contract-v1 manifest requests a separate source-backed packet; malformed task state fails softly without discarding the base bootstrap. Set response_mode to compact only to receive the deterministic compact disclosure; legacy remains the default. It assumes no built-in memory IDs, appends no event, persists no receipt, grants no authority, and keeps global scope disabled unless explicitly requested.',
     {
       query: z.string().min(1),
       project_id: z.string().min(1),
@@ -32,10 +42,44 @@ export function registerCognitiveTools(server: McpServer): void {
       layer: z.enum(['working', 'episodic', 'procedural', 'semantic', 'partner']).optional(),
       canonical_ids: z.array(z.number().int().positive()).max(20).optional(),
       include_canonical_content: z.boolean().optional(),
+      // Default false returns summary-only excluded records.
+      include_excluded_details: z.boolean().optional(),
+      // Kept opaque so malformed optional task state cannot prevent base bootstrap.
+      task_state: z.unknown().optional(),
+      response_mode: z.enum(['legacy', 'compact']).optional(),
     },
     async (input) => {
       try {
-        return jsonResult(bootstrapCognitiveAgent(getDatabase('memory'), input));
+        const db = getDatabase('memory');
+        const { task_state, response_mode, ...baseInput } = input;
+        const composed = task_state === undefined
+          ? agentBootstrap.bootstrapCognitiveAgent(db, baseInput)
+          : agentBootstrap.bootstrapCognitiveAgentWithTaskState(
+            db,
+            baseInput,
+            typeof task_state === 'object' && task_state !== null && !Array.isArray(task_state)
+              ? { project_id: input.project_id, include_global: input.include_global, task_id: (task_state as Record<string, unknown>).task_id, manifest: (task_state as Record<string, unknown>).manifest, adoption_receipt: (task_state as Record<string, unknown>).adoption_receipt } as import('../cognitive/types.js').TaskStateBootstrapRequest
+              : undefined,
+            options.operatorTrustRuntime,
+          );
+        if (response_mode === 'compact') {
+          const affectedContradictionSources = agentBootstrap.resolveBootstrapContradictionSources(
+            db,
+            baseInput,
+            composed,
+          );
+          const compact = bootstrapDisclosure.projectCompactBootstrap(composed, {
+            profile,
+            trustedRoleContext: {
+              bootstrap_query: baseInput.query,
+              affected_contradiction_sources: affectedContradictionSources,
+            },
+          });
+          // Compact is already the canonical wire representation; legacy's pretty
+          // printer would change its measured byte count and digest contract.
+          return textResult(bootstrapDisclosure.canonicalJson(compact));
+        }
+        return jsonResult(composed);
       } catch (error) {
         return errorResult(`Cognitive agent bootstrap error: ${(error as Error).message}`);
       }

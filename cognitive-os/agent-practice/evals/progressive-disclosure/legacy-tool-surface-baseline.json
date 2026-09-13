@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0.0",
+  "measurementTool": "tools-measure.mts",
+  "measurementToolVersion": "1.0.0",
+  "label": "legacy-full-surface",
+  "sourceState": "working-tree-with-uncommitted-source-changes",
+  "headCommitAtMeasurement": "bb0d4513d0058962b860655941d439a163a905d8",
+  "sourceFingerprintSha256": "f1f4af8be904517b7d815fdb717d9befb4b4d36ab988f03b7865a9a0b37e304a",
+  "registeredToolCount": 41,
+  "totalCombinedBytes": 31553,
+  "totalSchemaBytes": 22640,
+  "totalDescriptionBytes": 8913,
+  "registrationGroupCount": 9,
+  "perGroup": {
+    "src/tools/cognitive.ts": {
+      "toolCount": 8,
+      "combinedBytes": 6683,
+      "descriptionBytes": 1835,
+      "schemaBytes": 4848
+    },
+    "src/tools/epistemic.ts": {
+      "toolCount": 6,
+      "combinedBytes": 5799,
+      "descriptionBytes": 1453,
+      "schemaBytes": 4346
+    },
+    "src/tools/memory-graph.ts": {
+      "toolCount": 6,
+      "combinedBytes": 5516,
+      "descriptionBytes": 1550,
+      "schemaBytes": 3966
+    },
+    "src/tools/memory-import.ts": {
+      "toolCount": 1,
+      "combinedBytes": 1301,
+      "descriptionBytes": 546,
+      "schemaBytes": 755
+    },
+    "src/tools/memory-orient.ts": {
+      "toolCount": 4,
+      "combinedBytes": 1580,
+      "descriptionBytes": 791,
+      "schemaBytes": 789
+    },
+    "src/tools/memory-search.ts": {
+      "toolCount": 5,
+      "combinedBytes": 3062,
+      "descriptionBytes": 800,
+      "schemaBytes": 2262
+    },
+    "src/tools/memory-tags.ts": {
+      "toolCount": 2,
+      "combinedBytes": 1024,
+      "descriptionBytes": 416,
+      "schemaBytes": 608
+    },
+    "src/tools/memory-write.ts": {
+      "toolCount": 5,
+      "combinedBytes": 4975,
+      "descriptionBytes": 1104,
+      "schemaBytes": 3871
+    },
+    "src/tools/sql.ts": {
+      "toolCount": 4,
+      "combinedBytes": 1613,
+      "descriptionBytes": 418,
+      "schemaBytes": 1195
+    }
+  },
+  "detailedMeasurementTool": "scripts/tools-measure.mts",
+  "pending": "agent-profile measurements are pending Step 2B implementation"
+}

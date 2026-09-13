@@ -2,9 +2,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getDatabase } from '../db.js';
 import { textResult, errorResult, rowsResult } from '../util.js';
-import { bumpMemoryAccess, bumpSynapseAccess } from '../access.js';
+import { readMemoryEntry } from '../memory-read.js';
 
-function sanitizeFtsQuery(q: string): string {
+/** Shared FTS normalization used by legacy search and scoped agent search. */
+export function sanitizeFtsQuery(q: string): string {
   const trimmed = q.trim();
   if (!trimmed) return trimmed;
   if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
@@ -15,6 +16,29 @@ function sanitizeFtsQuery(q: string): string {
     .split(/\s+/)
     .map((tok) => (tok.includes('-') ? `"${tok.replace(/"/g, '""')}"` : tok))
     .join(' ');
+}
+
+export interface ScopedQueryOptions { project_id?: string; include_global?: boolean; category?: string; layer?: string; lifecycle?: string; status?: string; limit?: number; }
+function scopeCondition(alias: string, projectId: string | undefined, includeGlobal = true): { sql: string; params: string[] } {
+  if (!projectId) return { sql: '', params: [] };
+  return { sql: ` AND ${includeGlobal ? `(${alias}project_id = ? OR ${alias}project_id = '_global')` : `${alias}project_id = ?`}`, params: [projectId] };
+}
+/** Shared query services used by legacy adapters and scoped family adapters. */
+export function runMemorySearch(db: ReturnType<typeof getDatabase>, input: ScopedQueryOptions & { query: string }): unknown[] {
+  const scope = scopeCondition('m.', input.project_id, input.include_global ?? true); const conditions = ['memories_fts MATCH ?', 'm.status = ?']; const params: Array<string | number> = [sanitizeFtsQuery(input.query), input.status ?? 'active'];
+  if (scope.sql) { conditions.push(scope.sql.slice(5)); params.push(...scope.params); }
+  if (input.category) { conditions.push('m.category=?'); params.push(input.category); } if (input.layer) { conditions.push('m.layer=?'); params.push(input.layer); }
+  params.push(input.limit ?? 20);
+  return db.prepare(`SELECT m.id,m.layer,m.project_id,m.title,m.summary,m.status,m.lifecycle,m.confidence,m.boost,m.importance_score,m.created_at,m.updated_at,bm25(memories_fts)-(m.boost*.5) AS adjusted_rank,snippet(memories_fts,1,'[',']','...',12) AS snippet FROM memories_fts JOIN memories m ON m.id=memories_fts.rowid WHERE ${conditions.join(' AND ')} ORDER BY adjusted_rank LIMIT ?`).all(...params);
+}
+export function runMemoryRecent(db: ReturnType<typeof getDatabase>, input: ScopedQueryOptions): unknown[] {
+  const scope = scopeCondition('', input.project_id, input.include_global ?? true); const conditions = ["status='active'"]; const params: Array<string | number> = [];
+  if (scope.sql) { conditions.push(scope.sql.slice(5)); params.push(...scope.params); } if (input.category) { conditions.push('category=?'); params.push(input.category); } if (input.layer) { conditions.push('layer=?'); params.push(input.layer); } if (input.lifecycle) { conditions.push('lifecycle=?'); params.push(input.lifecycle); } params.push(input.limit ?? 20);
+  return db.prepare(`SELECT id,layer,project_id,title,summary,lifecycle,confidence,boost,importance_score,created_at FROM memories WHERE ${conditions.join(' AND ')} ORDER BY id DESC LIMIT ?`).all(...params);
+}
+export function runMemoryChanges(db: ReturnType<typeof getDatabase>, input: ScopedQueryOptions & { since: string }): unknown[] {
+  const scope = scopeCondition('', input.project_id, input.include_global ?? true); const conditions = ['(created_at > ? OR updated_at > ?)', "status != 'invalid'"]; const params: Array<string | number> = [input.since, input.since]; if (scope.sql) { conditions.push(scope.sql.slice(5)); params.push(...scope.params); } params.push(input.limit ?? 50);
+  return db.prepare(`SELECT id,layer,project_id,title,status,lifecycle,created_at,updated_at FROM memories WHERE ${conditions.join(' AND ')} ORDER BY updated_at DESC LIMIT ?`).all(...params);
 }
 
 export function registerMemorySearchTools(server: McpServer): void {
@@ -46,37 +70,7 @@ export function registerMemorySearchTools(server: McpServer): void {
     async ({ query, project_id, category, layer, status, limit }) => {
       const db = getDatabase('memory');
       try {
-        const ftsQuery = sanitizeFtsQuery(query);
-        const conditions: string[] = ['memories_fts MATCH ?', 'm.status = ?'];
-        const params: (string | number)[] = [ftsQuery, status];
-        if (project_id) {
-          conditions.push("(m.project_id = ? OR m.project_id = '_global')");
-          params.push(project_id);
-        }
-        if (category) {
-          conditions.push('m.category = ?');
-          params.push(category);
-        }
-        if (layer) {
-          conditions.push('m.layer = ?');
-          params.push(layer);
-        }
-        const where = conditions.join(' AND ');
-        params.push(limit);
-        const stmt = db.prepare(`
-          SELECT m.id, m.layer, m.project_id, m.title, m.summary, m.status,
-                 m.lifecycle, m.confidence, m.boost, m.importance_score,
-                 m.created_at, m.updated_at,
-                 bm25(memories_fts) - (m.boost * 0.5) AS adjusted_rank,
-                 snippet(memories_fts, 1, '[', ']', '...', 12) AS snippet
-          FROM memories_fts
-          JOIN memories m ON m.id = memories_fts.rowid
-          WHERE ${where}
-          ORDER BY adjusted_rank
-          LIMIT ?
-        `);
-        const rows = stmt.all(...params);
-        return rowsResult(rows);
+        return rowsResult(runMemorySearch(db, { query, project_id, category, layer, status, limit }));
       } catch (e) {
         return errorResult(`Search error: ${(e as Error).message}`);
       }
@@ -108,34 +102,7 @@ export function registerMemorySearchTools(server: McpServer): void {
     },
     async ({ project_id, category, layer, lifecycle, limit }) => {
       const db = getDatabase('memory');
-      const conditions: string[] = ["status = 'active'"];
-      const params: (string | number)[] = [];
-      if (project_id) {
-        conditions.push("(project_id = ? OR project_id = '_global')");
-        params.push(project_id);
-      }
-      if (category) {
-        conditions.push('category = ?');
-        params.push(category);
-      }
-      if (layer) {
-        conditions.push('layer = ?');
-        params.push(layer);
-      }
-      if (lifecycle) {
-        conditions.push('lifecycle = ?');
-        params.push(lifecycle);
-      }
-      params.push(limit);
-      const stmt = db.prepare(
-        `SELECT id, layer, project_id, title, summary, lifecycle, confidence, boost, importance_score, created_at
-         FROM memories
-         WHERE ${conditions.join(' AND ')}
-         ORDER BY id DESC
-         LIMIT ?`,
-      );
-      const rows = stmt.all(...params);
-      return rowsResult(rows);
+      return rowsResult(runMemoryRecent(db, { project_id, category, layer, lifecycle, limit }));
     },
   );
 
@@ -152,71 +119,13 @@ export function registerMemorySearchTools(server: McpServer): void {
     },
     async ({ id, include_synapses }) => {
       const db = getDatabase('memory');
-      const row = db.prepare('SELECT * FROM memories WHERE id = ?').get(id);
-      if (!row) {
+      try {
+        const result = readMemoryEntry(db, id, { include_synapses });
+        if (!include_synapses) return textResult(JSON.stringify(result.memory, null, 2));
+        return textResult(JSON.stringify(result, null, 2));
+      } catch (e) {
         return errorResult(`No memory found with id ${id}.`);
       }
-
-      // Get tags
-      const tags = db
-        .prepare('SELECT tag FROM memory_tag WHERE memory_id = ? ORDER BY tag')
-        .all(id) as { tag: string }[];
-
-      // Touch access (memory + its synapses, D7). The synapse bump is
-      // unconditional — the access signal needs to be written regardless of
-      // whether the response payload includes synapse neighbors (id 90).
-      try {
-        bumpMemoryAccess(db, id);
-        bumpSynapseAccess(db, [id]);
-      } catch {
-        /* ignore */
-      }
-
-      const entry = { ...(row as Record<string, unknown>), tags: tags.map((t) => t.tag) };
-
-      if (!include_synapses) {
-        return textResult(JSON.stringify(entry, null, 2));
-      }
-
-      const outgoing = db
-        .prepare(
-          `SELECT s.connection_type, s.weight, s.access_count, s.created_at, s.updated_at,
-                  m.id, m.layer, m.title, m.summary
-           FROM synapses s
-           JOIN memories m ON m.id = s.target_id
-           WHERE s.source_id = ?`,
-        )
-        .all(id) as Array<{
-          connection_type: string;
-          weight: number;
-          access_count: number;
-          created_at: string;
-          updated_at: string;
-          id: number;
-          layer: string;
-          title: string;
-          summary: string | null;
-        }>;
-      const incoming = db
-        .prepare(
-          `SELECT s.connection_type, s.weight, s.access_count, s.created_at, s.updated_at,
-                  m.id, m.layer, m.title, m.summary
-           FROM synapses s
-           JOIN memories m ON m.id = s.source_id
-           WHERE s.target_id = ?`,
-        )
-        .all(id) as Array<{
-          connection_type: string;
-          weight: number;
-          access_count: number;
-          created_at: string;
-          updated_at: string;
-          id: number;
-          layer: string;
-          title: string;
-          summary: string | null;
-        }>;
-      return textResult(JSON.stringify({ memory: entry, outgoing, incoming }, null, 2));
     },
   );
 
@@ -239,25 +148,7 @@ export function registerMemorySearchTools(server: McpServer): void {
     },
     async ({ since, project_id, limit }) => {
       const db = getDatabase('memory');
-      const conditions: string[] = [
-        "(created_at > ? OR updated_at > ?)",
-        "status != 'invalid'",
-      ];
-      const params: (string | number)[] = [since, since];
-      if (project_id) {
-        conditions.push("(project_id = ? OR project_id = '_global')");
-        params.push(project_id);
-      }
-      params.push(limit);
-      const stmt = db.prepare(
-        `SELECT id, layer, project_id, title, status, lifecycle, created_at, updated_at
-         FROM memories
-         WHERE ${conditions.join(' AND ')}
-         ORDER BY updated_at DESC
-         LIMIT ?`,
-      );
-      const rows = stmt.all(...params);
-      return rowsResult(rows);
+      return rowsResult(runMemoryChanges(db, { since, project_id, limit }));
     },
   );
 
